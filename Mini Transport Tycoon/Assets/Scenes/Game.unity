@@ -5289,7 +5289,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   groundTilemap: {fileID: 1686296014}
   roadTilemap: {fileID: 1561414114}
-  roadTile: {fileID: 11400000, guid: 0308ee14fca3d4ce8806ad60898d850a, type: 2}
+  roadStraightUpDownTile: {fileID: 11400000, guid: 21ec153a5edd74f5cb93a7a405690da2,
+    type: 2}
+  roadStraightLeftRightTile: {fileID: 11400000, guid: 0308ee14fca3d4ce8806ad60898d850a,
+    type: 2}
+  roadTurnUpRightTile: {fileID: 11400000, guid: 41d7fc0b5142a40b6bc052eb8ff1da9c,
+    type: 2}
+  roadTurnRightDownTile: {fileID: 11400000, guid: 924d2d534012c4833a9e81d967e0bd44,
+    type: 2}
+  roadTurnDownLeftTile: {fileID: 11400000, guid: d30dd9ab5dc634c90a1f92a7b2d20e09,
+    type: 2}
+  roadTurnLeftUpTile: {fileID: 11400000, guid: 8e53c13b1598f4b0cac5a28168b8d57d, type: 2}
+  roadTJunctionUpRightDownTile: {fileID: 11400000, guid: 988411cbc9a5f4695a36d3bf7be1b589,
+    type: 2}
+  roadTJunctionRightDownLeftTile: {fileID: 11400000, guid: e11563fb1489c48f9a9dcd906f439e4f,
+    type: 2}
+  roadTJunctionDownLeftUpTile: {fileID: 11400000, guid: 9f0412a0b8f04480abee38b48e907532,
+    type: 2}
+  roadTJunctionLeftUpRightTile: {fileID: 11400000, guid: 06f938db1d52f4e7b8b511aaaa278679,
+    type: 2}
+  roadIntersectionTile: {fileID: 11400000, guid: db38962cf60c244c0bb83aa3abb607de,
+    type: 2}
   buildMode: 0
 --- !u!1 &1420032886
 GameObject:
@@ -69617,7 +69637,7 @@ Tilemap:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Origin: {x: -31, y: -30, z: 0}
   m_Size: {x: 81, y: 75, z: 1}
-  m_TileAnchor: {x: 0.4, y: 0.34, z: 0}
+  m_TileAnchor: {x: 0.43, y: 0.32, z: 0}
   m_TileOrientation: 0
   m_TileOrientationMatrix:
     e00: 1
