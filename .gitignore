@@ -1,0 +1,79 @@
+# Unity generated files
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+
+# Visual Studio cache directory
+.vs/
+
+# Rider cache directory
+.idea/
+
+# JetBrains Rider
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Local user-specific settings
+*.swp
+*.swo
+*~
+
+# Ignore crash logs
+crash.log
+crash.log.*
+
+# Build results
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Player build outputs
+*.apk
+*.ipa
+*.exe
+
+# Editor specific files
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# Package files
+node_modules/
+packages/
+
+Mini Transport Tycoon/Library/
+Mini Transport Tycoon/Temp/
+Mini Transport Tycoon/Logs/
+Mini Transport Tycoon/Obj/
+Mini Transport Tycoon/UserSettings/
+Mini Transport Tycoon/Build/
+Mini Transport Tycoon/Builds/
+Mini Transport Tycoon/.vs/
+Mini Transport Tycoon/.idea/
+Mini Transport Tycoon/.vscode/
+Mini Transport Tycoon/*.sln.iml
+Mini Transport Tycoon/crash.log
+Mini Transport Tycoon/crash.log.*
+Mini Transport Tycoon/*.exe
+Mini Transport Tycoon/*.dll
+Mini Transport Tycoon/*.so
+Mini Transport Tycoon/*.dylib
+Mini Transport Tycoon/*.apk
+Mini Transport Tycoon/*.ipa
+Mini Transport Tycoon/*.sublime-project
+Mini Transport Tycoon/*.sublime-workspace
