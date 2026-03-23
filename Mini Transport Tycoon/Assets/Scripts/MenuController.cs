@@ -27,7 +27,7 @@ public class MenuController : MonoBehaviour
     }
 
     //Scene switch
-    public void LoadNextScene(string sceneName)
+    public void LoadNextScene(int sceneIndex)
     {
         SceneManager.LoadScene(sceneName);
     }
