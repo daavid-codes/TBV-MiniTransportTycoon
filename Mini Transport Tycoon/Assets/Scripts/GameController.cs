@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityTilemap = UnityEngine.Tilemaps.Tilemap;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 
 public class GameController : MonoBehaviour
@@ -38,6 +40,9 @@ public class GameController : MonoBehaviour
 
     [Header("Build Settings")]
     [SerializeField] private bool buildMode = false;
+    [SerializeField] private Image buildButtonImage;
+    [SerializeField] private Color normalColor = new Color32(250, 233, 215, 255); 
+    [SerializeField] private Color activeColor = new Color32(183, 181, 179, 255);
 
     void Update()
     {
@@ -49,6 +54,23 @@ public class GameController : MonoBehaviour
     {
         buildMode = !buildMode;
         Debug.Log("Build mode: " + buildMode);
+        
+        UpdateButtonColor();
+    }
+
+    private void UpdateButtonColor()
+    {
+        if (buildButtonImage != null)
+        {
+            if (buildMode)
+            {
+                buildButtonImage.color = activeColor;
+            }
+            else
+            {
+                buildButtonImage.color = normalColor;
+            }
+        }
     }
 
     void ToggleBuildMode()
