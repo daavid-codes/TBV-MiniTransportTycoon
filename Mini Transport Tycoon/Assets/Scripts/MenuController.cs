@@ -29,7 +29,12 @@ public class MenuController : MonoBehaviour
     //Scene switch
     public void LoadNextScene(int sceneIndex)
     {
-        SceneManager.LoadScene(sceneName);
+        if (sceneIndex >= 0 && sceneIndex < SceneManager.sceneCountInBuildSettings) {
+            SceneManager.LoadScene(sceneIndex);
+        }
+        else {
+            Debug.LogWarning($"Scene index {sceneIndex} is out of range!");
+        }
     }
     
 }
