@@ -44,6 +44,12 @@ public class GameController : MonoBehaviour
         HandleMouseInput();
     }
 
+    public void ToggleBuildModeUI()
+    {
+        buildMode = !buildMode;
+        Debug.Log("Build mode: " + buildMode);
+    }
+
     void ToggleBuildMode()
     {
         if (Input.GetKeyDown(KeyCode.B))
