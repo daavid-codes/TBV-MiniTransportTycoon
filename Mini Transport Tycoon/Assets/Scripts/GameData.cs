@@ -6,8 +6,9 @@ public class GameData : MonoBehaviour
 {
     public event Action OnDataChanged;
 
-    [SerializeField] private int money;
-    [SerializeField] private string cityName = "Kezdő Város";
+    [SerializeField] private int money = 4242;
+    [SerializeField] private string cityName = "Kaposvar";
+    [SerializeField] private float timeMultiplier = 0.2f;
     
     private DateTime currentDate;
 
@@ -52,7 +53,7 @@ public class GameData : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(timeMultiplier);
             CurrentDate = CurrentDate.AddMinutes(1);
         }
     }
