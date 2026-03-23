@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityTilemap = UnityEngine.Tilemaps.Tilemap;
 
+
 public class GameController : MonoBehaviour
 {
     private static readonly Vector3Int[] RoadNeighborOffsets =

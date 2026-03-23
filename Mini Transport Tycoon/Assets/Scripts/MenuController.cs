@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MenuController : MonoBehaviour
 {
@@ -24,4 +25,11 @@ public class MenuController : MonoBehaviour
             bridgeSubMenu.SetActive(!isCurrentlyActive);
         }
     }
+
+    //Scene switch
+    public void LoadNextScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
+    
 }
