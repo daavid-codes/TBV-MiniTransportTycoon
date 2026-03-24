@@ -4,9 +4,9 @@ using UnityTilemap = UnityEngine.Tilemaps.Tilemap;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-
 public class GameController : MonoBehaviour
 {
+    private static readonly Vector3Int InvalidCellPosition = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
     private static readonly Vector3Int[] RoadNeighborOffsets =
     {
         Vector3Int.up,
@@ -14,6 +14,7 @@ public class GameController : MonoBehaviour
         Vector3Int.down,
         Vector3Int.left
     };
+    private static readonly Color BuildPreviewColor = new Color(1f, 0.96f, 0.8f, 1f);
 
     [Header("Tilemaps")]
     [SerializeField] private UnityTilemap groundTilemap;
@@ -44,18 +45,26 @@ public class GameController : MonoBehaviour
     [SerializeField] private Color normalColor = new Color32(250, 233, 215, 255); 
     [SerializeField] private Color activeColor = new Color32(183, 181, 179, 255);
 
+    private Vector3Int lastDraggedRoadCell = InvalidCellPosition;
+    private Vector3Int previewedBuildCell = InvalidCellPosition;
+    private TileFlags previewedBuildCellFlags;
+    private bool hasPreviewedBuildCell;
+
     void Update()
     {
         ToggleBuildMode();
         HandleMouseInput();
+        UpdateBuildPreview();
+    }
+
+    void OnDisable()
+    {
+        ClearBuildPreview();
     }
 
     public void ToggleBuildModeUI()
     {
-        buildMode = !buildMode;
-        Debug.Log("Build mode: " + buildMode);
-        
-        UpdateButtonColor();
+        SetBuildMode(!buildMode);
     }
 
     private void UpdateButtonColor()
@@ -77,37 +86,55 @@ public class GameController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.B))
         {
-            buildMode = !buildMode;
-            Debug.Log("Build mode: " + buildMode);
+            SetBuildMode(!buildMode);
         }
     }
 
     void HandleMouseInput()
     {
-        if (!buildMode)
+        if (!buildMode || IsPointerOverUI())
             return;
 
         if (Input.GetMouseButtonDown(0))
         {
-            PlaceRoad();
+            PlaceRoadAtMousePosition();
+            lastDraggedRoadCell = GetMouseCellPosition();
+            return;
+        }
+
+        if (Input.GetMouseButton(0))
+        {
+            Vector3Int cellPos = GetMouseCellPosition();
+
+            if (cellPos != lastDraggedRoadCell)
+            {
+                PlaceRoad(cellPos);
+                lastDraggedRoadCell = cellPos;
+            }
+            return;
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            lastDraggedRoadCell = InvalidCellPosition;
         }
     }
 
-    void PlaceRoad()
+    void PlaceRoadAtMousePosition()
     {
-        // Convert mouse position to world position
+        PlaceRoad(GetMouseCellPosition());
+    }
+
+    Vector3Int GetMouseCellPosition()
+    {
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         worldPos.z = 0f;
+        return roadTilemap.WorldToCell(worldPos);
+    }
 
-        // Convert world position to tile cell
-        Vector3Int cellPos = roadTilemap.WorldToCell(worldPos);
-
-        // Only place road if ground exists under it
-        if (!groundTilemap.HasTile(cellPos))
-            return;
-
-        // Prevent placing road twice
-        if (roadTilemap.HasTile(cellPos))
+    void PlaceRoad(Vector3Int cellPos)
+    {
+        if (!CanBuildRoadAt(cellPos))
             return;
 
         // Place the road tile
@@ -118,6 +145,68 @@ public class GameController : MonoBehaviour
         roadTilemap.SetTile(cellPos, defaultRoadTile);
         UpdateRoadTiles(cellPos);
         Debug.Log("Placed road at: " + cellPos);
+    }
+
+    void SetBuildMode(bool enabled)
+    {
+        buildMode = enabled;
+        Debug.Log("Build mode: " + buildMode);
+        UpdateButtonColor();
+
+        if (!buildMode)
+        {
+            lastDraggedRoadCell = InvalidCellPosition;
+            ClearBuildPreview();
+        }
+    }
+
+    void UpdateBuildPreview()
+    {
+        if (!buildMode || IsPointerOverUI())
+        {
+            ClearBuildPreview();
+            return;
+        }
+
+        Vector3Int cellPos = GetMouseCellPosition();
+        if (!CanBuildRoadAt(cellPos))
+        {
+            ClearBuildPreview();
+            return;
+        }
+
+        if (hasPreviewedBuildCell && previewedBuildCell == cellPos)
+            return;
+
+        ClearBuildPreview();
+
+        previewedBuildCell = cellPos;
+        previewedBuildCellFlags = groundTilemap.GetTileFlags(cellPos);
+        groundTilemap.RemoveTileFlags(cellPos, TileFlags.LockColor);
+        groundTilemap.SetColor(cellPos, BuildPreviewColor);
+        hasPreviewedBuildCell = true;
+    }
+
+    void ClearBuildPreview()
+    {
+        if (!hasPreviewedBuildCell)
+            return;
+
+        groundTilemap.RemoveTileFlags(previewedBuildCell, TileFlags.LockColor);
+        groundTilemap.SetColor(previewedBuildCell, Color.white);
+        groundTilemap.SetTileFlags(previewedBuildCell, previewedBuildCellFlags);
+        previewedBuildCell = InvalidCellPosition;
+        hasPreviewedBuildCell = false;
+    }
+
+    bool CanBuildRoadAt(Vector3Int cellPos)
+    {
+        return groundTilemap.HasTile(cellPos) && !roadTilemap.HasTile(cellPos);
+    }
+
+    bool IsPointerOverUI()
+    {
+        return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
     }
 
     void UpdateRoadTiles(Vector3Int centerCell)
