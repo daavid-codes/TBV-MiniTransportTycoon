@@ -75,11 +75,20 @@ public class GameController : MonoBehaviour
     private readonly List<Vector3Int> previewedBuildCells = new List<Vector3Int>();
     private readonly List<TileFlags> previewedBuildCellFlags = new List<TileFlags>();
     private readonly HashSet<Vector3Int> occupiedGarageCells = new HashSet<Vector3Int>();
+    private readonly List<Vector3Int> pendingCarStopSelections = new List<Vector3Int>(2);
+    private readonly List<Vector3Int> roadCoordinates = new List<Vector3Int>();
+    private readonly HashSet<Vector3Int> roadCoordinateLookup = new HashSet<Vector3Int>();
     private bool pointerStartedOverUI;
+
+    void Awake()
+    {
+        RefreshRoadCoordinates();
+    }
 
     void Update()
     {
         HandleNavigationModeHotkeys();
+        SyncCarPlacementSelectionState();
         HandleMouseInput();
         UpdateBuildPreview();
     }
@@ -87,6 +96,7 @@ public class GameController : MonoBehaviour
     void OnDisable()
     {
         ClearBuildPreview();
+        ClearPendingCarStopSelections();
     }
 
     public void ToggleBuildModeUI()
@@ -297,6 +307,7 @@ public class GameController : MonoBehaviour
             return;
 
         roadTilemap.SetTile(cellPos, defaultRoadTile);
+        RegisterRoadCoordinate(cellPos);
         UpdateRoadTiles(cellPos);
         Debug.Log("Placed road at: " + cellPos);
         // Pénz levonása és az erőforrások kezelése itt történik majd
@@ -315,6 +326,7 @@ public class GameController : MonoBehaviour
         lastDraggedRoadCell = InvalidCellPosition;
         pointerStartedOverUI = false;
         ClearBuildPreview();
+        ClearPendingCarStopSelections();
     }
 
     void UpdateBuildPreview()
@@ -367,13 +379,13 @@ public class GameController : MonoBehaviour
 
     bool CanBuildRoadAt(Vector3Int cellPos)
     {
-        return groundTilemap.HasTile(cellPos) && !roadTilemap.HasTile(cellPos);
+        return groundTilemap.HasTile(cellPos) && !IsRoadCoordinate(cellPos);
     }
 
     bool CanBuildBusStopAt(Vector3Int cellPos)
     {
         return groundTilemap.HasTile(cellPos)
-            && !roadTilemap.HasTile(cellPos)
+            && !IsRoadCoordinate(cellPos)
             && busStopTilemap != null
             && !busStopTilemap.HasTile(cellPos)
             && HasAdjacentRoad(cellPos);
@@ -393,7 +405,7 @@ public class GameController : MonoBehaviour
             if (!groundTilemap.HasTile(cellPos))
                 return false;
 
-            if (roadTilemap.HasTile(cellPos))
+            if (IsRoadCoordinate(cellPos))
                 return false;
 
             if (busStopTilemap != null && busStopTilemap.HasTile(cellPos))
@@ -408,15 +420,15 @@ public class GameController : MonoBehaviour
 
     bool CanPlaceCarAt(Vector3Int cellPos)
     {
-        return roadTilemap != null && roadTilemap.HasTile(cellPos);
+        return IsRoadCoordinate(cellPos);
     }
 
     bool HasAdjacentRoad(Vector3Int cellPos)
     {
-        return roadTilemap.HasTile(cellPos + Vector3Int.up)
-            || roadTilemap.HasTile(cellPos + Vector3Int.right)
-            || roadTilemap.HasTile(cellPos + Vector3Int.down)
-            || roadTilemap.HasTile(cellPos + Vector3Int.left);
+        return IsRoadCoordinate(cellPos + Vector3Int.up)
+            || IsRoadCoordinate(cellPos + Vector3Int.right)
+            || IsRoadCoordinate(cellPos + Vector3Int.down)
+            || IsRoadCoordinate(cellPos + Vector3Int.left);
     }
 
     void PlaceBusStopAtMousePosition()
@@ -431,7 +443,13 @@ public class GameController : MonoBehaviour
 
     void PlaceCarAtMousePosition()
     {
-        PlaceCar(GetMouseCellPosition());
+        if (busStopTilemap == null)
+        {
+            Debug.LogWarning("Cannot place car because busStopTilemap is not assigned.");
+            return;
+        }
+
+        SelectCarStop(GetMouseCellPosition(busStopTilemap));
     }
 
     void PlaceCar(Vector3Int cellPos)
@@ -448,8 +466,73 @@ public class GameController : MonoBehaviour
         Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(cellPos);
         spawnPosition.z = carPrefab.transform.position.z;
 
-        Instantiate(carPrefab, spawnPosition, carPrefab.transform.rotation);
+        Car carInstance = Instantiate(carPrefab, spawnPosition, carPrefab.transform.rotation);
+        carInstance.SetRoadTilemap(roadTilemap);
         Debug.Log("Placed car at: " + cellPos);
+    }
+
+    void SelectCarStop(Vector3Int stopCellPos)
+    {
+        if (busStopTilemap == null || !busStopTilemap.HasTile(stopCellPos))
+        {
+            Debug.Log("Click a bus stop to select a car route.");
+            return;
+        }
+
+        if (pendingCarStopSelections.Contains(stopCellPos))
+        {
+            Debug.LogWarning("Select two different bus stops for the car route.");
+            return;
+        }
+
+        pendingCarStopSelections.Add(stopCellPos);
+        Debug.Log("Selected car stop " + pendingCarStopSelections.Count + "/2 at: " + stopCellPos);
+
+        if (pendingCarStopSelections.Count < 2)
+            return;
+
+        TryPlaceCarFromSelectedStops(pendingCarStopSelections[0], pendingCarStopSelections[1]);
+        ClearPendingCarStopSelections();
+    }
+
+    bool TryPlaceCarFromSelectedStops(Vector3Int firstStopCell, Vector3Int secondStopCell)
+    {
+        if (carPrefab == null)
+        {
+            Debug.LogWarning("Cannot place car because carPrefab is not assigned.");
+            return false;
+        }
+
+        if (!TryGetClosestRoadTile(firstStopCell, out Vector3Int spawnRoadCell))
+        {
+            Debug.LogWarning("Cannot place car because no road was found near the first selected bus stop.");
+            return false;
+        }
+
+        if (!TryGetClosestRoadTile(secondStopCell, out Vector3Int destinationRoadCell))
+        {
+            Debug.LogWarning("Cannot place car because no road was found near the second selected bus stop.");
+            return false;
+        }
+
+        List<Vector3Int> fullRoadRoute = FindRoadPath(spawnRoadCell, destinationRoadCell);
+
+        if (fullRoadRoute == null)
+        {
+            Debug.LogWarning("Cannot place car because there is no connected road path between the selected bus stops.");
+            return false;
+        }
+
+        Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(spawnRoadCell);
+        spawnPosition.z = carPrefab.transform.position.z;
+
+        Car carInstance = Instantiate(carPrefab, spawnPosition, carPrefab.transform.rotation);
+        carInstance.SetRoadTilemap(roadTilemap);
+        carInstance.SetRoadCoordinates(roadCoordinates);
+        carInstance.SetStopRoute(new List<Vector3Int> { firstStopCell, secondStopCell });
+        carInstance.SetShuttleRoute(fullRoadRoute);
+        Debug.Log("Placed car at: " + spawnRoadCell + " with stops: " + firstStopCell + " -> " + secondStopCell);
+        return true;
     }
 
     void PlaceBusStop(Vector3Int cellPos)
@@ -505,16 +588,72 @@ public class GameController : MonoBehaviour
         return busStopUpTile ?? busStopRightTile ?? busStopDownTile ?? busStopLeftTile;
     }
 
+    bool TryGetClosestRoadTile(Vector3Int startCell, out Vector3Int roadCell)
+    {
+        roadCell = InvalidCellPosition;
+
+        if (roadTilemap == null)
+            return false;
+
+        if (IsRoadCoordinate(startCell))
+        {
+            roadCell = startCell;
+            return true;
+        }
+
+        for (int i = 0; i < RoadNeighborOffsets.Length; i++)
+        {
+            Vector3Int adjacentCell = startCell + RoadNeighborOffsets[i];
+
+            if (IsRoadCoordinate(adjacentCell))
+            {
+                roadCell = adjacentCell;
+                return true;
+            }
+        }
+
+        Queue<Vector3Int> queue = new Queue<Vector3Int>();
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
+        queue.Enqueue(startCell);
+        visited.Add(startCell);
+
+        while (queue.Count > 0)
+        {
+            Vector3Int current = queue.Dequeue();
+
+            for (int i = 0; i < RoadNeighborOffsets.Length; i++)
+            {
+                Vector3Int next = current + RoadNeighborOffsets[i];
+
+                if (!visited.Add(next))
+                    continue;
+
+                if (IsRoadCoordinate(next))
+                {
+                    roadCell = next;
+                    return true;
+                }
+
+                if (groundTilemap.HasTile(next))
+                {
+                    queue.Enqueue(next);
+                }
+            }
+        }
+
+        return false;
+    }
+
     Vector3Int GetNearestRoadDirection(Vector3Int cellPos)
     {
         // Direct adjacency has highest priority, then radius search.
-        if (roadTilemap.HasTile(cellPos + Vector3Int.up))
+        if (IsRoadCoordinate(cellPos + Vector3Int.up))
             return Vector3Int.up;
-        if (roadTilemap.HasTile(cellPos + Vector3Int.right))
+        if (IsRoadCoordinate(cellPos + Vector3Int.right))
             return Vector3Int.right;
-        if (roadTilemap.HasTile(cellPos + Vector3Int.down))
+        if (IsRoadCoordinate(cellPos + Vector3Int.down))
             return Vector3Int.down;
-        if (roadTilemap.HasTile(cellPos + Vector3Int.left))
+        if (IsRoadCoordinate(cellPos + Vector3Int.left))
             return Vector3Int.left;
 
         // BFS to nearest road tile
@@ -533,7 +672,7 @@ public class GameController : MonoBehaviour
                 if (visited.Contains(next))
                     continue;
 
-                if (roadTilemap.HasTile(next))
+                if (IsRoadCoordinate(next))
                 {
                     Vector3Int diff = next - cellPos;
                     if (Mathf.Abs(diff.x) >= Mathf.Abs(diff.y))
@@ -551,6 +690,100 @@ public class GameController : MonoBehaviour
 
         // Default direction if none found
         return Vector3Int.up;
+    }
+
+    List<Vector3Int> FindRoadPath(Vector3Int startCell, Vector3Int endCell)
+    {
+        if (!CanPlaceCarAt(startCell) || !CanPlaceCarAt(endCell))
+            return null;
+
+        Queue<Vector3Int> queue = new Queue<Vector3Int>();
+        Dictionary<Vector3Int, Vector3Int> cameFrom = new Dictionary<Vector3Int, Vector3Int>();
+        queue.Enqueue(startCell);
+        cameFrom[startCell] = InvalidCellPosition;
+
+        while (queue.Count > 0)
+        {
+            Vector3Int current = queue.Dequeue();
+
+            if (current == endCell)
+            {
+                return ReconstructRoadPath(cameFrom, endCell);
+            }
+
+            for (int i = 0; i < RoadNeighborOffsets.Length; i++)
+            {
+                Vector3Int next = current + RoadNeighborOffsets[i];
+
+                if (cameFrom.ContainsKey(next) || !IsRoadCoordinate(next))
+                    continue;
+
+                cameFrom[next] = current;
+                queue.Enqueue(next);
+            }
+        }
+
+        return null;
+    }
+
+    List<Vector3Int> ReconstructRoadPath(Dictionary<Vector3Int, Vector3Int> cameFrom, Vector3Int endCell)
+    {
+        List<Vector3Int> path = new List<Vector3Int>();
+        Vector3Int current = endCell;
+
+        while (current != InvalidCellPosition)
+        {
+            path.Add(current);
+            current = cameFrom[current];
+        }
+
+        path.Reverse();
+        return path;
+    }
+
+    void SyncCarPlacementSelectionState()
+    {
+        if (placeCar && navigationMode == NavigationMode.Camera)
+            return;
+
+        ClearPendingCarStopSelections();
+    }
+
+    void ClearPendingCarStopSelections()
+    {
+        pendingCarStopSelections.Clear();
+    }
+
+    void RefreshRoadCoordinates()
+    {
+        roadCoordinates.Clear();
+        roadCoordinateLookup.Clear();
+
+        if (roadTilemap == null)
+            return;
+
+        BoundsInt cellBounds = roadTilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!roadTilemap.HasTile(cellPos))
+                continue;
+
+            RegisterRoadCoordinate(cellPos);
+        }
+    }
+
+    void RegisterRoadCoordinate(Vector3Int cellPos)
+    {
+        if (!roadCoordinateLookup.Add(cellPos))
+            return;
+
+        roadCoordinates.Add(cellPos);
+    }
+
+    bool IsRoadCoordinate(Vector3Int cellPos)
+    {
+        return roadCoordinateLookup.Contains(cellPos);
     }
 
     bool IsPointerOverUI()
@@ -637,7 +870,7 @@ public class GameController : MonoBehaviour
                 if (footprint.Contains(neighborCell))
                     continue;
 
-                if (roadTilemap.HasTile(neighborCell))
+                if (IsRoadCoordinate(neighborCell))
                     return true;
             }
         }
@@ -653,7 +886,7 @@ public class GameController : MonoBehaviour
         {
             Vector3Int neighborCell = centerCell + RoadNeighborOffsets[i];
 
-            if (roadTilemap.HasTile(neighborCell))
+            if (IsRoadCoordinate(neighborCell))
             {
                 UpdateRoadTile(neighborCell);
             }
@@ -662,7 +895,7 @@ public class GameController : MonoBehaviour
 
     void UpdateRoadTile(Vector3Int cellPos)
     {
-        if (!roadTilemap.HasTile(cellPos))
+        if (!IsRoadCoordinate(cellPos))
             return;
 
         TileBase roadTile = GetRoadTileForMask(GetRoadNeighborMask(cellPos));
@@ -677,16 +910,16 @@ public class GameController : MonoBehaviour
     {
         int mask = 0;
 
-        if (roadTilemap.HasTile(cellPos + Vector3Int.up))
+        if (IsRoadCoordinate(cellPos + Vector3Int.up))
             mask |= 1;
 
-        if (roadTilemap.HasTile(cellPos + Vector3Int.right))
+        if (IsRoadCoordinate(cellPos + Vector3Int.right))
             mask |= 2;
 
-        if (roadTilemap.HasTile(cellPos + Vector3Int.down))
+        if (IsRoadCoordinate(cellPos + Vector3Int.down))
             mask |= 4;
 
-        if (roadTilemap.HasTile(cellPos + Vector3Int.left))
+        if (IsRoadCoordinate(cellPos + Vector3Int.left))
             mask |= 8;
 
         return mask;
