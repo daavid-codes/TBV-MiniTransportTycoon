@@ -3,10 +3,6 @@ using UnityEngine;
 
 public class Car : Vehicle
 {
-    [Header("Example Route")]
-    [SerializeField] private bool useExampleRouteOnStart = true;
-    [SerializeField] private List<Vector3Int> exampleRoute = new List<Vector3Int>();
-
     private List<Vector3Int> shuttleRouteForward = new List<Vector3Int>();
     private List<Vector3Int> shuttleRouteBackward = new List<Vector3Int>();
     private bool useShuttleRoute;
@@ -20,12 +16,7 @@ public class Car : Vehicle
     protected override void Start()
     {
         base.Start();
-        EnsureExampleRoute();
 
-        if (useExampleRouteOnStart && !HasAssignedRoute)
-        {
-            SetRoute(exampleRoute);
-        }
     }
 
     protected override void Update()
@@ -72,20 +63,11 @@ public class Car : Vehicle
     private void Reset()
     {
         type = CarType.Car;
-        SetDefaultExampleRoute();
     }
 
     private void OnValidate()
     {
         type = CarType.Car;
-        EnsureExampleRoute();
-    }
-
-    [ContextMenu("Load Example Route")]
-    private void LoadExampleRoute()
-    {
-        EnsureExampleRoute();
-        SetRoute(exampleRoute);
     }
 
     private void StartNextShuttleLeg()
@@ -117,30 +99,5 @@ public class Car : Vehicle
         }
 
         return leg;
-    }
-
-    private void EnsureExampleRoute()
-    {
-        if (exampleRoute == null)
-        {
-            exampleRoute = new List<Vector3Int>();
-        }
-
-        if (exampleRoute.Count == 0)
-        {
-            SetDefaultExampleRoute();
-        }
-    }
-
-    private void SetDefaultExampleRoute()
-    {
-        exampleRoute = new List<Vector3Int>
-        {
-            new Vector3Int(0, 7, 0),
-            new Vector3Int(1, 7, 0),
-            new Vector3Int(2, 7, 0),
-            new Vector3Int(3, 7, 0),
-            new Vector3Int(4, 7, 0)
-        };
     }
 }

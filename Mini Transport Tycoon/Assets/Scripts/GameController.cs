@@ -60,8 +60,8 @@ public class GameController : MonoBehaviour
     [SerializeField] private TileBase garageTile;
 
     [Header("Vehicle Placement")]
-    [SerializeField] private bool placeCar = false;
-    [SerializeField] private Car carPrefab;
+    [SerializeField] private bool placeBus= false;
+    [SerializeField] private Bus busPrefab;
 
     [Header("Navigation")]
     [SerializeField] private NavigationMode navigationMode = NavigationMode.Camera;
@@ -170,7 +170,7 @@ public class GameController : MonoBehaviour
     void HandleMouseInput()
     {
         bool isCameraMode = navigationMode == NavigationMode.Camera;
-        bool canPlaceCarInCurrentMode = placeCar && navigationMode == NavigationMode.Camera;
+        bool canPlaceCarInCurrentMode = placeBus&& navigationMode == NavigationMode.Camera;
 
         if (!IsBuildPlacementMode() && !isCameraMode)
             return;
@@ -457,16 +457,16 @@ public class GameController : MonoBehaviour
         if (!CanPlaceCarAt(cellPos))
             return;
 
-        if (carPrefab == null)
+        if (busPrefab == null)
         {
-            Debug.LogWarning("Cannot place car because carPrefab is not assigned.");
+            Debug.LogWarning("Cannot place car because busPrefab is not assigned.");
             return;
         }
 
         Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(cellPos);
-        spawnPosition.z = carPrefab.transform.position.z;
+        spawnPosition.z = busPrefab.transform.position.z;
 
-        Car carInstance = Instantiate(carPrefab, spawnPosition, carPrefab.transform.rotation);
+        Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
         Debug.Log("Placed car at: " + cellPos);
     }
@@ -497,9 +497,9 @@ public class GameController : MonoBehaviour
 
     bool TryPlaceCarFromSelectedStops(Vector3Int firstStopCell, Vector3Int secondStopCell)
     {
-        if (carPrefab == null)
+        if (busPrefab == null)
         {
-            Debug.LogWarning("Cannot place car because carPrefab is not assigned.");
+            Debug.LogWarning("Cannot place car because busPrefab is not assigned.");
             return false;
         }
 
@@ -524,9 +524,9 @@ public class GameController : MonoBehaviour
         }
 
         Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(spawnRoadCell);
-        spawnPosition.z = carPrefab.transform.position.z;
+        spawnPosition.z = busPrefab.transform.position.z;
 
-        Car carInstance = Instantiate(carPrefab, spawnPosition, carPrefab.transform.rotation);
+        Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
         carInstance.SetRoadCoordinates(roadCoordinates);
         carInstance.SetStopRoute(new List<Vector3Int> { firstStopCell, secondStopCell });
@@ -743,7 +743,7 @@ public class GameController : MonoBehaviour
 
     void SyncCarPlacementSelectionState()
     {
-        if (placeCar && navigationMode == NavigationMode.Camera)
+        if (placeBus&& navigationMode == NavigationMode.Camera)
             return;
 
         ClearPendingCarStopSelections();
