@@ -6,7 +6,7 @@ public class CopperRefinery : Facility
 {
     public CopperRefinery(int x, int y, Orientation o, int area) : base(x, y, o, area)
     {
-
+        resourceType = COPPER;
     }
 
     public override void produce(Game game)

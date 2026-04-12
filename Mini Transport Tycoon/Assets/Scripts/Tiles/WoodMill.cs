@@ -6,7 +6,7 @@ public class WoodMIll : Facility
 {
     public WoodMill(int x, int y, Orientation o, int area) : base(x, y, o, area)
     {
-
+        resourceType = WOOD;
     }
 
     public override void produce(Game game)

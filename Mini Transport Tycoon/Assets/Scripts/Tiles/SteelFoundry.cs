@@ -6,7 +6,7 @@ public class SteelFoundry : Facility
 {
     public SteelFoundry(int x, int y, Orientation o, int area) : base(x, y, o, area)
     {
-
+        resourceType = STEEL;
     }
 
     public override void produce(Game game)
