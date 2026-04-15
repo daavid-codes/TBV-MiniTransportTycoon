@@ -1,5 +1,6 @@
 {
-    "name": "MiniTransportTycoon.Runtime",
+    "name": "Scripts",
+    "rootNamespace": "",
     "references": [
         "Unity.TextMeshPro",
         "UnityEngine.UI"

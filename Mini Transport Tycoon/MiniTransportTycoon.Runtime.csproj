@@ -82,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets/Scripts/MiniTransportTycoon.Runtime.asmdef" />
+    <None Include="Assets/Scripts/Scripts.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
