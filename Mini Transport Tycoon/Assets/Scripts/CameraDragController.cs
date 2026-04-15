@@ -5,7 +5,6 @@ using UnityEngine;
 public class CameraDragController : MonoBehaviour
 {
 
-    /*[SerializeField], ha azt akarod, hogy csak ez a class lássa, és látható legyen inspectorban; egyébként mindenki láthatja*/
     private float dragSpeed = 2.0f;
     private Vector3 dragOrigin;
 
@@ -31,12 +30,12 @@ public class CameraDragController : MonoBehaviour
 
     void HandleDrag()
     {
-        if (Input.GetMouseButtonDown(2))//a "2" a görgetögomb; ha a jobbklikk kell, akkor "1"
+        if (Input.GetMouseButtonDown(0))
         {
             dragOrigin = Input.mousePosition;
         }
 
-        if (Input.GetMouseButton(2))//amíg le van nyomva
+        if (Input.GetMouseButton(0))
         {
             Vector3 difference = (Camera.main.ScreenToWorldPoint(dragOrigin) - Camera.main.ScreenToWorldPoint(Input.mousePosition)) * dragSpeed;
 
