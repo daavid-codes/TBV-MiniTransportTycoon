@@ -32,6 +32,7 @@ public abstract class Vehicle : MonoBehaviour
     protected Vector3 targetPosition;
     protected bool isMoving;
     protected bool hasAssignedRoute;
+    protected virtual float DeltaTime => Time.deltaTime;
 
     protected virtual void Start()
     {
@@ -114,7 +115,7 @@ public abstract class Vehicle : MonoBehaviour
             return;
         }
 
-        float tileSpeed = speed * Time.deltaTime;
+        float tileSpeed = speed * DeltaTime;
         movementProgress += tileSpeed;
 
         if (movementProgress >= 1f)
