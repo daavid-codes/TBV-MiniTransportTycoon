@@ -14,11 +14,19 @@ public class CameraDragController : MonoBehaviour
     private float maxZoom = 10.0f;
     private float scroll;
 
+    private float minX = -80f;
+    private float maxX = 80f;
+    private float minY = -48f;
+    private float maxY = 40f;
+    private float clampedX;
+    private float clampedY;
+
     // Update is called once per frame
     void Update()
     {
         HandleDrag();
         HandleZoom();
+        ClampCamera();
     }
 
     void HandleDrag()
@@ -42,5 +50,11 @@ public class CameraDragController : MonoBehaviour
         scroll = Input.GetAxis("Mouse ScrollWheel");
         Camera.main.orthographicSize -= scroll * zoomSpeed;
         Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize, minZoom, maxZoom);
+    }
+
+    void ClampCamera() {
+        clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
+        clampedY = Mathf.Clamp(transform.position.y, minY, maxY);
+        transform.position = new Vector3(clampedX, clampedY, transform.position.z);
     }
 }
