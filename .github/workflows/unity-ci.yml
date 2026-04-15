@@ -12,27 +12,38 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache Library
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: Library
-          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          path: Mini Transport Tycoon/Library
+          key: Library-${{ hashFiles('Mini Transport Tycoon/Assets/**', 'Mini Transport Tycoon/Packages/**', 'Mini Transport Tycoon/ProjectSettings/**') }}
 
       - name: Build project
         uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          unityVersion: 2022.3.10f1
+          unityVersion: 2022.3.62f3
           targetPlatform: StandaloneWindows64
+          projectPath: Mini Transport Tycoon
 
       - name: Upload build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Build
           path: build
       
       - name: Run tests
         uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          unityVersion: 2022.3.10f1
+          unityVersion: 2022.3.62f3
+          projectPath: Mini Transport Tycoon
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
