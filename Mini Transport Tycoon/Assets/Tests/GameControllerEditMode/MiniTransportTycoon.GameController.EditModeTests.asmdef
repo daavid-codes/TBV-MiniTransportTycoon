@@ -6,7 +6,6 @@
         "UnityEngine.EventSystems",
         "Unity.TextMeshPro",
         "nunit.framework",
-        "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
     "includePlatforms": [
@@ -20,7 +19,5 @@
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false,
-    "optionalUnityReferences": [
-        "TestAssemblies"
-    ]
+    "optionalUnityReferences": []
 }
