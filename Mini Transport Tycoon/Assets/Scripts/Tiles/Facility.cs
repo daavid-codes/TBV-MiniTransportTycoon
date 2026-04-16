@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Facility : Site
+public abstract class Facility : Site
 {
-    private int callCount;
-    private float productivityMultiplier;
+    protected int callCount { get; set; }
+    protected float productivityMultiplier { get; set; }
 
     public Facility(int x, int y, Orientation o) : base(x, y, o)
     {
@@ -16,7 +16,7 @@ public class Facility : Site
         productivityMultiplier = 1.0f;
     }
 
-    private void updateProductivity()
+    protected void updateProductivity()
     {
         if (callCount < 120)
         {
@@ -30,5 +30,5 @@ public class Facility : Site
         callCount += 1;
     }
 
-    public abstract void produce(Game game);
+    public abstract void produce(GameData game);
 }

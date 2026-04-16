@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BridgeField : MonoBehaviour
+public class BridgeField : Field
 {
-    private int maxDistance;
-    private int maxSpeed { get; }
+    protected int maxDistance;
+    protected int maxSpeed { get; }
 
     public BridgeField(int x, int y, Orientation o) : base(x, y, o)
     {

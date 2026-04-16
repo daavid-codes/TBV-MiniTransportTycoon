@@ -4,15 +4,15 @@ using UnityEngine;
 
 public class PaperFactory : Facility
 {
-    public PaperFactory(int x, int y, Orientation o, int area) : base(x, y, o, area)
+    public PaperFactory(int x, int y, Orientation o) : base(x, y, o)
     {
-        resourceType = PAPER;
+        resourceType = Resource.PAPER;
     }
 
-    public override void produce(Game game)
+    public override void produce(GameData game)
     {
         updateProductivity();
         //game.iron += (int)(resourceAmount * productivityMultiplier);
-        game.setPaper(game.getPaper() + (int)(resourceAmount * productivityMultiplier));
+        //game.setPaper(game.getPaper() + (int)(resourceAmount * productivityMultiplier));
     }
 }

@@ -2,17 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WoodMIll : Facility
+public class WoodMill : Facility
 {
-    public WoodMill(int x, int y, Orientation o, int area) : base(x, y, o, area)
+    public WoodMill(int x, int y, Orientation o) : base(x, y, o)
     {
-        resourceType = WOOD;
+        resourceType = Resource.WOOD;
     }
 
-    public override void produce(Game game)
+    public override void produce(GameData game)
     {
         updateProductivity();
         //game.iron += (int)(resourceAmount * productivityMultiplier);
-        game.setWood(game.getWood() + (int)(resourceAmount * productivityMultiplier));
+        //game.setWood(game.getWood() + (int)(resourceAmount * productivityMultiplier));
     }
 }

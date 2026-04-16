@@ -4,10 +4,10 @@ using UnityEngine;
 
 public abstract class Field
 {
-    private int x;
-    private int y;
-    private Orientation orientation;
-    private int cost { get; }
+    protected int x;
+    protected int y;
+    protected Orientation orientation;
+    protected int cost { get; set; }
 
     public Field(int x, int y, Orientation orientation)
     {

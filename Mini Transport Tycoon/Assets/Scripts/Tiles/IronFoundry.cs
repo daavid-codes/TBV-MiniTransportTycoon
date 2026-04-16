@@ -4,15 +4,15 @@ using UnityEngine;
 
 public class IronFoundry : Facility
 {
-    public IronFoundry(int x, int y, Orientation o, int area) : base(x, y, o, area)
+    public IronFoundry(int x, int y, Orientation o) : base(x, y, o)
     {
-        resourceType = IRON;
+        resourceType = Resource.IRON;
     }
 
-    public override void produce(Game game)
+    public override void produce(GameData game)
     {
         updateProductivity();
         //game.iron += (int)(resourceAmount * productivityMultiplier);
-        game.setIron(game.getIron() + (int)(resourceAmount * productivityMultiplier));
+        //game.setIron(game.getIron() + (int)(resourceAmount * productivityMultiplier));
     }
 }
