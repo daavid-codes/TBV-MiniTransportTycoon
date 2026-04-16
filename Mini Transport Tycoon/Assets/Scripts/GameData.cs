@@ -10,7 +10,8 @@ namespace MiniTransportTycoon
 
     [SerializeField] private int money = 4242;
     [SerializeField] private string cityName = "Kaposvar";
-    [SerializeField] private float timeMultiplier = 0.2f;
+    [SerializeField] private float timeMultiplier = 1;
+    [SerializeField] private bool isPaused = false;
     
     private DateTime currentDate;
 
@@ -44,6 +45,27 @@ namespace MiniTransportTycoon
         }
     }
 
+    public float TimeMultiplier
+    {
+        get { return timeMultiplier; }
+        set
+        {
+            timeMultiplier = value;
+            OnDataChanged?.Invoke();
+        }
+    }
+
+    public bool IsPaused
+    {
+        get { return isPaused; }
+        set
+        {
+            isPaused = value;
+            Time.timeScale = isPaused ? 0f : 1f;
+            OnDataChanged?.Invoke();
+        }
+    }
+
     private void Start()
     {
         currentDate = new DateTime(2026, 1, 1, 8, 0, 0);
@@ -55,7 +77,7 @@ namespace MiniTransportTycoon
     {
         while (true)
         {
-            yield return new WaitForSeconds(timeMultiplier);
+            yield return new WaitForSeconds(1/ (timeMultiplier * 10));
             CurrentDate = CurrentDate.AddMinutes(1);
         }
     }

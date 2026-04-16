@@ -68,8 +68,10 @@ namespace MiniTransportTycoon
     [Header("Navigation")]
     [SerializeField] private NavigationMode navigationMode = NavigationMode.Camera;
 
-    [Header("Build Settings")]
+    [Header("Button Settings")]
     [SerializeField] private Image buildButtonImage;
+    [SerializeField] private Image busStopButtonImage;
+    [SerializeField] private Image garageButtonImage;
     [SerializeField] private Color normalColor = new Color32(250, 233, 215, 255); 
     [SerializeField] private Color activeColor = new Color32(183, 181, 179, 255);
 
@@ -137,6 +139,28 @@ namespace MiniTransportTycoon
             else
             {
                 buildButtonImage.color = normalColor;
+            }
+        }
+        if (busStopButtonImage != null)
+        {
+            if (navigationMode == NavigationMode.StopBuild)
+            {
+                busStopButtonImage.color = activeColor;
+            }
+            else
+            {
+                busStopButtonImage.color = normalColor;
+            }
+        }
+        if (garageButtonImage != null)
+        {
+            if (navigationMode == NavigationMode.GarageBuild)
+            {
+                garageButtonImage.color = activeColor;
+            }
+            else
+            {
+                garageButtonImage.color = normalColor;
             }
         }
     }
