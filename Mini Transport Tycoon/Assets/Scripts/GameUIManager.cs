@@ -37,5 +37,28 @@ namespace MiniTransportTycoon
         if (dateText != null)
             dateText.text = gameData.CurrentDate.ToString("yyyy. MM. dd. HH:mm");
     }
+
+    public void IncreaseTimeMultiplier()
+    {
+        if (gameData.TimeMultiplier < 4f)
+        {
+            gameData.TimeMultiplier *= 2f;
+        }
+    }
+
+    public void DecreaseTimeMultiplier()
+    {
+        if (gameData.TimeMultiplier > 0.25f)
+        {
+            gameData.TimeMultiplier /= 2f;
+        }
+    }
+
+    public void TogglePause()
+    {
+        gameData.IsPaused = !gameData.IsPaused;
+        Time.timeScale = gameData.IsPaused ? 0f : 1f;
+    }
+
     }
 }
