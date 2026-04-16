@@ -1,6 +1,8 @@
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request_target:
 
 permissions:
   contents: write
@@ -9,13 +11,13 @@ permissions:
   pull-requests: write
   packages: write
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: game-ci/unity-test-runner@v4
         env:
