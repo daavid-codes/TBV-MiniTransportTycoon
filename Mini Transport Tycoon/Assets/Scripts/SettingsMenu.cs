@@ -6,8 +6,10 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
 
-public class SettingsMenu : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class SettingsMenu : MonoBehaviour
+    {
     public AudioMixer mixer;
     Resolution[] resolutions;
     public TMP_Dropdown resolutionsDropdown;
@@ -53,6 +55,5 @@ public class SettingsMenu : MonoBehaviour
     {
         Screen.fullScreen = isFullscreen;
     }
-
-
+    }
 }

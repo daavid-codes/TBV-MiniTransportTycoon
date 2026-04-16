@@ -1,8 +1,10 @@
 using UnityEngine;
 using TMPro;
 
-public class UIManager : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class UIManager : MonoBehaviour
+    {
     [SerializeField] private GameData gameData;
     [SerializeField] private TextMeshProUGUI moneyText;
     [SerializeField] private TextMeshProUGUI cityText;
@@ -34,5 +36,6 @@ public class UIManager : MonoBehaviour
 
         if (dateText != null)
             dateText.text = gameData.CurrentDate.ToString("yyyy. MM. dd. HH:mm");
+    }
     }
 }

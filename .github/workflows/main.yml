@@ -1,0 +1,80 @@
+name: Unity CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Run Unity Tests + Code Coverage + Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Unity Tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: Mini Transport Tycoon
+          githubToken: ""                # NE írjon PR kommentet
+          enableCodeCoverage: true       # Code coverage bekapcsolása
+          enableTestReporting: false     # NE próbáljon GitHub API-t hívni
+          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport'
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage
+          path: artifacts/**/CoverageReport
+
+      - name: Static Analysis (Unity)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: Mini Transport Tycoon
+          targetPlatform: StandaloneLinux64
+          buildMethod: UnityEditor.CodeAnalysis.CodeAnalysisRunner.Run
+          versioning: None
+
+  build:
+    name: Build Unity Project
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Unity Project
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: Mini Transport Tycoon
+          targetPlatform: StandaloneWindows64
+          versioning: None
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-windows
+          path: build/StandaloneWindows64

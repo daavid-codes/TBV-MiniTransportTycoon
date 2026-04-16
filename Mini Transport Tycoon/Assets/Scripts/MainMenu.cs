@@ -2,8 +2,10 @@ using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class MainMenu : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class MainMenu : MonoBehaviour
+    {
     public void PlayGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
@@ -16,8 +18,8 @@ public class MainMenu : MonoBehaviour
     }
 
     /*
-     * Pszeudókód a jövöre tekintettel
-     * azért "jövöre" mert némely karaktereket nem szereti a visual studio code 2022
+     * Pszeudï¿½kï¿½d a jï¿½vï¿½re tekintettel
+     * azï¿½rt "jï¿½vï¿½re" mert nï¿½mely karaktereket nem szereti a visual studio code 2022
      * 
      public void Awake() {
         if (CheckForSaveFiles())
@@ -45,4 +47,5 @@ public class MainMenu : MonoBehaviour
     }
      */
 
+    }
 }

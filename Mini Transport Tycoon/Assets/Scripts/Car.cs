@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Car : Vehicle
+namespace MiniTransportTycoon
 {
+    public class Car : Vehicle
+    {
     private List<Vector3Int> shuttleRouteForward = new List<Vector3Int>();
     private List<Vector3Int> shuttleRouteBackward = new List<Vector3Int>();
     private bool useShuttleRoute;
@@ -99,5 +101,6 @@ public class Car : Vehicle
         }
 
         return leg;
+    }
     }
 }

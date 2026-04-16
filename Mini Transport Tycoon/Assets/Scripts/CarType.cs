@@ -1,7 +1,10 @@
-public enum CarType
+namespace MiniTransportTycoon
 {
-    Bus,
-    Taxi,
-    Truck,
-    Car
+    public enum CarType
+    {
+        Bus,
+        Taxi,
+        Truck,
+        Car
+    }
 }

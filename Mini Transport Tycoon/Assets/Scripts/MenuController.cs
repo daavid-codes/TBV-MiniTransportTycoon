@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class MenuController : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class MenuController : MonoBehaviour
+    {
     public GameObject vehicleSubMenu;
     public GameObject bridgeSubMenu;
 
@@ -36,5 +38,5 @@ public class MenuController : MonoBehaviour
             Debug.LogWarning($"Scene index {sceneIndex} is out of range!");
         }
     }
-    
+    }
 }

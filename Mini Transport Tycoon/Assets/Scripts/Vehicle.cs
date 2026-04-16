@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public abstract class Vehicle : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public abstract class Vehicle : MonoBehaviour
+    {
     [SerializeField] protected TileBase carSprite;
     [SerializeField] protected float speed;
     [SerializeField] protected int age;
@@ -32,6 +34,7 @@ public abstract class Vehicle : MonoBehaviour
     protected Vector3 targetPosition;
     protected bool isMoving;
     protected bool hasAssignedRoute;
+    protected virtual float DeltaTime => Time.deltaTime;
 
     protected virtual void Start()
     {
@@ -114,7 +117,7 @@ public abstract class Vehicle : MonoBehaviour
             return;
         }
 
-        float tileSpeed = speed * Time.deltaTime;
+        float tileSpeed = speed * DeltaTime;
         movementProgress += tileSpeed;
 
         if (movementProgress >= 1f)
@@ -204,4 +207,5 @@ public abstract class Vehicle : MonoBehaviour
     public List<Vector3Int> StopRoute => stopRoute;
     public bool IsMoving => isMoving;
     public bool HasAssignedRoute => hasAssignedRoute;
+    }
 }

@@ -1,8 +1,10 @@
 using UnityEngine;
 using TMPro;
 
-public class TopBarManager : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class TopBarManager : MonoBehaviour
+    {
     public TextMeshProUGUI cityNameText;
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI dateText;
@@ -12,5 +14,6 @@ public class TopBarManager : MonoBehaviour
         cityNameText.text = cityName;
         moneyText.text = $"${money:N0}";
         dateText.text = date;
+    }
     }
 }
