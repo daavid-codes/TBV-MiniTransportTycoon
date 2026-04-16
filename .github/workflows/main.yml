@@ -12,6 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v4
 
       - uses: game-ci/unity-test-runner@v4
@@ -32,3 +33,4 @@ jobs:
           targetPlatform: StandaloneWindows64
           unityVersion: 2022.3.62f3
           projectPath: Mini Transport Tycoon
+          versioning: None
