@@ -65,8 +65,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_UiFrameRateCounter.cs" />
-    <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TextMeshSpawner.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark01.cs" />
+    <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TextMeshSpawner.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/VertexZoom.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextEventHandler.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark02.cs" />
@@ -1122,7 +1122,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="MiniTransportTycoon.Runtime.csproj" />
+    <ProjectReference Include="Scripts.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>

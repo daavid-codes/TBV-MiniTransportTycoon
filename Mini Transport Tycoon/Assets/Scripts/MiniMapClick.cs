@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MiniMapClick : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class MiniMapClick : MonoBehaviour
+    {
     [SerializeField] private Camera minimapCamera;
     [SerializeField] private Camera mainCamera;
     private RectTransform rect;
@@ -39,5 +41,6 @@ public class MiniMapClick : MonoBehaviour
 
         worldPoint.z = mainCamera.transform.position.z;
         mainCamera.transform.position = worldPoint;
+    }
     }
 }

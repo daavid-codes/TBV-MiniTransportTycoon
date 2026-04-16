@@ -1,8 +1,11 @@
-public enum NavigationMode
+namespace MiniTransportTycoon
 {
-    Camera,
-    RoadBuild,
-    StopBuild,
-    GarageBuild,
-    Destroy
+    public enum NavigationMode
+    {
+        Camera,
+        RoadBuild,
+        StopBuild,
+        GarageBuild,
+        Destroy
+    }
 }

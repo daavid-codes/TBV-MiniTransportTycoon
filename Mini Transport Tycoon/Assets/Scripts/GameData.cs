@@ -2,8 +2,10 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class GameData : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class GameData : MonoBehaviour
+    {
     public event Action OnDataChanged;
 
     [SerializeField] private int money = 4242;
@@ -56,5 +58,6 @@ public class GameData : MonoBehaviour
             yield return new WaitForSeconds(timeMultiplier);
             CurrentDate = CurrentDate.AddMinutes(1);
         }
+    }
     }
 }

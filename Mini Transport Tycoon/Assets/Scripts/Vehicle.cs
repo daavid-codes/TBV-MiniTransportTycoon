@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public abstract class Vehicle : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public abstract class Vehicle : MonoBehaviour
+    {
     [SerializeField] protected TileBase carSprite;
     [SerializeField] protected float speed;
     [SerializeField] protected int age;
@@ -205,4 +207,5 @@ public abstract class Vehicle : MonoBehaviour
     public List<Vector3Int> StopRoute => stopRoute;
     public bool IsMoving => isMoving;
     public bool HasAssignedRoute => hasAssignedRoute;
+    }
 }

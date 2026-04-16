@@ -6,6 +6,10 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
+using MiniTransportTycoon;
+
+namespace MiniTransportTycoon
+{
     public class GameControllerTests
     {
         private const BindingFlags InstanceFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
@@ -467,3 +471,4 @@ using UnityEngine.UI;
             public Tile GarageTile;
         }
     }
+}

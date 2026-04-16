@@ -5,8 +5,10 @@ using UnityTilemap = UnityEngine.Tilemaps.Tilemap;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class GameController : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class GameController : MonoBehaviour
+    {
     private static readonly Vector3Int InvalidCellPosition = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
     private static readonly Vector3Int[] RoadNeighborOffsets =
     {
@@ -985,5 +987,6 @@ public class GameController : MonoBehaviour
             ?? roadTJunctionDownLeftUpTile
             ?? roadTJunctionLeftUpRightTile
             ?? roadIntersectionTile;
+    }
     }
 }

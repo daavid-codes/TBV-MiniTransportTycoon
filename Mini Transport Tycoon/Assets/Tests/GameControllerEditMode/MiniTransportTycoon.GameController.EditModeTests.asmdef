@@ -1,8 +1,13 @@
 {
     "name": "MiniTransportTycoon.GameController.EditModeTests",
     "references": [
-        "MiniTransportTycoon.Runtime",
-        "UnityEngine.UI"
+        "Scripts",
+        "UnityEngine.UI",
+        "UnityEngine.EventSystems",
+        "Unity.TextMeshPro",
+        "nunit.framework",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
     ],
     "includePlatforms": [
         "Editor"

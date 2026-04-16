@@ -930,6 +930,10 @@
       <HintPath>Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.TestRunner">
       <HintPath>Library/ScriptAssemblies/UnityEngine.TestRunner.dll</HintPath>
       <Private>False</Private>
@@ -944,7 +948,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="MiniTransportTycoon.Runtime.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>

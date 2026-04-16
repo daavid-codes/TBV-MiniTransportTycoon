@@ -3,7 +3,7 @@
     "rootNamespace": "",
     "references": [
         "UnityEngine.UI",
-        "UnityEngine.UIElementsModule",
+        "UnityEngine.EventSystems",
         "Unity.TextMeshPro"
     ],
     "includePlatforms": [],

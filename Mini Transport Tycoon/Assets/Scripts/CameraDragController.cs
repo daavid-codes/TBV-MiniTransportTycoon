@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraDragController : MonoBehaviour
+namespace MiniTransportTycoon
 {
+    public class CameraDragController : MonoBehaviour
+    {
 
     private float dragSpeed = 2.0f;
     private Vector3 dragOrigin;
@@ -55,5 +57,6 @@ public class CameraDragController : MonoBehaviour
         clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
         clampedY = Mathf.Clamp(transform.position.y, minY, maxY);
         transform.position = new Vector3(clampedX, clampedY, transform.position.z);
+    }
     }
 }
