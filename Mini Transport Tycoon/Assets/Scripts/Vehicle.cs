@@ -7,6 +7,7 @@ namespace MiniTransportTycoon
 {
     public abstract class Vehicle : MonoBehaviour
     {
+    [SerializeField] protected int id;
     [SerializeField] protected TileBase carSprite;
     [SerializeField] protected float speed;
     [SerializeField] protected int age;
@@ -43,6 +44,23 @@ namespace MiniTransportTycoon
         stopRoute ??= new List<Vector3Int>();
         roadCoordinates ??= new List<Vector3Int>();
         roadCoordinateLookup ??= new HashSet<Vector3Int>();
+
+        if (VehicleManager.Instance != null)
+        {
+            id = VehicleManager.Instance.RegisterVehicle(this);
+        }
+        else
+        {
+            Debug.LogWarning("VehicleManager do not found!");
+        }
+    }
+
+    protected virtual void OnDestroy()
+    {
+        if (VehicleManager.Instance != null)
+        {
+            VehicleManager.Instance.UnregisterVehicle(this);
+        }
     }
 
     protected virtual void Update()
@@ -199,6 +217,8 @@ namespace MiniTransportTycoon
         return roadTilemap != null && roadTilemap.HasTile(cell);
     }
 
+    public int Id => id;
+    public int Age => age;
     public TileBase CarSprite => carSprite;
     public float Speed => speed;
     public int MaintenanceCost => maintenanceCost;
