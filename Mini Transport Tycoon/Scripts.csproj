@@ -98,6 +98,7 @@
     <Compile Include="Assets/Scripts/Tiles/City.cs" />
     <Compile Include="Assets/Scripts/MainMenu.cs" />
     <Compile Include="Assets/Scripts/Tiles/SteelFoundry.cs" />
+    <Compile Include="Assets/Scripts/VehicleManager.cs" />
     <Compile Include="Assets/Scripts/Tiles/IronFoundry.cs" />
     <Compile Include="Assets/Scripts/Tiles/GarageField.cs" />
   </ItemGroup>

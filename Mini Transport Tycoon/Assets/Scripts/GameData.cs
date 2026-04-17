@@ -1,11 +1,13 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace MiniTransportTycoon
 {
     public class GameData : MonoBehaviour
     {
+
     public event Action OnDataChanged;
 
     [SerializeField] private int money = 4242;
