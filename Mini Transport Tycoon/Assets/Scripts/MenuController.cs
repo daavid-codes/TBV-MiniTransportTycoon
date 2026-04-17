@@ -6,6 +6,7 @@ namespace MiniTransportTycoon
     public class MenuController : MonoBehaviour
     {
     public GameObject vehicleSubMenu;
+    public GameObject GarageMenu;
 
     public void ToggleVehicleMenu()
     {
@@ -13,6 +14,15 @@ namespace MiniTransportTycoon
         {
             bool isCurrentlyActive = vehicleSubMenu.activeSelf;
             vehicleSubMenu.SetActive(!isCurrentlyActive);
+        }
+    }
+
+    public void ToggleGarageMenu()
+    {
+        if (GarageMenu != null)
+        {
+            bool isCurrentlyActive = GarageMenu.activeSelf;
+            GarageMenu.SetActive(!isCurrentlyActive);
         }
     }
 

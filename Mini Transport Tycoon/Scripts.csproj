@@ -82,6 +82,7 @@
     <Compile Include="Assets/Scripts/TopBarManager.cs" />
     <Compile Include="Assets/Scripts/Tiles/MediumBridge.cs" />
     <Compile Include="Assets/Scripts/Tiles/StopField.cs" />
+    <Compile Include="Assets/Scripts/VehicleUIEntry.cs" />
     <Compile Include="Assets/Scripts/Tiles/Resource.cs" />
     <Compile Include="Assets/Scripts/Bus.cs" />
     <Compile Include="Assets/Scripts/Tiles/Site.cs" />
@@ -91,6 +92,7 @@
     <Compile Include="Assets/Scripts/Vehicle.cs" />
     <Compile Include="Assets/Scripts/SettingsMenu.cs" />
     <Compile Include="Assets/Scripts/MiniMapClick.cs" />
+    <Compile Include="Assets/Scripts/VehicleListUI.cs" />
     <Compile Include="Assets/Scripts/CameraDragController.cs" />
     <Compile Include="Assets/Scripts/Tiles/WaterField.cs" />
     <Compile Include="Assets/Scripts/Tiles/Facility.cs" />

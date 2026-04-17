@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,6 +7,8 @@ namespace MiniTransportTycoon
     public class VehicleManager : MonoBehaviour
     {
         public static VehicleManager Instance { get; private set; }
+
+        public event Action OnVehiclesChanged;
 
         private int nextId = 1;
         private List<Vehicle> activeVehicles = new List<Vehicle>();
@@ -25,6 +28,7 @@ namespace MiniTransportTycoon
         public int RegisterVehicle(Vehicle vehicle)
         {
             activeVehicles.Add(vehicle);
+            OnVehiclesChanged?.Invoke();
             return nextId++;
         }
 
@@ -33,17 +37,10 @@ namespace MiniTransportTycoon
             if (activeVehicles.Contains(vehicle))
             {
                 activeVehicles.Remove(vehicle);
+                OnVehiclesChanged?.Invoke();
             }
         }
 
-        public void GetAllVehicles()
-        {
-            foreach (var vehicle in activeVehicles)
-            {
-                Debug.Log($"Vehicle ID: {vehicle.Id}, Type: {vehicle.Type}");
-            } 
-            
-                      
-        } 
+        public List<Vehicle> GetAllVehicles() => activeVehicles;
     }
 }

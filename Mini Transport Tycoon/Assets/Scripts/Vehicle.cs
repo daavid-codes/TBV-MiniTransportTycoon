@@ -218,6 +218,7 @@ namespace MiniTransportTycoon
     }
 
     public int Id => id;
+    public int Age => age;
     public TileBase CarSprite => carSprite;
     public float Speed => speed;
     public int MaintenanceCost => maintenanceCost;
