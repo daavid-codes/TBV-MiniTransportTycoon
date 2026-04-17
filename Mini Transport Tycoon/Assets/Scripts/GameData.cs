@@ -10,7 +10,7 @@ namespace MiniTransportTycoon
 
     [SerializeField] private int money = 4242;
     [SerializeField] private string cityName = "Kaposvar";
-    [SerializeField] private float timeMultiplier = 1;
+    [SerializeField] private float timeMultiplier = 0.2f;
     [SerializeField] private bool isPaused = false;
     
     private DateTime currentDate;
@@ -77,7 +77,7 @@ namespace MiniTransportTycoon
     {
         while (true)
         {
-            yield return new WaitForSeconds(1/ (timeMultiplier * 10));
+            yield return new WaitForSeconds(timeMultiplier);
             CurrentDate = CurrentDate.AddMinutes(1);
         }
     }
