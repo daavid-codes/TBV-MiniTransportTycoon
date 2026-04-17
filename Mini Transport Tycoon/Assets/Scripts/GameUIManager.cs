@@ -40,17 +40,17 @@ namespace MiniTransportTycoon
 
     public void IncreaseTimeMultiplier()
     {
-        if (gameData.TimeMultiplier < 4f)
+        if (Time.timeScale < 4f)
         {
-            gameData.TimeMultiplier *= 2f;
+            Time.timeScale *= 2f;
         }
     }
 
     public void DecreaseTimeMultiplier()
     {
-        if (gameData.TimeMultiplier > 0.25f)
+        if (Time.timeScale > 0.25f)
         {
-            gameData.TimeMultiplier /= 2f;
+            Time.timeScale /= 2f;
         }
     }
 

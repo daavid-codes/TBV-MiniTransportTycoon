@@ -72,6 +72,7 @@ namespace MiniTransportTycoon
     [SerializeField] private Image buildButtonImage;
     [SerializeField] private Image busStopButtonImage;
     [SerializeField] private Image garageButtonImage;
+    [SerializeField] private Image placeBusButtonImage; 
     [SerializeField] private Color normalColor = new Color32(250, 233, 215, 255); 
     [SerializeField] private Color activeColor = new Color32(183, 181, 179, 255);
 
@@ -128,6 +129,16 @@ namespace MiniTransportTycoon
         SetNavigationMode(NavigationMode.Camera);
     }
 
+    public void TogglePlaceBusModeUI()
+    {
+        placeBus = !placeBus;
+        if (placeBus)
+        {
+            SetNavigationMode(NavigationMode.Camera);
+        }
+        UpdateButtonColor();
+    }
+
     private void UpdateButtonColor()
     {
         if (buildButtonImage != null)
@@ -161,6 +172,17 @@ namespace MiniTransportTycoon
             else
             {
                 garageButtonImage.color = normalColor;
+            }
+        }
+        if (placeBusButtonImage != null)
+        {
+            if (navigationMode == NavigationMode.Camera && placeBus)
+            {
+                placeBusButtonImage.color = activeColor;
+            }
+            else
+            {
+                placeBusButtonImage.color = normalColor;
             }
         }
     }
