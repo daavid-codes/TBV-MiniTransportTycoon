@@ -254,12 +254,13 @@ namespace MiniTransportTycoon
             }
             else
             {
-                if (LogGarageClickAtMousePosition())
-                    return;
-
                 if (canPlaceCarInCurrentMode)
                 {
                     PlaceCarAtMousePosition();
+                }
+                else if (LogGarageClickAtMousePosition())
+                {
+                    return;
                 }
             }
             return;
@@ -531,13 +532,13 @@ namespace MiniTransportTycoon
 
     void PlaceCarAtMousePosition()
     {
-        if (busStopTilemap == null)
+        if (!TryGetRoutePointAtMousePosition(out Vector3Int routePointCell))
         {
-            Debug.LogWarning("Cannot place car because busStopTilemap is not assigned.");
+            Debug.Log("Click a bus stop or garage to select a car route point.");
             return;
         }
 
-        SelectCarStop(GetMouseCellPosition(busStopTilemap));
+        SelectCarStop(routePointCell);
     }
 
     void PlaceCar(Vector3Int cellPos)
@@ -561,29 +562,39 @@ namespace MiniTransportTycoon
 
     void SelectCarStop(Vector3Int stopCellPos)
     {
-        if (busStopTilemap == null || !busStopTilemap.HasTile(stopCellPos))
+        Vector3Int normalizedRoutePoint = NormalizeRoutePoint(stopCellPos);
+
+        if (normalizedRoutePoint == InvalidCellPosition)
         {
-            Debug.Log("Click a bus stop to select a car route.");
+            Debug.Log("Click a bus stop or garage to select a car route point.");
             return;
         }
 
-        if (pendingCarStopSelections.Contains(stopCellPos))
+        if (pendingCarStopSelections.Count >= 2 && normalizedRoutePoint == pendingCarStopSelections[0])
         {
-            Debug.LogWarning("Select two different bus stops for the car route.");
+            bool placedBus = TryPlaceCarFromSelectedStops(new List<Vector3Int>(pendingCarStopSelections));
+
+            if (!placedBus)
+            {
+                Debug.LogWarning("Could not create a loop route from selected route points.");
+            }
+
+            ClearPendingCarStopSelections();
             return;
         }
 
-        pendingCarStopSelections.Add(stopCellPos);
-        Debug.Log("Selected car stop " + pendingCarStopSelections.Count + "/2 at: " + stopCellPos);
-
-        if (pendingCarStopSelections.Count < 2)
+        if (pendingCarStopSelections.Contains(normalizedRoutePoint))
+        {
+            Debug.LogWarning("Route point already selected. Click the first point again to finalize the loop.");
             return;
+        }
 
-        TryPlaceCarFromSelectedStops(pendingCarStopSelections[0], pendingCarStopSelections[1]);
-        ClearPendingCarStopSelections();
+        pendingCarStopSelections.Add(normalizedRoutePoint);
+        Debug.Log("Selected route point " + pendingCarStopSelections.Count + " at: " + normalizedRoutePoint
+            + ". Click the first selected point to finalize route.");
     }
 
-    bool TryPlaceCarFromSelectedStops(Vector3Int firstStopCell, Vector3Int secondStopCell)
+    bool TryPlaceCarFromSelectedStops(List<Vector3Int> selectedRoutePoints)
     {
         if (busPrefab == null)
         {
@@ -591,23 +602,57 @@ namespace MiniTransportTycoon
             return false;
         }
 
-        if (!TryGetClosestRoadTile(firstStopCell, out Vector3Int spawnRoadCell))
+        if (selectedRoutePoints == null || selectedRoutePoints.Count < 2)
         {
-            Debug.LogWarning("Cannot place car because no road was found near the first selected bus stop.");
+            Debug.LogWarning("Cannot place car because at least two route points are required.");
             return false;
         }
 
-        if (!TryGetClosestRoadTile(secondStopCell, out Vector3Int destinationRoadCell))
+        List<Vector3Int> normalizedRoutePoints = new List<Vector3Int>(selectedRoutePoints.Count);
+        List<Vector3Int> routeRoadCells = new List<Vector3Int>(selectedRoutePoints.Count);
+
+        for (int i = 0; i < selectedRoutePoints.Count; i++)
         {
-            Debug.LogWarning("Cannot place car because no road was found near the second selected bus stop.");
-            return false;
+            Vector3Int normalizedRoutePoint = NormalizeRoutePoint(selectedRoutePoints[i]);
+
+            if (normalizedRoutePoint == InvalidCellPosition)
+            {
+                Debug.LogWarning("Cannot place car because one of the route points is not a bus stop or garage.");
+                return false;
+            }
+
+            if (!TryGetClosestRoadTile(normalizedRoutePoint, out Vector3Int closestRoadCell))
+            {
+                Debug.LogWarning("Cannot place car because no road was found near route point: " + normalizedRoutePoint);
+                return false;
+            }
+
+            normalizedRoutePoints.Add(normalizedRoutePoint);
+            routeRoadCells.Add(closestRoadCell);
         }
 
-        List<Vector3Int> fullRoadRoute = FindRoadPath(spawnRoadCell, destinationRoadCell);
+        List<List<Vector3Int>> loopRouteLegs = new List<List<Vector3Int>>(routeRoadCells.Count);
 
-        if (fullRoadRoute == null)
+        for (int i = 0; i < routeRoadCells.Count; i++)
         {
-            Debug.LogWarning("Cannot place car because there is no connected road path between the selected bus stops.");
+            Vector3Int startRoadCell = routeRoadCells[i];
+            Vector3Int endRoadCell = routeRoadCells[(i + 1) % routeRoadCells.Count];
+            List<Vector3Int> legPath = FindRoadPath(startRoadCell, endRoadCell);
+
+            if (legPath == null)
+            {
+                Debug.LogWarning("Cannot place car because route points are not connected by roads.");
+                return false;
+            }
+
+            loopRouteLegs.Add(legPath);
+        }
+
+        Vector3Int spawnRoadCell = routeRoadCells[0];
+
+        if (roadTilemap == null)
+        {
+            Debug.LogWarning("Cannot place car because roadTilemap is not assigned.");
             return false;
         }
 
@@ -617,10 +662,50 @@ namespace MiniTransportTycoon
         Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
         carInstance.SetRoadCoordinates(roadCoordinates);
-        carInstance.SetStopRoute(new List<Vector3Int> { firstStopCell, secondStopCell });
-        carInstance.SetShuttleRoute(fullRoadRoute);
-        Debug.Log("Placed car at: " + spawnRoadCell + " with stops: " + firstStopCell + " -> " + secondStopCell);
+        carInstance.SetStopRoute(normalizedRoutePoints);
+        carInstance.SetLoopRoute(loopRouteLegs);
+        Debug.Log("Placed car at: " + spawnRoadCell + " with loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         return true;
+    }
+
+    bool TryGetRoutePointAtMousePosition(out Vector3Int routePointCell)
+    {
+        routePointCell = InvalidCellPosition;
+
+        if (busStopTilemap != null)
+        {
+            Vector3Int busStopCellPos = GetMouseCellPosition(busStopTilemap);
+
+            if (busStopTilemap.HasTile(busStopCellPos))
+            {
+                routePointCell = busStopCellPos;
+                return true;
+            }
+        }
+
+        if (garageTilemap != null)
+        {
+            Vector3Int garageCellPos = GetMouseCellPosition(garageTilemap);
+
+            if (TryGetGarageOriginCell(garageCellPos, out Vector3Int garageOriginCell))
+            {
+                routePointCell = garageOriginCell;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    Vector3Int NormalizeRoutePoint(Vector3Int selectedCellPos)
+    {
+        if (busStopTilemap != null && busStopTilemap.HasTile(selectedCellPos))
+            return selectedCellPos;
+
+        if (garageTilemap != null && TryGetGarageOriginCell(selectedCellPos, out Vector3Int garageOriginCell))
+            return garageOriginCell;
+
+        return InvalidCellPosition;
     }
 
     void PlaceBusStop(Vector3Int cellPos)
