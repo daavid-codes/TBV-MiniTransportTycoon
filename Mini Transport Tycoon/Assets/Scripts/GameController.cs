@@ -61,6 +61,11 @@ namespace MiniTransportTycoon
     [SerializeField] private UnityTilemap garageTilemap;
     [SerializeField] private TileBase garageTile;
 
+    [Header("Houses Tiles")]
+    [SerializeField] private UnityTilemap housesTilemap;
+
+    private UnityTilemap[] allTilemaps;
+
     [Header("Vehicle Placement")]
     [SerializeField] private bool placeBus= false;
     [SerializeField] private Bus busPrefab;
@@ -87,6 +92,7 @@ namespace MiniTransportTycoon
 
     void Awake()
     {
+        allTilemaps = new Tilemap[] { groundTilemap, roadTilemap, busStopTilemap, garageTilemap, housesTilemap };
         RefreshRoadCoordinates();
     }
 
@@ -427,7 +433,41 @@ namespace MiniTransportTycoon
 
     bool CanBuildRoadAt(Vector3Int cellPos)
     {
-        return groundTilemap.HasTile(cellPos) && !IsRoadCoordinate(cellPos);
+        // Must be a valid ground (grass) tile
+        if (!groundTilemap.HasTile(cellPos))
+            return false;
+
+        // Cannot already have a road
+        if (IsRoadCoordinate(cellPos))
+            return false;
+
+        // Cannot build under any of the 4 garage tiles
+        if (occupiedGarageCells.Contains(cellPos))
+            return false;
+
+        // Check all other tilemaps - none should have a tile at this location
+        for (int i = 0; i < allTilemaps.Length; i++)
+        {
+            UnityTilemap tilemap = allTilemaps[i];
+            
+            // Skip null tilemaps
+            if (tilemap == null)
+                continue;
+
+            // Skip ground tilemap (we already checked it)
+            if (tilemap == groundTilemap)
+                continue;
+
+            // If ANY other tilemap has a tile here → block
+            if (tilemap.HasTile(cellPos))
+                return false;
+        }
+
+        // Road must be adjacent to an existing road
+        if (!HasAdjacentRoad(cellPos))
+            return false;
+
+        return true;
     }
 
     bool CanBuildBusStopAt(Vector3Int cellPos)
