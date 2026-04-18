@@ -32,12 +32,12 @@ namespace MiniTransportTycoon
 
     void HandleDrag()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(1))
         {
             dragOrigin = Input.mousePosition;
         }
 
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(1))
         {
             Vector3 difference = (Camera.main.ScreenToWorldPoint(dragOrigin) - Camera.main.ScreenToWorldPoint(Input.mousePosition)) * dragSpeed;
 
