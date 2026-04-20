@@ -14,8 +14,16 @@ namespace MiniTransportTycoon
     [SerializeField] private string cityName = "Kaposvar";
     [SerializeField] private float timeMultiplier = 0.2f;
     [SerializeField] private bool isPaused = false;
-    
-    private DateTime currentDate;
+
+        [SerializeField] private int iron = 0;
+        [SerializeField] private int steel = 0;
+        [SerializeField] private int wood = 0;
+        [SerializeField] private int paper = 0;
+        [SerializeField] private int copper = 0;
+
+        private List<Facility> facilities = new List<Facility>();
+
+        private DateTime currentDate;
 
     public int Money
     {
@@ -72,6 +80,7 @@ namespace MiniTransportTycoon
     {
         currentDate = new DateTime(2026, 1, 1, 8, 0, 0);
         StartCoroutine(TimeRoutine());
+        //OnDayChanged += ProduceAllFacilities;
         OnDataChanged?.Invoke();
     }
 
@@ -83,5 +92,67 @@ namespace MiniTransportTycoon
             CurrentDate = CurrentDate.AddMinutes(1);
         }
     }
+        //----Resource Fields
+        public int Iron {
+            get { return iron; }
+            set {
+                iron = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public int Steel
+        {
+            get { return steel; }
+            set
+            {
+                steel = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public int Wood
+        {
+            get { return wood; }
+            set
+            {
+                wood = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public int Paper
+        {
+            get { return paper; }
+            set
+            {
+                paper = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public int Copper
+        {
+            get { return copper; }
+            set
+            {
+                copper = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+        //----Resource Fields END
+
+        public void AddFacility(Facility f)
+        {
+            facilities.Add(f);   
+        }
+
+        public void ProduceAllFacilities()
+        {
+            foreach (Facility facility in facilities)
+            {
+                facility.produce(this);
+            }
+        }
     }
 }

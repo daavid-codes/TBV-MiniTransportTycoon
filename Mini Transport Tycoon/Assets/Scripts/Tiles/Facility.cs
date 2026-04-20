@@ -13,7 +13,7 @@ public abstract class Facility : Site
     {
         //area = 3;
         //resourceType = MONEY;
-        //resourceAmount = 300;
+        resourceAmount = 100;
         callCount = 0;
         productivityMultiplier = 1.0f;
     }
