@@ -5,37 +5,36 @@ namespace MiniTransportTycoon
 {
     public class MenuController : MonoBehaviour
     {
-    public GameObject vehicleSubMenu;
-    public GameObject GarageMenu;
+        public GameObject vehicleSubMenu;
+        public GameObject GarageMenu;
+        
 
-    public void ToggleVehicleMenu()
-    {
-        if (vehicleSubMenu != null)
+        public void ToggleVehicleMenu()
         {
-            bool isCurrentlyActive = vehicleSubMenu.activeSelf;
-            vehicleSubMenu.SetActive(!isCurrentlyActive);
+            if (vehicleSubMenu != null)
+            {
+                vehicleSubMenu.SetActive(!vehicleSubMenu.activeSelf);
+            }
         }
-    }
 
-    public void ToggleGarageMenu()
-    {
-        if (GarageMenu != null)
+        public void ToggleGarageMenu()
         {
-            bool isCurrentlyActive = GarageMenu.activeSelf;
-            GarageMenu.SetActive(!isCurrentlyActive);
+            if (GarageMenu != null)
+            {
+                GarageMenu.SetActive(!GarageMenu.activeSelf);
+            }
         }
-    }
 
-
-    //Scene switch
-    public void LoadNextScene(int sceneIndex)
-    {
-        if (sceneIndex >= 0 && sceneIndex < SceneManager.sceneCountInBuildSettings) {
-            SceneManager.LoadScene(sceneIndex);
+        public void LoadNextScene(int sceneIndex)
+        {
+            if (sceneIndex >= 0 && sceneIndex < SceneManager.sceneCountInBuildSettings)
+            {
+                SceneManager.LoadScene(sceneIndex);
+            }
+            else
+            {
+                Debug.LogWarning($"Scene index {sceneIndex} is out of range!");
+            }
         }
-        else {
-            Debug.LogWarning($"Scene index {sceneIndex} is out of range!");
-        }
-    }
     }
 }
