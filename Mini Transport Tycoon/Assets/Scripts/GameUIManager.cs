@@ -10,6 +10,26 @@ namespace MiniTransportTycoon
     [SerializeField] private TextMeshProUGUI cityText;
     [SerializeField] private TextMeshProUGUI dateText;
 
+    public GameObject escapeMenu;
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                ToggleEscapeMenu();
+            }
+        }
+
+        public void ToggleEscapeMenu()
+        {
+            if (escapeMenu != null)
+            {
+                escapeMenu.SetActive(!escapeMenu.activeSelf);
+                TogglePause();
+                
+            }
+        }
+
     private void OnEnable()
     {
         if (gameData != null)
