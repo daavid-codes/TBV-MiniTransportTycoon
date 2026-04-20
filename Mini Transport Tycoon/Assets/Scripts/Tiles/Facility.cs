@@ -13,7 +13,7 @@ public abstract class Facility : Site
     {
         //area = 3;
         //resourceType = MONEY;
-        //resourceAmount = 300;
+        resourceAmount = 100;
         callCount = 0;
         productivityMultiplier = 1.0f;
     }
@@ -26,7 +26,7 @@ public abstract class Facility : Site
         }
         else
         {
-            productivityMultiplier = Mathf.Max(0.5f, productivityMultiplier - 0,005f);
+            productivityMultiplier = Mathf.Max(0.5f, productivityMultiplier - 0, 005f);
         }
 
         callCount += 1;

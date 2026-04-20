@@ -13,7 +13,6 @@ public class WoodMill : Facility
     public override void produce(GameData game)
     {
         updateProductivity();
-        //game.iron += (int)(resourceAmount * productivityMultiplier);
-        //game.setWood(game.getWood() + (int)(resourceAmount * productivityMultiplier));
+        game.Wood += (int)(resourceAmount * productivityMultiplier);
     }
 }

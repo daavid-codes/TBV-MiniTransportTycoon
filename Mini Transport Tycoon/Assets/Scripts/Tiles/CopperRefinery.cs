@@ -13,7 +13,6 @@ public class CopperRefinery : Facility
     public override void produce(GameData game)
     {
         updateProductivity();
-        //game.iron += (int)(resourceAmount * productivityMultiplier);
-        //game.setCopper(game.getCopper() + (int)(resourceAmount * this.productivityMultiplier));
+        game.Copper += (int)(resourceAmount * productivityMultiplier);
     }
 }
