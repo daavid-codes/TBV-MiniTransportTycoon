@@ -23,6 +23,8 @@ namespace MiniTransportTycoon
 
         private List<Facility> facilities = new List<Facility>();
 
+        public event Action OnDayChanged;
+
         private DateTime currentDate;
 
         public int Money
@@ -80,16 +82,31 @@ namespace MiniTransportTycoon
         {
             currentDate = new DateTime(2026, 1, 1, 8, 0, 0);
             StartCoroutine(TimeRoutine());
-            //OnDayChanged += ProduceAllFacilities;
+            OnDayChanged += ProduceAllFacilities;//this line
+
+            //Adding facilities
+            AddFacility(new IronFoundry(0, 0, Orientation.Horizontal));
+            AddFacility(new SteelFoundry(0, 0, Orientation.Horizontal));
+            AddFacility(new WoodMill(0, 0, Orientation.Horizontal));
+            AddFacility(new PaperFactory(0, 0, Orientation.Horizontal));
+            AddFacility(new CopperRefinery(0, 0, Orientation.Horizontal));
+
             OnDataChanged?.Invoke();
         }
 
         private IEnumerator TimeRoutine()
         {
+            DateTime previousDate;
             while (true)
             {
                 yield return new WaitForSeconds(timeMultiplier);
+                previousDate = CurrentDate;
                 CurrentDate = CurrentDate.AddMinutes(1);
+
+                if (CurrentDate.Day != previousDate.Day)
+                {
+                    OnDayChanged?.Invoke();
+                }
             }
         }
         //----Resource Fields
