@@ -64,6 +64,13 @@ namespace MiniTransportTycoon
     [Header("Warehouse Tiles")]
     [SerializeField] private UnityTilemap warehouseTilemap;
 
+    [Header("Facility Tiles")]
+    [SerializeField] private UnityTilemap ironFoundryTilemap;
+    [SerializeField] private UnityTilemap paperFactoryTilemap;
+    [SerializeField] private UnityTilemap steelFoundryTilemap;
+    [SerializeField] private UnityTilemap woodMillTilemap;
+    [SerializeField] private UnityTilemap copperRefineryTilemap;
+
     [Header("Houses Tiles")]
     [SerializeField] private UnityTilemap housesTilemap;
 
@@ -76,6 +83,14 @@ namespace MiniTransportTycoon
     [Header("Warehouse Runtime")]
     [SerializeField] private Warehouse warehousePrefab;
     [SerializeField] private Transform warehouseRuntimeRoot;
+
+    [Header("Facility Runtime")]
+    [SerializeField] private IronFactory ironFoundryPrefab;
+    [SerializeField] private PaperFactory paperFactoryPrefab;
+    [SerializeField] private SteelFactory steelFoundryPrefab;
+    [SerializeField] private WoodFactory woodFactoryPrefab;
+    [SerializeField] private CoalFactory copperRefineryPrefab;
+    [SerializeField] private Transform facilityRuntimeRoot;
 
     [Header("Navigation")]
     [SerializeField] private NavigationMode navigationMode = NavigationMode.Camera;
@@ -93,18 +108,36 @@ namespace MiniTransportTycoon
     private readonly List<TileFlags> previewedBuildCellFlags = new List<TileFlags>();
     private readonly HashSet<Vector3Int> occupiedGarageCells = new HashSet<Vector3Int>();
     private readonly HashSet<Vector3Int> occupiedWarehouseCells = new HashSet<Vector3Int>();
+    private readonly HashSet<Vector3Int> occupiedFacilityCells = new HashSet<Vector3Int>();
     private readonly Dictionary<Vector3Int, Warehouse> warehousesByOrigin = new Dictionary<Vector3Int, Warehouse>();
+    private readonly Dictionary<Vector3Int, Facility> facilitiesByOrigin = new Dictionary<Vector3Int, Facility>();
     private readonly List<Vector3Int> pendingCarStopSelections = new List<Vector3Int>(2);
     private readonly List<Vector3Int> roadCoordinates = new List<Vector3Int>();
     private readonly HashSet<Vector3Int> roadCoordinateLookup = new HashSet<Vector3Int>();
     private int nextWarehouseId = 1;
+    private int nextFacilityId = 1;
     private bool pointerStartedOverUI;
 
     void Awake()
     {
-        allTilemaps = new Tilemap[] { groundTilemap, roadTilemap, busStopTilemap, garageTilemap, warehouseTilemap, housesTilemap };
+        allTilemaps = new Tilemap[]
+        {
+            groundTilemap,
+            roadTilemap,
+            busStopTilemap,
+            garageTilemap,
+            warehouseTilemap,
+            ironFoundryTilemap,
+            paperFactoryTilemap,
+            steelFoundryTilemap,
+            woodMillTilemap,
+            copperRefineryTilemap,
+            housesTilemap
+        };
         RefreshWarehouseFootprintOccupancy();
+        RefreshFacilityFootprintOccupancy();
         InitializeWarehousesFromTilemap();
+        InitializeFacilitiesFromTilemaps();
         RefreshRoadCoordinates();
     }
 
@@ -270,6 +303,10 @@ namespace MiniTransportTycoon
                 {
                     PlaceCarAtMousePosition();
                 }
+                else if (LogFacilityClickAtMousePosition())
+                {
+                    return;
+                }
                 else if (LogWarehouseClickAtMousePosition())
                 {
                     return;
@@ -366,6 +403,63 @@ namespace MiniTransportTycoon
         return true;
     }
 
+    bool LogFacilityClickAtMousePosition()
+    {
+        if (!TryGetFacilityAtMousePosition(out Vector3Int clickedCellPos, out Vector3Int facilityOriginCell, out Facility facility))
+            return false;
+
+        if (facility == null)
+        {
+            Debug.LogWarning("Clicked facility at: " + facilityOriginCell + " but no Facility script instance is registered.");
+            return true;
+        }
+
+        Debug.Log("Clicked facility " + facility.GetType().Name + " id " + facility.Id + " at: " + facilityOriginCell + " (footprint cell: " + clickedCellPos + ")");
+        return true;
+    }
+
+    bool TryGetFacilityAtMousePosition(out Vector3Int clickedCellPos, out Vector3Int facilityOriginCell, out Facility facility)
+    {
+        clickedCellPos = InvalidCellPosition;
+        facilityOriginCell = InvalidCellPosition;
+        facility = null;
+
+        if (TryGetFacilityAtTilemapCell(ironFoundryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        if (TryGetFacilityAtTilemapCell(paperFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        if (TryGetFacilityAtTilemapCell(steelFoundryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        if (TryGetFacilityAtTilemapCell(woodMillTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        if (TryGetFacilityAtTilemapCell(copperRefineryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        return false;
+    }
+
+    bool TryGetFacilityAtTilemapCell(UnityTilemap tilemap, out Vector3Int clickedCellPos, out Vector3Int facilityOriginCell, out Facility facility)
+    {
+        clickedCellPos = InvalidCellPosition;
+        facilityOriginCell = InvalidCellPosition;
+        facility = null;
+
+        if (tilemap == null)
+            return false;
+
+        clickedCellPos = GetMouseCellPosition(tilemap);
+
+        if (!TryGetFacilityOriginCell(clickedCellPos, tilemap, out facilityOriginCell))
+            return false;
+
+        facilitiesByOrigin.TryGetValue(facilityOriginCell, out facility);
+        return true;
+    }
+
     bool TryGetWarehouseAtCell(Vector3Int clickedCellPos, out Vector3Int warehouseOriginCell, out Warehouse warehouse)
     {
         warehouse = null;
@@ -413,6 +507,27 @@ namespace MiniTransportTycoon
                 continue;
 
             warehouseOriginCell = candidateOriginCell;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool TryGetFacilityOriginCell(Vector3Int clickedCellPos, UnityTilemap tilemap, out Vector3Int facilityOriginCell)
+    {
+        facilityOriginCell = InvalidCellPosition;
+
+        if (tilemap == null)
+            return false;
+
+        for (int i = 0; i < GarageFootprintOffsets.Length; i++)
+        {
+            Vector3Int candidateOriginCell = clickedCellPos - GarageFootprintOffsets[i];
+
+            if (!tilemap.HasTile(candidateOriginCell))
+                continue;
+
+            facilityOriginCell = candidateOriginCell;
             return true;
         }
 
@@ -518,6 +633,10 @@ namespace MiniTransportTycoon
         if (occupiedWarehouseCells.Contains(cellPos))
             return false;
 
+        // Cannot build under facility footprint tiles.
+        if (occupiedFacilityCells.Contains(cellPos))
+            return false;
+
         // Check all other tilemaps - none should have a tile at this location
         for (int i = 0; i < allTilemaps.Length; i++)
         {
@@ -550,6 +669,7 @@ namespace MiniTransportTycoon
             && busStopTilemap != null
             && !busStopTilemap.HasTile(cellPos)
             && !occupiedWarehouseCells.Contains(cellPos)
+            && !occupiedFacilityCells.Contains(cellPos)
             && HasAdjacentRoad(cellPos);
     }
 
@@ -577,6 +697,9 @@ namespace MiniTransportTycoon
                 return false;
 
             if (occupiedWarehouseCells.Contains(cellPos))
+                return false;
+
+            if (occupiedFacilityCells.Contains(cellPos))
                 return false;
         }
 
@@ -1045,6 +1168,37 @@ namespace MiniTransportTycoon
         }
     }
 
+    void RefreshFacilityFootprintOccupancy()
+    {
+        occupiedFacilityCells.Clear();
+        AddFacilityTilemapOccupancy(ironFoundryTilemap);
+        AddFacilityTilemapOccupancy(paperFactoryTilemap);
+        AddFacilityTilemapOccupancy(steelFoundryTilemap);
+        AddFacilityTilemapOccupancy(woodMillTilemap);
+        AddFacilityTilemapOccupancy(copperRefineryTilemap);
+    }
+
+    void AddFacilityTilemapOccupancy(UnityTilemap tilemap)
+    {
+        if (tilemap == null)
+            return;
+
+        BoundsInt cellBounds = tilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!tilemap.HasTile(cellPos))
+                continue;
+
+            List<Vector3Int> facilityFootprint = GetGarageFootprintCells(cellPos);
+
+            for (int i = 0; i < facilityFootprint.Count; i++)
+            {
+                occupiedFacilityCells.Add(facilityFootprint[i]);
+            }
+        }
+    }
+
     void InitializeWarehousesFromTilemap()
     {
         warehousesByOrigin.Clear();
@@ -1079,10 +1233,59 @@ namespace MiniTransportTycoon
         }
     }
 
+    void InitializeFacilitiesFromTilemaps()
+    {
+        facilitiesByOrigin.Clear();
+        nextFacilityId = 1;
+
+        RegisterFacilitiesFromTilemap(ironFoundryTilemap, ironFoundryPrefab);
+        RegisterFacilitiesFromTilemap(paperFactoryTilemap, paperFactoryPrefab);
+        RegisterFacilitiesFromTilemap(steelFoundryTilemap, steelFoundryPrefab);
+        RegisterFacilitiesFromTilemap(woodMillTilemap, woodFactoryPrefab);
+        RegisterFacilitiesFromTilemap(copperRefineryTilemap, copperRefineryPrefab);
+    }
+
+    void RegisterFacilitiesFromTilemap(UnityTilemap facilityTilemap, Facility facilityPrefab)
+    {
+        if (facilityTilemap == null)
+            return;
+
+        if (facilityPrefab == null)
+        {
+            Debug.LogWarning("Facility tilemap is assigned, but its prefab is missing. Cannot spawn facility scripts.");
+            return;
+        }
+
+        HashSet<Vector3Int> facilityOrigins = new HashSet<Vector3Int>();
+        BoundsInt cellBounds = facilityTilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!facilityTilemap.HasTile(cellPos))
+                continue;
+
+            if (TryGetFacilityOriginCell(cellPos, facilityTilemap, out Vector3Int facilityOriginCell))
+            {
+                facilityOrigins.Add(facilityOriginCell);
+            }
+        }
+
+        foreach (Vector3Int facilityOriginCell in facilityOrigins)
+        {
+            RegisterFacilityInstance(facilityOriginCell, facilityTilemap, facilityPrefab);
+        }
+    }
+
     public void RegisterPlacedWarehouse(Vector3Int warehouseOriginCell)
     {
         RefreshWarehouseFootprintOccupancy();
         RegisterWarehouseInstance(warehouseOriginCell);
+    }
+
+    public void RegisterPlacedFacility(Vector3Int facilityOriginCell, UnityTilemap facilityTilemap, Facility facilityPrefab)
+    {
+        RefreshFacilityFootprintOccupancy();
+        RegisterFacilityInstance(facilityOriginCell, facilityTilemap, facilityPrefab);
     }
 
     Warehouse RegisterWarehouseInstance(Vector3Int warehouseOriginCell)
@@ -1105,6 +1308,28 @@ namespace MiniTransportTycoon
         warehouseInstance.Initialize(nextWarehouseId++);
         warehousesByOrigin[warehouseOriginCell] = warehouseInstance;
         return warehouseInstance;
+    }
+
+    Facility RegisterFacilityInstance(Vector3Int facilityOriginCell, UnityTilemap facilityTilemap, Facility facilityPrefab)
+    {
+        if (facilitiesByOrigin.TryGetValue(facilityOriginCell, out Facility existingFacility) && existingFacility != null)
+            return existingFacility;
+
+        if (facilityTilemap == null || facilityPrefab == null)
+            return null;
+
+        Vector3 spawnPosition = facilityTilemap.GetCellCenterWorld(facilityOriginCell);
+        spawnPosition.z = facilityPrefab.transform.position.z;
+
+        Facility facilityInstance = Instantiate(
+            facilityPrefab,
+            spawnPosition,
+            facilityPrefab.transform.rotation,
+            facilityRuntimeRoot);
+
+        facilityInstance.Initialize(nextFacilityId++);
+        facilitiesByOrigin[facilityOriginCell] = facilityInstance;
+        return facilityInstance;
     }
 
     void RegisterRoadCoordinate(Vector3Int cellPos)
