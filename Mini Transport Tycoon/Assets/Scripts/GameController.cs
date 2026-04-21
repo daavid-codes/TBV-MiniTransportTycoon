@@ -65,11 +65,11 @@ namespace MiniTransportTycoon
     [SerializeField] private UnityTilemap warehouseTilemap;
 
     [Header("Facility Tiles")]
-    [SerializeField] private UnityTilemap ironFoundryTilemap;
+    [SerializeField] private UnityTilemap ironFactoryTilemap;
     [SerializeField] private UnityTilemap paperFactoryTilemap;
-    [SerializeField] private UnityTilemap steelFoundryTilemap;
-    [SerializeField] private UnityTilemap woodMillTilemap;
-    [SerializeField] private UnityTilemap copperRefineryTilemap;
+    [SerializeField] private UnityTilemap steelFactoryTilemap;
+    [SerializeField] private UnityTilemap woodFactoryTilemap;
+    [SerializeField] private UnityTilemap coalFactoryTilemap;
 
     [Header("Houses Tiles")]
     [SerializeField] private UnityTilemap housesTilemap;
@@ -127,11 +127,11 @@ namespace MiniTransportTycoon
             busStopTilemap,
             garageTilemap,
             warehouseTilemap,
-            ironFoundryTilemap,
+            ironFactoryTilemap,
             paperFactoryTilemap,
-            steelFoundryTilemap,
-            woodMillTilemap,
-            copperRefineryTilemap,
+            steelFactoryTilemap,
+            woodFactoryTilemap,
+            coalFactoryTilemap,
             housesTilemap
         };
         RefreshWarehouseFootprintOccupancy();
@@ -424,19 +424,19 @@ namespace MiniTransportTycoon
         facilityOriginCell = InvalidCellPosition;
         facility = null;
 
-        if (TryGetFacilityAtTilemapCell(ironFoundryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+        if (TryGetFacilityAtTilemapCell(ironFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
             return true;
 
         if (TryGetFacilityAtTilemapCell(paperFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
             return true;
 
-        if (TryGetFacilityAtTilemapCell(steelFoundryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+        if (TryGetFacilityAtTilemapCell(steelFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
             return true;
 
-        if (TryGetFacilityAtTilemapCell(woodMillTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+        if (TryGetFacilityAtTilemapCell(woodFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
             return true;
 
-        if (TryGetFacilityAtTilemapCell(copperRefineryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+        if (TryGetFacilityAtTilemapCell(coalFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
             return true;
 
         return false;
@@ -1171,11 +1171,11 @@ namespace MiniTransportTycoon
     void RefreshFacilityFootprintOccupancy()
     {
         occupiedFacilityCells.Clear();
-        AddFacilityTilemapOccupancy(ironFoundryTilemap);
+        AddFacilityTilemapOccupancy(ironFactoryTilemap);
         AddFacilityTilemapOccupancy(paperFactoryTilemap);
-        AddFacilityTilemapOccupancy(steelFoundryTilemap);
-        AddFacilityTilemapOccupancy(woodMillTilemap);
-        AddFacilityTilemapOccupancy(copperRefineryTilemap);
+        AddFacilityTilemapOccupancy(steelFactoryTilemap);
+        AddFacilityTilemapOccupancy(woodFactoryTilemap);
+        AddFacilityTilemapOccupancy(coalFactoryTilemap);
     }
 
     void AddFacilityTilemapOccupancy(UnityTilemap tilemap)
@@ -1238,11 +1238,11 @@ namespace MiniTransportTycoon
         facilitiesByOrigin.Clear();
         nextFacilityId = 1;
 
-        RegisterFacilitiesFromTilemap(ironFoundryTilemap, ironFoundryPrefab);
+        RegisterFacilitiesFromTilemap(ironFactoryTilemap, ironFoundryPrefab);
         RegisterFacilitiesFromTilemap(paperFactoryTilemap, paperFactoryPrefab);
-        RegisterFacilitiesFromTilemap(steelFoundryTilemap, steelFoundryPrefab);
-        RegisterFacilitiesFromTilemap(woodMillTilemap, woodFactoryPrefab);
-        RegisterFacilitiesFromTilemap(copperRefineryTilemap, copperRefineryPrefab);
+        RegisterFacilitiesFromTilemap(steelFactoryTilemap, steelFoundryPrefab);
+        RegisterFacilitiesFromTilemap(woodFactoryTilemap, woodFactoryPrefab);
+        RegisterFacilitiesFromTilemap(coalFactoryTilemap, copperRefineryPrefab);
     }
 
     void RegisterFacilitiesFromTilemap(UnityTilemap facilityTilemap, Facility facilityPrefab)
