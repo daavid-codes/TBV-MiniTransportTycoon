@@ -65,9 +65,8 @@ namespace MiniTransportTycoon
             
             bus.SetRoute(newRoute);
 
-            Assert.IsFalse(GetField<bool>(bus, "useShuttleRoute"));
-            Assert.AreEqual(0, GetField<List<Vector3Int>>(bus, "shuttleRouteForward").Count);
-            Assert.AreEqual(0, GetField<List<Vector3Int>>(bus, "shuttleRouteBackward").Count);
+            Assert.IsFalse(GetField<bool>(bus, "useLoopRoute"));
+            Assert.AreEqual(0, GetField<List<List<Vector3Int>>>(bus, "loopRouteLegs").Count);
         }
 
         [Test]
@@ -78,7 +77,7 @@ namespace MiniTransportTycoon
             
             bus.SetShuttleRoute(path);
 
-            Assert.IsFalse(GetField<bool>(bus, "useShuttleRoute"));
+            Assert.IsFalse(GetField<bool>(bus, "useLoopRoute"));
         }
 
         [Test]
@@ -89,10 +88,11 @@ namespace MiniTransportTycoon
             
             bus.SetShuttleRoute(path);
 
-            Assert.IsTrue(GetField<bool>(bus, "useShuttleRoute"));
+            Assert.IsTrue(GetField<bool>(bus, "useLoopRoute"));
             
-            List<Vector3Int> forwardRoute = GetField<List<Vector3Int>>(bus, "shuttleRouteForward");
-            List<Vector3Int> backwardRoute = GetField<List<Vector3Int>>(bus, "shuttleRouteBackward");
+            List<List<Vector3Int>> loopRouteLegs = GetField<List<List<Vector3Int>>>(bus, "loopRouteLegs");
+            List<Vector3Int> forwardRoute = loopRouteLegs[0];
+            List<Vector3Int> backwardRoute = loopRouteLegs[1];
 
             Assert.AreEqual(2, forwardRoute.Count);
             Assert.AreEqual(2, backwardRoute.Count);
@@ -106,12 +106,12 @@ namespace MiniTransportTycoon
             Bus bus = CreateBus();
             List<Vector3Int> path = new List<Vector3Int> { new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(2, 0, 0) };
 
-            List<Vector3Int> forwardResult = Invoke<List<Vector3Int>>(bus, "BuildShuttleLeg", path, false);
+            List<Vector3Int> forwardResult = Invoke<List<Vector3Int>>(bus, "BuildLoopLeg", path, false);
             Assert.AreEqual(2, forwardResult.Count);
             Assert.AreEqual(new Vector3Int(1, 0, 0), forwardResult[0]);
             Assert.AreEqual(new Vector3Int(2, 0, 0), forwardResult[1]);
 
-            List<Vector3Int> backwardResult = Invoke<List<Vector3Int>>(bus, "BuildShuttleLeg", path, true);
+            List<Vector3Int> backwardResult = Invoke<List<Vector3Int>>(bus, "BuildLoopLeg", path, true);
             Assert.AreEqual(2, backwardResult.Count);
             Assert.AreEqual(new Vector3Int(1, 0, 0), backwardResult[0]);
             Assert.AreEqual(new Vector3Int(0, 0, 0), backwardResult[1]);
@@ -122,18 +122,19 @@ namespace MiniTransportTycoon
         {
             Bus bus = CreateBus();
             List<Vector3Int> path = new List<Vector3Int> { new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(2, 0, 0) };
+            bus.SetRoadCoordinates(path);
             bus.SetShuttleRoute(path);
 
-            SetPropertyOrField(bus, "IsMoving", false);
-            SetPropertyOrField(bus, "Route", new List<Vector3Int> { new Vector3Int(0, 0, 0) });
+            SetPropertyOrField(bus, "isMoving", false);
+            SetPropertyOrField(bus, "route", new List<Vector3Int> { new Vector3Int(0, 0, 0) });
 
-            bool initialForwardState = GetField<bool>(bus, "nextShuttleLegIsForward");
+            int initialLegIndex = GetField<int>(bus, "nextLoopLegIndex");
 
             Invoke(bus, "Update");
 
-            bool newForwardState = GetField<bool>(bus, "nextShuttleLegIsForward");
-            Assert.AreNotEqual(initialForwardState, newForwardState);
-            Assert.AreEqual(2, GetPropertyOrField<List<Vector3Int>>(bus, "Route").Count);
+            int newLegIndex = GetField<int>(bus, "nextLoopLegIndex");
+            Assert.AreNotEqual(initialLegIndex, newLegIndex);
+            Assert.AreEqual(2, GetPropertyOrField<List<Vector3Int>>(bus, "route").Count);
         }
 
         private Bus CreateBus()

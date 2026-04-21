@@ -53,11 +53,18 @@ namespace MiniTransportTycoon
     {
         List<List<Vector3Int>> shuttleLegs = new List<List<Vector3Int>>
         {
-            BuildLoopLeg(fullRoadPath, reverse: false),
-            BuildLoopLeg(fullRoadPath, reverse: true)
+            fullRoadPath != null ? new List<Vector3Int>(fullRoadPath) : new List<Vector3Int>(),
+            BuildReversedLeg(fullRoadPath)
         };
 
         SetLoopRoute(shuttleLegs);
+    }
+
+    private List<Vector3Int> BuildReversedLeg(List<Vector3Int> fullRoadPath)
+    {
+        List<Vector3Int> reversedLeg = fullRoadPath != null ? new List<Vector3Int>(fullRoadPath) : new List<Vector3Int>();
+        reversedLeg.Reverse();
+        return reversedLeg;
     }
 
     public void SetLoopRoute(List<List<Vector3Int>> newLoopLegs)

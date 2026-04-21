@@ -34,7 +34,7 @@ namespace MiniTransportTycoon
             
             var allTilemaps = GetField<Tilemap[]>(context.Controller, "allTilemaps");
             Assert.IsNotNull(allTilemaps);
-            Assert.AreEqual(5, allTilemaps.Length);
+            Assert.AreEqual(11, allTilemaps.Length);
             
             var roadCoordinates = GetField<List<Vector3Int>>(context.Controller, "roadCoordinates");
             Assert.IsNotNull(roadCoordinates);
@@ -132,7 +132,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int pos = Vector3Int.zero;
-            Invoke(context.Controller, "PlaceRoad", pos);
+            AddRoad(context, pos);
             
             bool result = Invoke<bool>(context.Controller, "CanBuildRoadAt", pos);
             
@@ -180,7 +180,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int pos = new Vector3Int(5, 5, 0);
-            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.up);
+            AddRoad(context, pos + Vector3Int.up);
             
             bool result = Invoke<bool>(context.Controller, "CanBuildRoadAt", pos);
             
@@ -192,7 +192,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int pos = new Vector3Int(2, 2, 0);
-            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.right);
+            AddRoad(context, pos + Vector3Int.right);
             
             bool result = Invoke<bool>(context.Controller, "CanBuildBusStopAt", pos);
             
@@ -204,7 +204,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int pos = new Vector3Int(2, 2, 0);
-            Invoke(context.Controller, "PlaceRoad", pos);
+            AddRoad(context, pos);
             
             bool result = Invoke<bool>(context.Controller, "CanBuildBusStopAt", pos);
             
@@ -242,7 +242,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int origin = Vector3Int.zero;
-            Invoke(context.Controller, "PlaceRoad", origin + Vector3Int.right);
+            AddRoad(context, origin + Vector3Int.right);
             
             bool result = Invoke<bool>(context.Controller, "CanBuildGarageAt", origin);
             
@@ -254,7 +254,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int origin = new Vector3Int(2, 2, 0);
-            Invoke(context.Controller, "PlaceRoad", origin + Vector3Int.left);
+            AddRoad(context, origin + Vector3Int.left);
             
             bool result = Invoke<bool>(context.Controller, "CanBuildGarageAt", origin);
             
@@ -292,10 +292,10 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int pos = Vector3Int.zero;
-            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.up);
-            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.right);
-            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.down);
-            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.left);
+            AddRoad(context, pos + Vector3Int.up);
+            AddRoad(context, pos + Vector3Int.right);
+            AddRoad(context, pos + Vector3Int.down);
+            AddRoad(context, pos + Vector3Int.left);
             
             int mask = Invoke<int>(context.Controller, "GetRoadNeighborMask", pos);
             
@@ -333,7 +333,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int pos = Vector3Int.zero;
-            Invoke(context.Controller, "PlaceRoad", pos);
+            AddRoad(context, pos);
             
             bool result = Invoke<bool>(context.Controller, "CanPlaceCarAt", pos);
             
@@ -356,7 +356,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int pos = Vector3Int.zero;
-            Invoke(context.Controller, "PlaceRoad", pos);
+            AddRoad(context, pos);
             
             object[] args = { pos, Vector3Int.zero };
             var method = context.Controller.GetType().GetMethod("TryGetClosestRoadTile", InstanceFlags);
@@ -372,7 +372,7 @@ namespace MiniTransportTycoon
             var context = CreateContext();
             Vector3Int start = Vector3Int.zero;
             Vector3Int roadPos = new Vector3Int(0, 3, 0);
-            Invoke(context.Controller, "PlaceRoad", roadPos);
+            AddRoad(context, roadPos);
             
             object[] args = { start, Vector3Int.zero };
             var method = context.Controller.GetType().GetMethod("TryGetClosestRoadTile", InstanceFlags);
@@ -391,10 +391,10 @@ namespace MiniTransportTycoon
             Vector3Int mid2 = new Vector3Int(1, 1, 0);
             Vector3Int end = new Vector3Int(2, 1, 0);
             
-            Invoke(context.Controller, "PlaceRoad", start);
-            Invoke(context.Controller, "PlaceRoad", mid1);
-            Invoke(context.Controller, "PlaceRoad", mid2);
-            Invoke(context.Controller, "PlaceRoad", end);
+            AddRoad(context, start);
+            AddRoad(context, mid1);
+            AddRoad(context, mid2);
+            AddRoad(context, end);
             
             List<Vector3Int> path = Invoke<List<Vector3Int>>(context.Controller, "FindRoadPath", start, end);
             
@@ -411,8 +411,8 @@ namespace MiniTransportTycoon
             Vector3Int start = Vector3Int.zero;
             Vector3Int end = new Vector3Int(5, 5, 0);
             
-            Invoke(context.Controller, "PlaceRoad", start);
-            Invoke(context.Controller, "PlaceRoad", end);
+            AddRoad(context, start);
+            AddRoad(context, end);
             
             List<Vector3Int> path = Invoke<List<Vector3Int>>(context.Controller, "FindRoadPath", start, end);
             
@@ -456,12 +456,13 @@ namespace MiniTransportTycoon
             
             context.BusStops.SetTile(stop1, context.BusStopUpTile);
             context.BusStops.SetTile(stop2, context.BusStopUpTile);
-            Invoke(context.Controller, "PlaceRoad", stop1 + Vector3Int.up);
-            Invoke(context.Controller, "PlaceRoad", stop2 + Vector3Int.up);
-            Invoke(context.Controller, "PlaceRoad", new Vector3Int(1, 1, 0));
+            AddRoad(context, stop1 + Vector3Int.up);
+            AddRoad(context, stop2 + Vector3Int.up);
+            AddRoad(context, new Vector3Int(1, 1, 0));
             
             Invoke(context.Controller, "SelectCarStop", stop1);
             Invoke(context.Controller, "SelectCarStop", stop2);
+            Invoke(context.Controller, "SelectCarStop", stop1);
             
             var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
             Assert.AreEqual(0, pending.Count);
@@ -472,7 +473,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             Vector3Int cellPos = Vector3Int.zero;
-            Invoke(context.Controller, "PlaceRoad", new Vector3Int(-2, 0, 0));
+            AddRoad(context, new Vector3Int(-2, 0, 0));
             
             Vector3Int dir = Invoke<Vector3Int>(context.Controller, "GetNearestRoadDirection", cellPos);
             
@@ -496,7 +497,7 @@ namespace MiniTransportTycoon
         {
             var context = CreateContext();
             List<Vector3Int> footprint = new List<Vector3Int> { Vector3Int.zero, Vector3Int.right };
-            Invoke(context.Controller, "PlaceRoad", Vector3Int.up);
+            AddRoad(context, Vector3Int.up);
             
             bool result = Invoke<bool>(context.Controller, "HasAdjacentRoad", footprint);
             
@@ -633,6 +634,12 @@ namespace MiniTransportTycoon
             return FindMethod(target.GetType(), name, args).Invoke(target, args);
         }
 
+        private static void AddRoad(ControllerContext context, Vector3Int cellPos)
+        {
+            context.Road.SetTile(cellPos, context.RoadStraightUpDownTile);
+            Invoke(context.Controller, "RegisterRoadCoordinate", cellPos);
+        }
+
         private static FieldInfo FindField(Type type, string name)
         {
             FieldInfo f = type.GetField(name, InstanceFlags);
@@ -641,19 +648,53 @@ namespace MiniTransportTycoon
 
         private static MethodInfo FindMethod(Type type, string name, object[] args)
         {
-            MethodInfo m = type.GetMethod(name, InstanceFlags);
-            if (m != null) return m;
+            Type currentType = type;
+            object[] actualArgs = args ?? Array.Empty<object>();
 
-            MethodInfo[] methods = type.GetMethods(InstanceFlags);
-            for (int i = 0; i < methods.Length; i++)
+            while (currentType != null)
             {
-                if (methods[i].Name == name && methods[i].GetParameters().Length == args.Length)
+                MethodInfo[] methods = currentType.GetMethods(InstanceFlags);
+                for (int i = 0; i < methods.Length; i++)
                 {
-                    return methods[i];
+                    MethodInfo method = methods[i];
+                    if (method.Name != name)
+                        continue;
+
+                    ParameterInfo[] parameters = method.GetParameters();
+                    if (parameters.Length != actualArgs.Length)
+                        continue;
+
+                    bool matches = true;
+                    for (int j = 0; j < parameters.Length; j++)
+                    {
+                        object arg = actualArgs[j];
+                        Type parameterType = parameters[j].ParameterType;
+
+                        if (arg == null)
+                        {
+                            if (parameterType.IsValueType && Nullable.GetUnderlyingType(parameterType) == null)
+                            {
+                                matches = false;
+                                break;
+                            }
+                            continue;
+                        }
+
+                        if (!parameterType.IsInstanceOfType(arg))
+                        {
+                            matches = false;
+                            break;
+                        }
+                    }
+
+                    if (matches)
+                        return method;
                 }
+
+                currentType = currentType.BaseType;
             }
 
-            return type.BaseType != null ? FindMethod(type.BaseType, name, args) : null;
+            return null;
         }
 
         private class ControllerContext
