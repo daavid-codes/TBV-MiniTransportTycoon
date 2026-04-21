@@ -101,6 +101,12 @@ namespace MiniTransportTycoon
         materialType = material;
     }
 
+    public void SetMaxCarryingAmount(int maxAmount)
+    {
+        maxCarryingAmount = Mathf.Max(0, maxAmount);
+        carryingAmount = Mathf.Clamp(carryingAmount, 0, maxCarryingAmount);
+    }
+
     public int LoadMaterial(int amount)
     {
         if (amount <= 0)

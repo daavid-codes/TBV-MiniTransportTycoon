@@ -82,6 +82,7 @@ namespace MiniTransportTycoon
     [SerializeField] private bool placeTruck = false;
     [SerializeField] private Truck truckPrefab;
     [SerializeField] private Materials truckPlacementMaterial = Materials.Wood;
+    [SerializeField] private int truckPlacementCapacity = 500;
 
     [Header("Warehouse Runtime")]
     [SerializeField] private Warehouse warehousePrefab;
@@ -215,7 +216,13 @@ namespace MiniTransportTycoon
 
     public void StartTruckPlacement(Materials material)
     {
+        StartTruckPlacement(material, truckPlacementCapacity);
+    }
+
+    public void StartTruckPlacement(Materials material, int capacity)
+    {
         truckPlacementMaterial = material;
+        truckPlacementCapacity = Mathf.Max(0, capacity);
         placeTruck = true;
         placeBus = false;
         ClearPendingCarStopSelections();
@@ -942,6 +949,11 @@ namespace MiniTransportTycoon
 
     void SelectTruckStop(Vector3Int stopCellPos, Materials material)
     {
+        SelectTruckStop(stopCellPos, material, truckPlacementCapacity);
+    }
+
+    void SelectTruckStop(Vector3Int stopCellPos, Materials material, int capacity)
+    {
         Vector3Int normalizedRoutePoint = NormalizeTruckRoutePoint(stopCellPos);
 
         if (normalizedRoutePoint == InvalidCellPosition)
@@ -952,7 +964,7 @@ namespace MiniTransportTycoon
 
         if (pendingTruckStopSelections.Count >= 2 && normalizedRoutePoint == pendingTruckStopSelections[0])
         {
-            bool placedTruck = TryPlaceTruckFromSelectedStops(new List<Vector3Int>(pendingTruckStopSelections), material);
+            bool placedTruck = TryPlaceTruckFromSelectedStops(new List<Vector3Int>(pendingTruckStopSelections), material, capacity);
 
             if (!placedTruck)
             {
@@ -975,6 +987,11 @@ namespace MiniTransportTycoon
     }
 
     public bool TryPlaceTruckFromSelectedStops(List<Vector3Int> selectedRoutePoints, Materials material)
+    {
+        return TryPlaceTruckFromSelectedStops(selectedRoutePoints, material, truckPlacementCapacity);
+    }
+
+    public bool TryPlaceTruckFromSelectedStops(List<Vector3Int> selectedRoutePoints, Materials material, int capacity)
     {
         if (truckPrefab == null)
         {
@@ -1049,8 +1066,9 @@ namespace MiniTransportTycoon
         truckInstance.SetRoadCoordinates(roadCoordinates);
         truckInstance.SetStopRoute(normalizedRoutePoints);
         truckInstance.SetMaterialType(material);
+        truckInstance.SetMaxCarryingAmount(capacity);
         truckInstance.SetLoopRoute(loopRouteLegs);
-        Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with capacity " + Mathf.Max(0, capacity) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         return true;
     }
 
