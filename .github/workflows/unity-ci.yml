@@ -47,14 +47,38 @@ jobs:
           ls -la "${{ steps.tests.outputs.artifactsPath }}" || true
           ls -la "${{ steps.tests.outputs.coveragePath }}" || true
 
+      - name: Prepare Coverage Artifact Folder
+        if: always()
+        run: |
+          set -eu
+          rm -rf coverage-artifact
+          mkdir -p coverage-artifact
+
+          copied=false
+
+          if [ -d "${{ steps.tests.outputs.coveragePath }}" ]; then
+            cp -R "${{ steps.tests.outputs.coveragePath }}" coverage-artifact/CodeCoverage
+            copied=true
+          fi
+
+          if [ -d "${{ steps.tests.outputs.artifactsPath }}" ]; then
+            first_match="$(find "${{ steps.tests.outputs.artifactsPath }}" -type d -name CodeCoverage | head -n 1 || true)"
+            if [ -n "$first_match" ] && [ "$copied" = false ]; then
+              cp -R "$first_match" coverage-artifact/CodeCoverage
+              copied=true
+            fi
+          fi
+
+          if [ "$copied" = false ]; then
+            echo "Coverage output was not found in this run." > coverage-artifact/README.txt
+          fi
+
       - name: Upload Coverage Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: code-coverage
-          path: |
-            ${{ steps.tests.outputs.coveragePath }}
-            ${{ steps.tests.outputs.artifactsPath }}/**/CodeCoverage/**
+          path: coverage-artifact/**
 
   build:
     name: Build Unity Project
