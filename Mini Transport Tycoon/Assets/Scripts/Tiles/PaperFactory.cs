@@ -13,7 +13,6 @@ public class PaperFactory : Facility
     public override void produce(GameData game)
     {
         updateProductivity();
-        //game.iron += (int)(resourceAmount * productivityMultiplier);
-        //game.setPaper(game.getPaper() + (int)(resourceAmount * productivityMultiplier));
+        game.Paper += (int)(resourceAmount * productivityMultiplier);
     }
 }

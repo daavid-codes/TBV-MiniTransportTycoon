@@ -13,7 +13,6 @@ public class IronFoundry : Facility
     public override void produce(GameData game)
     {
         updateProductivity();
-        //game.iron += (int)(resourceAmount * productivityMultiplier);
-        //game.setIron(game.getIron() + (int)(resourceAmount * productivityMultiplier));
+        game.Iron += (int)(resourceAmount * productivityMultiplier);
     }
 }

@@ -8,80 +8,153 @@ namespace MiniTransportTycoon
     public class GameData : MonoBehaviour
     {
 
-    public event Action OnDataChanged;
+        public event Action OnDataChanged;
 
-    [SerializeField] private int money = 4242;
-    [SerializeField] private string cityName = "Kaposvar";
-    [SerializeField] private float timeMultiplier = 0.2f;
-    [SerializeField] private bool isPaused = false;
-    
-    private DateTime currentDate;
+        [SerializeField] private int money = 4242;
+        [SerializeField] private string cityName = "Kaposvar";
+        [SerializeField] private float timeMultiplier = 0.2f;
+        [SerializeField] private bool isPaused = false;
 
-    public int Money
-    {
-        get { return money; }
-        set
+        [SerializeField] private int iron = 0;
+        [SerializeField] private int steel = 0;
+        [SerializeField] private int wood = 0;
+        [SerializeField] private int paper = 0;
+        [SerializeField] private int copper = 0;
+
+        private List<Facility> facilities = new List<Facility>();
+
+        private DateTime currentDate;
+
+        public int Money
         {
-            money = value;
+            get { return money; }
+            set
+            {
+                money = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public string CityName
+        {
+            get { return cityName; }
+            set
+            {
+                cityName = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public DateTime CurrentDate
+        {
+            get { return currentDate; }
+            private set
+            {
+                currentDate = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public float TimeMultiplier
+        {
+            get { return timeMultiplier; }
+            set
+            {
+                timeMultiplier = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public bool IsPaused
+        {
+            get { return isPaused; }
+            set
+            {
+                isPaused = value;
+                Time.timeScale = isPaused ? 0f : 1f;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        private void Start()
+        {
+            currentDate = new DateTime(2026, 1, 1, 8, 0, 0);
+            StartCoroutine(TimeRoutine());
+            //OnDayChanged += ProduceAllFacilities;
             OnDataChanged?.Invoke();
         }
-    }
 
-    public string CityName
-    {
-        get { return cityName; }
-        set
+        private IEnumerator TimeRoutine()
         {
-            cityName = value;
-            OnDataChanged?.Invoke();
+            while (true)
+            {
+                yield return new WaitForSeconds(timeMultiplier);
+                CurrentDate = CurrentDate.AddMinutes(1);
+            }
         }
-    }
-
-    public DateTime CurrentDate
-    {
-        get { return currentDate; }
-        private set
+        //----Resource Fields
+        public int Iron
         {
-            currentDate = value;
-            OnDataChanged?.Invoke();
+            get { return iron; }
+            set
+            {
+                iron = value;
+                OnDataChanged?.Invoke();
+            }
         }
-    }
 
-    public float TimeMultiplier
-    {
-        get { return timeMultiplier; }
-        set
+        public int Steel
         {
-            timeMultiplier = value;
-            OnDataChanged?.Invoke();
+            get { return steel; }
+            set
+            {
+                steel = value;
+                OnDataChanged?.Invoke();
+            }
         }
-    }
 
-    public bool IsPaused
-    {
-        get { return isPaused; }
-        set
+        public int Wood
         {
-            isPaused = value;
-            Time.timeScale = isPaused ? 0f : 1f;
-            OnDataChanged?.Invoke();
+            get { return wood; }
+            set
+            {
+                wood = value;
+                OnDataChanged?.Invoke();
+            }
         }
-    }
 
-    private void Start()
-    {
-        currentDate = new DateTime(2026, 1, 1, 8, 0, 0);
-        StartCoroutine(TimeRoutine());
-        OnDataChanged?.Invoke();
-    }
-
-    private IEnumerator TimeRoutine()
-    {
-        while (true)
+        public int Paper
         {
-            yield return new WaitForSeconds(timeMultiplier);
-            CurrentDate = CurrentDate.AddMinutes(1);
+            get { return paper; }
+            set
+            {
+                paper = value;
+                OnDataChanged?.Invoke();
+            }
         }
-    }
+
+        public int Copper
+        {
+            get { return copper; }
+            set
+            {
+                copper = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+        //----Resource Fields END
+
+        public void AddFacility(Facility f)
+        {
+            facilities.Add(f);
+        }
+
+        public void ProduceAllFacilities()
+        {
+            foreach (Facility facility in facilities)
+            {
+                facility.produce(this);
+            }
+        }
     }
 }
