@@ -74,15 +74,15 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 2
-  m_Sprite: {fileID: 21300000, guid: 3e2485c0cdefc45309d5fd1c011c026f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 53efe5772f1e74794bade2564ecd9c91, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 0.5}
+  m_Size: {x: 0.73046875, y: 0.73046875}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &2326899049741260738
@@ -97,13 +97,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7299b100aa6584ce89b8a30bb7269104, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  id: 0
   carSprite: {fileID: 0}
   speed: 1
   age: 0
   maintenanceCost: 600
   type: 2
   roadTilemap: {fileID: 0}
-  leftUpSprite: {fileID: 0}
-  leftDownSprite: {fileID: 0}
-  rightUpSprite: {fileID: 0}
-  rightDownSprite: {fileID: 0}
+  leftUpSprite: {fileID: 21300000, guid: b2f4d75c789374b358022043c926baf6, type: 3}
+  leftDownSprite: {fileID: 21300000, guid: 49c5c541b329e4fce8dfd2bfffa5d388, type: 3}
+  rightUpSprite: {fileID: 21300000, guid: 2ac66cce9c7be4823a14282b88ac2aa4, type: 3}
+  rightDownSprite: {fileID: 21300000, guid: 53efe5772f1e74794bade2564ecd9c91, type: 3}
+  materialType: 0

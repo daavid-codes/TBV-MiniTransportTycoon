@@ -8,6 +8,7 @@ namespace MiniTransportTycoon
     private readonly List<List<Vector3Int>> loopRouteLegs = new List<List<Vector3Int>>();
     private bool useLoopRoute;
     private int nextLoopLegIndex;
+    private bool hasStartedLoopLeg;
     private GameData gameData;
 
     private void Awake()
@@ -34,6 +35,7 @@ namespace MiniTransportTycoon
             return;
         }
 
+        HandleStopArrival();
         StartNextLoopLeg();
     }
 
@@ -61,6 +63,7 @@ namespace MiniTransportTycoon
         useLoopRoute = false;
         loopRouteLegs.Clear();
         nextLoopLegIndex = 0;
+        hasStartedLoopLeg = false;
 
         if (newLoopLegs == null)
         {
@@ -113,6 +116,24 @@ namespace MiniTransportTycoon
 
         base.SetRoute(nextRoute);
         nextLoopLegIndex = (nextLoopLegIndex + 1) % loopRouteLegs.Count;
+        hasStartedLoopLeg = true;
+    }
+
+    private void HandleStopArrival()
+    {
+        if (!hasStartedLoopLeg)
+            return;
+
+        if (stopRoute == null || stopRoute.Count == 0 || garageTilemap == null)
+            return;
+
+        int reachedStopIndex = nextLoopLegIndex % stopRoute.Count;
+        Vector3Int reachedStopCell = stopRoute[reachedStopIndex];
+
+        if (garageTilemap.HasTile(reachedStopCell))
+        {
+            Maintain();
+        }
     }
 
     private List<Vector3Int> BuildLoopLeg(List<Vector3Int> fullRoadPath, bool reverse)

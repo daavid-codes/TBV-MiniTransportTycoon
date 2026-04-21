@@ -79,6 +79,9 @@ namespace MiniTransportTycoon
     [Header("Vehicle Placement")]
     [SerializeField] private bool placeBus= false;
     [SerializeField] private Bus busPrefab;
+    [SerializeField] private bool placeTruck = false;
+    [SerializeField] private Truck truckPrefab;
+    [SerializeField] private Materials truckPlacementMaterial = Materials.Wood;
 
     [Header("Warehouse Runtime")]
     [SerializeField] private Warehouse warehousePrefab;
@@ -112,6 +115,7 @@ namespace MiniTransportTycoon
     private readonly Dictionary<Vector3Int, Warehouse> warehousesByOrigin = new Dictionary<Vector3Int, Warehouse>();
     private readonly Dictionary<Vector3Int, Facility> facilitiesByOrigin = new Dictionary<Vector3Int, Facility>();
     private readonly List<Vector3Int> pendingCarStopSelections = new List<Vector3Int>(2);
+    private readonly List<Vector3Int> pendingTruckStopSelections = new List<Vector3Int>(2);
     private readonly List<Vector3Int> roadCoordinates = new List<Vector3Int>();
     private readonly HashSet<Vector3Int> roadCoordinateLookup = new HashSet<Vector3Int>();
     private int nextWarehouseId = 1;
@@ -185,8 +189,37 @@ namespace MiniTransportTycoon
         placeBus = !placeBus;
         if (placeBus)
         {
+            placeTruck = false;
+            ClearPendingTruckStopSelections();
+        }
+
+        if (placeBus)
+        {
             SetNavigationMode(NavigationMode.Camera);
         }
+        UpdateButtonColor();
+    }
+
+    public void TogglePlaceTruckModeUI()
+    {
+        placeTruck = !placeTruck;
+        if (placeTruck)
+        {
+            placeBus = false;
+            ClearPendingCarStopSelections();
+            SetNavigationMode(NavigationMode.Camera);
+        }
+
+        UpdateButtonColor();
+    }
+
+    public void StartTruckPlacement(Materials material)
+    {
+        truckPlacementMaterial = material;
+        placeTruck = true;
+        placeBus = false;
+        ClearPendingCarStopSelections();
+        SetNavigationMode(NavigationMode.Camera);
         UpdateButtonColor();
     }
 
@@ -270,6 +303,7 @@ namespace MiniTransportTycoon
     {
         bool isCameraMode = navigationMode == NavigationMode.Camera;
         bool canPlaceCarInCurrentMode = placeBus&& navigationMode == NavigationMode.Camera;
+        bool canPlaceTruckInCurrentMode = placeTruck && navigationMode == NavigationMode.Camera;
 
         if (!IsBuildPlacementMode() && !isCameraMode)
             return;
@@ -302,6 +336,10 @@ namespace MiniTransportTycoon
                 if (canPlaceCarInCurrentMode)
                 {
                     PlaceCarAtMousePosition();
+                }
+                else if (canPlaceTruckInCurrentMode)
+                {
+                    PlaceTruckAtMousePosition();
                 }
                 else if (LogFacilityClickAtMousePosition())
                 {
@@ -740,6 +778,17 @@ namespace MiniTransportTycoon
         SelectCarStop(routePointCell);
     }
 
+    void PlaceTruckAtMousePosition()
+    {
+        if (!TryGetTruckRoutePointAtMousePosition(out Vector3Int routePointCell))
+        {
+            Debug.Log("Click a garage, warehouse, or facility to select a truck route point.");
+            return;
+        }
+
+        SelectTruckStop(routePointCell, truckPlacementMaterial);
+    }
+
     void PlaceCar(Vector3Int cellPos)
     {
         if (!CanPlaceCarAt(cellPos))
@@ -756,6 +805,7 @@ namespace MiniTransportTycoon
 
         Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
+        carInstance.SetGarageTilemap(garageTilemap);
         Debug.Log("Placed car at: " + cellPos);
     }
 
@@ -860,10 +910,120 @@ namespace MiniTransportTycoon
 
         Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
+        carInstance.SetGarageTilemap(garageTilemap);
         carInstance.SetRoadCoordinates(roadCoordinates);
         carInstance.SetStopRoute(normalizedRoutePoints);
         carInstance.SetLoopRoute(loopRouteLegs);
         Debug.Log("Placed car at: " + spawnRoadCell + " with loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        return true;
+    }
+
+    void SelectTruckStop(Vector3Int stopCellPos, Materials material)
+    {
+        Vector3Int normalizedRoutePoint = NormalizeTruckRoutePoint(stopCellPos);
+
+        if (normalizedRoutePoint == InvalidCellPosition)
+        {
+            Debug.Log("Click a garage, warehouse, or facility to select a truck route point.");
+            return;
+        }
+
+        if (pendingTruckStopSelections.Count >= 2 && normalizedRoutePoint == pendingTruckStopSelections[0])
+        {
+            bool placedTruck = TryPlaceTruckFromSelectedStops(new List<Vector3Int>(pendingTruckStopSelections), material);
+
+            if (!placedTruck)
+            {
+                Debug.LogWarning("Could not create a loop route from selected truck route points.");
+            }
+
+            ClearPendingTruckStopSelections();
+            return;
+        }
+
+        if (pendingTruckStopSelections.Contains(normalizedRoutePoint))
+        {
+            Debug.LogWarning("Truck route point already selected. Click the first point again to finalize the loop.");
+            return;
+        }
+
+        pendingTruckStopSelections.Add(normalizedRoutePoint);
+        Debug.Log("Selected truck route point " + pendingTruckStopSelections.Count + " at: " + normalizedRoutePoint
+            + ". Click the first selected point to finalize route.");
+    }
+
+    public bool TryPlaceTruckFromSelectedStops(List<Vector3Int> selectedRoutePoints, Materials material)
+    {
+        if (truckPrefab == null)
+        {
+            Debug.LogWarning("Cannot place truck because truckPrefab is not assigned.");
+            return false;
+        }
+
+        if (selectedRoutePoints == null || selectedRoutePoints.Count < 2)
+        {
+            Debug.LogWarning("Cannot place truck because at least two route points are required.");
+            return false;
+        }
+
+        List<Vector3Int> normalizedRoutePoints = new List<Vector3Int>(selectedRoutePoints.Count);
+        List<Vector3Int> routeRoadCells = new List<Vector3Int>(selectedRoutePoints.Count);
+
+        for (int i = 0; i < selectedRoutePoints.Count; i++)
+        {
+            Vector3Int normalizedRoutePoint = NormalizeTruckRoutePoint(selectedRoutePoints[i]);
+
+            if (normalizedRoutePoint == InvalidCellPosition)
+            {
+                Debug.LogWarning("Cannot place truck because one of the route points is not a garage, warehouse, or facility.");
+                return false;
+            }
+
+            if (!TryGetClosestRoadTile(normalizedRoutePoint, out Vector3Int closestRoadCell))
+            {
+                Debug.LogWarning("Cannot place truck because no road was found near route point: " + normalizedRoutePoint);
+                return false;
+            }
+
+            normalizedRoutePoints.Add(normalizedRoutePoint);
+            routeRoadCells.Add(closestRoadCell);
+        }
+
+        List<List<Vector3Int>> loopRouteLegs = new List<List<Vector3Int>>(routeRoadCells.Count);
+
+        for (int i = 0; i < routeRoadCells.Count; i++)
+        {
+            Vector3Int startRoadCell = routeRoadCells[i];
+            Vector3Int endRoadCell = routeRoadCells[(i + 1) % routeRoadCells.Count];
+            List<Vector3Int> legPath = FindRoadPath(startRoadCell, endRoadCell);
+
+            if (legPath == null)
+            {
+                Debug.LogWarning("Cannot place truck because route points are not connected by roads.");
+                return false;
+            }
+
+            loopRouteLegs.Add(legPath);
+        }
+
+        if (roadTilemap == null)
+        {
+            Debug.LogWarning("Cannot place truck because roadTilemap is not assigned.");
+            return false;
+        }
+
+        Vector3Int spawnRoadCell = routeRoadCells[0];
+        Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(spawnRoadCell);
+        spawnPosition.z = truckPrefab.transform.position.z;
+
+        Truck truckInstance = Instantiate(truckPrefab, spawnPosition, truckPrefab.transform.rotation);
+        truckInstance.SetRoadTilemap(roadTilemap);
+        truckInstance.SetGarageTilemap(garageTilemap);
+        truckInstance.SetRoadCoordinates(roadCoordinates);
+        truckInstance.SetStopRoute(normalizedRoutePoints);
+        truckInstance.SetMaterialType(material);
+        truckInstance.SetLoopRoute(loopRouteLegs);
+        Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         return true;
     }
 
@@ -896,6 +1056,41 @@ namespace MiniTransportTycoon
         return false;
     }
 
+    bool TryGetTruckRoutePointAtMousePosition(out Vector3Int routePointCell)
+    {
+        routePointCell = InvalidCellPosition;
+
+        if (garageTilemap != null)
+        {
+            Vector3Int garageCellPos = GetMouseCellPosition(garageTilemap);
+
+            if (TryGetGarageOriginCell(garageCellPos, out Vector3Int garageOriginCell))
+            {
+                routePointCell = garageOriginCell;
+                return true;
+            }
+        }
+
+        if (warehouseTilemap != null)
+        {
+            Vector3Int warehouseCellPos = GetMouseCellPosition(warehouseTilemap);
+
+            if (TryGetWarehouseOriginCell(warehouseCellPos, out Vector3Int warehouseOriginCell))
+            {
+                routePointCell = warehouseOriginCell;
+                return true;
+            }
+        }
+
+        if (TryGetFacilityAtMousePosition(out _, out Vector3Int facilityOriginCell, out _))
+        {
+            routePointCell = facilityOriginCell;
+            return true;
+        }
+
+        return false;
+    }
+
     Vector3Int NormalizeRoutePoint(Vector3Int selectedCellPos)
     {
         if (busStopTilemap != null && busStopTilemap.HasTile(selectedCellPos))
@@ -905,6 +1100,42 @@ namespace MiniTransportTycoon
             return garageOriginCell;
 
         return InvalidCellPosition;
+    }
+
+    Vector3Int NormalizeTruckRoutePoint(Vector3Int selectedCellPos)
+    {
+        if (garageTilemap != null && TryGetGarageOriginCell(selectedCellPos, out Vector3Int garageOriginCell))
+            return garageOriginCell;
+
+        if (warehouseTilemap != null && TryGetWarehouseOriginCell(selectedCellPos, out Vector3Int warehouseOriginCell))
+            return warehouseOriginCell;
+
+        if (TryGetFacilityOriginFromAnyTilemap(selectedCellPos, out Vector3Int facilityOriginCell))
+            return facilityOriginCell;
+
+        return InvalidCellPosition;
+    }
+
+    bool TryGetFacilityOriginFromAnyTilemap(Vector3Int selectedCellPos, out Vector3Int facilityOriginCell)
+    {
+        facilityOriginCell = InvalidCellPosition;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, ironFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, paperFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, steelFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, woodFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, coalFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        return false;
     }
 
     void PlaceBusStop(Vector3Int cellPos)
@@ -1116,14 +1347,29 @@ namespace MiniTransportTycoon
     void SyncCarPlacementSelectionState()
     {
         if (placeBus&& navigationMode == NavigationMode.Camera)
+        {
+            ClearPendingTruckStopSelections();
             return;
+        }
+
+        if (placeTruck && navigationMode == NavigationMode.Camera)
+        {
+            ClearPendingCarStopSelections();
+            return;
+        }
 
         ClearPendingCarStopSelections();
+        ClearPendingTruckStopSelections();
     }
 
     void ClearPendingCarStopSelections()
     {
         pendingCarStopSelections.Clear();
+    }
+
+    void ClearPendingTruckStopSelections()
+    {
+        pendingTruckStopSelections.Clear();
     }
 
     void RefreshRoadCoordinates()
