@@ -121,6 +121,11 @@ namespace MiniTransportTycoon
         roadCoordinateLookup = new HashSet<Vector3Int>(roadCoordinates);
     }
 
+    public void SetSpeed(float newSpeed)
+    {
+        speed = Mathf.Max(0f, newSpeed);
+    }
+
     protected Vector3 GetWorldPosition(Vector3Int cell)
     {
         if (roadTilemap != null)

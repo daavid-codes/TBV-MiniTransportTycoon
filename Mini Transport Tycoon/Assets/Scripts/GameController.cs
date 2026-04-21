@@ -80,10 +80,12 @@ namespace MiniTransportTycoon
     [SerializeField] private bool placeBus= false;
     [SerializeField] private Bus busPrefab;
     [SerializeField] private int busPlacementCapacity = 50;
+    [SerializeField] private float busPlacementSpeed = 1f;
     [SerializeField] private bool placeTruck = false;
     [SerializeField] private Truck truckPrefab;
     [SerializeField] private Materials truckPlacementMaterial = Materials.Wood;
     [SerializeField] private int truckPlacementCapacity = 500;
+    [SerializeField] private float truckPlacementSpeed = 1f;
 
     [Header("Warehouse Runtime")]
     [SerializeField] private Warehouse warehousePrefab;
@@ -204,7 +206,13 @@ namespace MiniTransportTycoon
 
     public void StartBusPlacement(int capacity)
     {
+        StartBusPlacement(capacity, busPlacementSpeed);
+    }
+
+    public void StartBusPlacement(int capacity, float speed)
+    {
         busPlacementCapacity = Mathf.Max(0, capacity);
+        busPlacementSpeed = Mathf.Max(0f, speed);
         placeBus = true;
         placeTruck = false;
         ClearPendingTruckStopSelections();
@@ -227,13 +235,19 @@ namespace MiniTransportTycoon
 
     public void StartTruckPlacement(Materials material)
     {
-        StartTruckPlacement(material, truckPlacementCapacity);
+        StartTruckPlacement(material, truckPlacementCapacity, truckPlacementSpeed);
     }
 
     public void StartTruckPlacement(Materials material, int capacity)
     {
+        StartTruckPlacement(material, capacity, truckPlacementSpeed);
+    }
+
+    public void StartTruckPlacement(Materials material, int capacity, float speed)
+    {
         truckPlacementMaterial = material;
         truckPlacementCapacity = Mathf.Max(0, capacity);
+        truckPlacementSpeed = Mathf.Max(0f, speed);
         placeTruck = true;
         placeBus = false;
         ClearPendingCarStopSelections();
@@ -851,10 +865,10 @@ namespace MiniTransportTycoon
 
     void SelectCarStop(Vector3Int stopCellPos)
     {
-        SelectCarStop(stopCellPos, busPlacementCapacity);
+        SelectCarStop(stopCellPos, busPlacementCapacity, busPlacementSpeed);
     }
 
-    void SelectCarStop(Vector3Int stopCellPos, int capacity)
+    void SelectCarStop(Vector3Int stopCellPos, int capacity, float speed)
     {
         Vector3Int normalizedRoutePoint = NormalizeRoutePoint(stopCellPos);
 
@@ -866,7 +880,7 @@ namespace MiniTransportTycoon
 
         if (pendingCarStopSelections.Count >= 2 && normalizedRoutePoint == pendingCarStopSelections[0])
         {
-            bool placedBus = TryPlaceCarFromSelectedStops(new List<Vector3Int>(pendingCarStopSelections), capacity);
+            bool placedBus = TryPlaceCarFromSelectedStops(new List<Vector3Int>(pendingCarStopSelections), capacity, speed);
 
             if (!placedBus)
             {
@@ -890,10 +904,10 @@ namespace MiniTransportTycoon
 
     bool TryPlaceCarFromSelectedStops(List<Vector3Int> selectedRoutePoints)
     {
-        return TryPlaceCarFromSelectedStops(selectedRoutePoints, busPlacementCapacity);
+        return TryPlaceCarFromSelectedStops(selectedRoutePoints, busPlacementCapacity, busPlacementSpeed);
     }
 
-    bool TryPlaceCarFromSelectedStops(List<Vector3Int> selectedRoutePoints, int capacity)
+    bool TryPlaceCarFromSelectedStops(List<Vector3Int> selectedRoutePoints, int capacity, float speed)
     {
         if (busPrefab == null)
         {
@@ -964,17 +978,18 @@ namespace MiniTransportTycoon
         carInstance.SetRoadCoordinates(roadCoordinates);
         carInstance.SetStopRoute(normalizedRoutePoints);
         carInstance.SetMaxCarryingAmount(capacity);
+        carInstance.SetSpeed(speed);
         carInstance.SetLoopRoute(loopRouteLegs);
-        Debug.Log("Placed car at: " + spawnRoadCell + " with capacity " + Mathf.Max(0, capacity) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        Debug.Log("Placed car at: " + spawnRoadCell + " with capacity " + Mathf.Max(0, capacity) + ", speed " + Mathf.Max(0f, speed) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         return true;
     }
 
     void SelectTruckStop(Vector3Int stopCellPos, Materials material)
     {
-        SelectTruckStop(stopCellPos, material, truckPlacementCapacity);
+        SelectTruckStop(stopCellPos, material, truckPlacementCapacity, truckPlacementSpeed);
     }
 
-    void SelectTruckStop(Vector3Int stopCellPos, Materials material, int capacity)
+    void SelectTruckStop(Vector3Int stopCellPos, Materials material, int capacity, float speed)
     {
         Vector3Int normalizedRoutePoint = NormalizeTruckRoutePoint(stopCellPos);
 
@@ -986,7 +1001,7 @@ namespace MiniTransportTycoon
 
         if (pendingTruckStopSelections.Count >= 2 && normalizedRoutePoint == pendingTruckStopSelections[0])
         {
-            bool placedTruck = TryPlaceTruckFromSelectedStops(new List<Vector3Int>(pendingTruckStopSelections), material, capacity);
+            bool placedTruck = TryPlaceTruckFromSelectedStops(new List<Vector3Int>(pendingTruckStopSelections), material, capacity, speed);
 
             if (!placedTruck)
             {
@@ -1010,10 +1025,15 @@ namespace MiniTransportTycoon
 
     public bool TryPlaceTruckFromSelectedStops(List<Vector3Int> selectedRoutePoints, Materials material)
     {
-        return TryPlaceTruckFromSelectedStops(selectedRoutePoints, material, truckPlacementCapacity);
+        return TryPlaceTruckFromSelectedStops(selectedRoutePoints, material, truckPlacementCapacity, truckPlacementSpeed);
     }
 
     public bool TryPlaceTruckFromSelectedStops(List<Vector3Int> selectedRoutePoints, Materials material, int capacity)
+    {
+        return TryPlaceTruckFromSelectedStops(selectedRoutePoints, material, capacity, truckPlacementSpeed);
+    }
+
+    public bool TryPlaceTruckFromSelectedStops(List<Vector3Int> selectedRoutePoints, Materials material, int capacity, float speed)
     {
         if (truckPrefab == null)
         {
@@ -1089,8 +1109,9 @@ namespace MiniTransportTycoon
         truckInstance.SetStopRoute(normalizedRoutePoints);
         truckInstance.SetMaterialType(material);
         truckInstance.SetMaxCarryingAmount(capacity);
+        truckInstance.SetSpeed(speed);
         truckInstance.SetLoopRoute(loopRouteLegs);
-        Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with capacity " + Mathf.Max(0, capacity) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with capacity " + Mathf.Max(0, capacity) + ", speed " + Mathf.Max(0f, speed) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         return true;
     }
 
