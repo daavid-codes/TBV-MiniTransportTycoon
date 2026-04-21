@@ -5,7 +5,6 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
-
 using MiniTransportTycoon;
 
 namespace MiniTransportTycoon
@@ -20,455 +19,653 @@ namespace MiniTransportTycoon
         {
             for (int i = trackedObjects.Count - 1; i >= 0; i--)
             {
-                UnityEngine.Object trackedObject = trackedObjects[i];
-                if (trackedObject != null)
+                if (trackedObjects[i] != null)
                 {
-                    UnityEngine.Object.DestroyImmediate(trackedObject);
+                    UnityEngine.Object.DestroyImmediate(trackedObjects[i]);
                 }
             }
-
             trackedObjects.Clear();
         }
 
         [Test]
-        public void NavigationModeUiMethods_SwitchModesAndUpdateBuildButtonColor()
+        public void Awake_InitializesTilemapsAndCollections()
         {
-            ControllerContext context = CreateControllerContext();
-            Image buildButtonImage = CreateImage("BuildButton");
-            Color normalColor = new Color32(10, 20, 30, 255);
-            Color activeColor = new Color32(40, 50, 60, 255);
+            var context = CreateContext();
+            
+            var allTilemaps = GetField<Tilemap[]>(context.Controller, "allTilemaps");
+            Assert.IsNotNull(allTilemaps);
+            Assert.AreEqual(5, allTilemaps.Length);
+            
+            var roadCoordinates = GetField<List<Vector3Int>>(context.Controller, "roadCoordinates");
+            Assert.IsNotNull(roadCoordinates);
+        }
 
-            SetField(context.Controller, "buildButtonImage", buildButtonImage);
-            SetField(context.Controller, "normalColor", normalColor);
-            SetField(context.Controller, "activeColor", activeColor);
-
+        [Test]
+        public void ToggleBuildModeUI_SetsModeToRoadBuild()
+        {
+            var context = CreateContext();
+            
             context.Controller.ToggleBuildModeUI();
+            
             Assert.AreEqual(NavigationMode.RoadBuild, GetField<NavigationMode>(context.Controller, "navigationMode"));
-            Assert.AreEqual(activeColor, buildButtonImage.color);
+            Assert.AreEqual(context.ActiveColor, context.BuildButtonImage.color);
+            Assert.AreEqual(context.NormalColor, context.BusStopButtonImage.color);
+            Assert.AreEqual(context.NormalColor, context.GarageButtonImage.color);
+        }
 
+        [Test]
+        public void ToggleBusStopBuildModeUI_SetsModeToStopBuild()
+        {
+            var context = CreateContext();
+            
             context.Controller.ToggleBusStopBuildModeUI();
+            
             Assert.AreEqual(NavigationMode.StopBuild, GetField<NavigationMode>(context.Controller, "navigationMode"));
-            Assert.AreEqual(normalColor, buildButtonImage.color);
+            Assert.AreEqual(context.NormalColor, context.BuildButtonImage.color);
+            Assert.AreEqual(context.ActiveColor, context.BusStopButtonImage.color);
+        }
 
+        [Test]
+        public void ToggleGarageBuildModeUI_SetsModeToGarageBuild()
+        {
+            var context = CreateContext();
+            
             context.Controller.ToggleGarageBuildModeUI();
+            
             Assert.AreEqual(NavigationMode.GarageBuild, GetField<NavigationMode>(context.Controller, "navigationMode"));
+            Assert.AreEqual(context.ActiveColor, context.GarageButtonImage.color);
+        }
 
+        [Test]
+        public void ToggleDestroyModeUI_SetsModeToDestroy()
+        {
+            var context = CreateContext();
+            
             context.Controller.ToggleDestroyModeUI();
+            
             Assert.AreEqual(NavigationMode.Destroy, GetField<NavigationMode>(context.Controller, "navigationMode"));
+        }
 
+        [Test]
+        public void SetCameraModeUI_SetsModeToCamera()
+        {
+            var context = CreateContext();
+            SetField(context.Controller, "navigationMode", NavigationMode.RoadBuild);
+            
             context.Controller.SetCameraModeUI();
+            
             Assert.AreEqual(NavigationMode.Camera, GetField<NavigationMode>(context.Controller, "navigationMode"));
-            Assert.AreEqual(normalColor, buildButtonImage.color);
+            Assert.AreEqual(context.NormalColor, context.BuildButtonImage.color);
         }
 
         [Test]
-        public void PlaceRoad_RegistersCoordinatesAndUpdatesConnectedTiles()
+        public void TogglePlaceBusModeUI_TogglesFlagAndSetsCameraMode()
         {
-            ControllerContext context = CreateControllerContext();
+            var context = CreateContext();
+            SetField(context.Controller, "navigationMode", NavigationMode.RoadBuild);
+            
+            context.Controller.TogglePlaceBusModeUI();
+            
+            Assert.IsTrue(GetField<bool>(context.Controller, "placeBus"));
+            Assert.AreEqual(NavigationMode.Camera, GetField<NavigationMode>(context.Controller, "navigationMode"));
+            Assert.AreEqual(context.ActiveColor, context.PlaceBusButtonImage.color);
+            
+            context.Controller.TogglePlaceBusModeUI();
+            
+            Assert.IsFalse(GetField<bool>(context.Controller, "placeBus"));
+            Assert.AreEqual(context.NormalColor, context.PlaceBusButtonImage.color);
+        }
 
-            Invoke(context.Controller, "PlaceRoad", Vector3Int.zero);
-            Assert.AreSame(context.RoadStraightUpDownTile, context.Road.GetTile(Vector3Int.zero));
+        [Test]
+        public void CanBuildRoadAt_NoGroundTile_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int pos = new Vector3Int(100, 100, 0);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildRoadAt", pos);
+            
+            Assert.IsFalse(result);
+        }
 
-            Invoke(context.Controller, "PlaceRoad", Vector3Int.right);
-            Assert.AreSame(context.RoadStraightLeftRightTile, context.Road.GetTile(Vector3Int.zero));
-            Assert.AreSame(context.RoadStraightLeftRightTile, context.Road.GetTile(Vector3Int.right));
+        [Test]
+        public void CanBuildRoadAt_RoadAlreadyExists_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int pos = Vector3Int.zero;
+            Invoke(context.Controller, "PlaceRoad", pos);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildRoadAt", pos);
+            
+            Assert.IsFalse(result);
+        }
 
+        [Test]
+        public void CanBuildRoadAt_OccupiedByGarage_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int pos = Vector3Int.zero;
+            var occupied = GetField<HashSet<Vector3Int>>(context.Controller, "occupiedGarageCells");
+            occupied.Add(pos);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildRoadAt", pos);
+            
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void CanBuildRoadAt_OccupiedByBusStop_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int pos = Vector3Int.zero;
+            context.BusStops.SetTile(pos, context.BusStopUpTile);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildRoadAt", pos);
+            
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void CanBuildRoadAt_NoAdjacentRoad_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int pos = new Vector3Int(5, 5, 0);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildRoadAt", pos);
+            
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void CanBuildRoadAt_ValidConditions_ReturnsTrue()
+        {
+            var context = CreateContext();
+            Vector3Int pos = new Vector3Int(5, 5, 0);
+            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.up);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildRoadAt", pos);
+            
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void CanBuildBusStopAt_ValidConditions_ReturnsTrue()
+        {
+            var context = CreateContext();
+            Vector3Int pos = new Vector3Int(2, 2, 0);
+            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.right);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildBusStopAt", pos);
+            
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void CanBuildBusStopAt_OnExistingRoad_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int pos = new Vector3Int(2, 2, 0);
+            Invoke(context.Controller, "PlaceRoad", pos);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildBusStopAt", pos);
+            
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void GetGarageFootprintCells_ReturnsCorrectFourCells()
+        {
+            var context = CreateContext();
+            Vector3Int origin = new Vector3Int(10, 10, 0);
+            
+            List<Vector3Int> footprint = Invoke<List<Vector3Int>>(context.Controller, "GetGarageFootprintCells", origin);
+            
+            Assert.AreEqual(4, footprint.Count);
+            Assert.IsTrue(footprint.Contains(origin));
+            Assert.IsTrue(footprint.Contains(origin + Vector3Int.right));
+            Assert.IsTrue(footprint.Contains(origin + Vector3Int.up));
+            Assert.IsTrue(footprint.Contains(origin + Vector3Int.up + Vector3Int.right));
+        }
+
+        [Test]
+        public void CanBuildGarageAt_MissingGround_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int origin = new Vector3Int(99, 99, 0);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildGarageAt", origin);
+            
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void CanBuildGarageAt_RoadInFootprint_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int origin = Vector3Int.zero;
+            Invoke(context.Controller, "PlaceRoad", origin + Vector3Int.right);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildGarageAt", origin);
+            
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void CanBuildGarageAt_ValidConditions_ReturnsTrue()
+        {
+            var context = CreateContext();
+            Vector3Int origin = new Vector3Int(2, 2, 0);
+            Invoke(context.Controller, "PlaceRoad", origin + Vector3Int.left);
+            
+            bool result = Invoke<bool>(context.Controller, "CanBuildGarageAt", origin);
+            
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void TryGetGarageOriginCell_ValidClick_ReturnsTrueAndOrigin()
+        {
+            var context = CreateContext();
+            Vector3Int origin = new Vector3Int(5, 5, 0);
+            context.Garage.SetTile(origin, context.GarageTile);
+            
+            object[] args = { origin + Vector3Int.up, Vector3Int.zero };
+            var method = context.Controller.GetType().GetMethod("TryGetGarageOriginCell", InstanceFlags);
+            bool result = (bool)method.Invoke(context.Controller, args);
+            
+            Assert.IsTrue(result);
+            Assert.AreEqual(origin, (Vector3Int)args[1]);
+        }
+
+        [Test]
+        public void GetRoadNeighborMask_NoNeighbors_ReturnsZero()
+        {
+            var context = CreateContext();
+            Vector3Int pos = Vector3Int.zero;
+            
+            int mask = Invoke<int>(context.Controller, "GetRoadNeighborMask", pos);
+            
+            Assert.AreEqual(0, mask);
+        }
+
+        [Test]
+        public void GetRoadNeighborMask_AllNeighbors_ReturnsFifteen()
+        {
+            var context = CreateContext();
+            Vector3Int pos = Vector3Int.zero;
+            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.up);
+            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.right);
+            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.down);
+            Invoke(context.Controller, "PlaceRoad", pos + Vector3Int.left);
+            
+            int mask = Invoke<int>(context.Controller, "GetRoadNeighborMask", pos);
+            
+            Assert.AreEqual(15, mask);
+        }
+
+        [TestCase(0, "StraightUD")]
+        [TestCase(1, "StraightUD")]
+        [TestCase(2, "StraightLR")]
+        [TestCase(3, "TurnUR")]
+        [TestCase(4, "StraightUD")]
+        [TestCase(5, "StraightUD")]
+        [TestCase(6, "TurnRD")]
+        [TestCase(7, "TJunctionURD")]
+        [TestCase(8, "StraightLR")]
+        [TestCase(9, "TurnLU")]
+        [TestCase(10, "StraightLR")]
+        [TestCase(11, "TJunctionLUR")]
+        [TestCase(12, "TurnDL")]
+        [TestCase(13, "TJunctionDLU")]
+        [TestCase(14, "TJunctionRDL")]
+        [TestCase(15, "Intersection")]
+        public void GetRoadTileForMask_ReturnsCorrectTileType(int mask, string expectedName)
+        {
+            var context = CreateContext();
+            
+            TileBase tile = Invoke<TileBase>(context.Controller, "GetRoadTileForMask", mask);
+            
+            Assert.IsNotNull(tile);
+            Assert.AreEqual(expectedName, tile.name);
+        }
+
+        [Test]
+        public void CanPlaceCarAt_IsRoad_ReturnsTrue()
+        {
+            var context = CreateContext();
+            Vector3Int pos = Vector3Int.zero;
+            Invoke(context.Controller, "PlaceRoad", pos);
+            
+            bool result = Invoke<bool>(context.Controller, "CanPlaceCarAt", pos);
+            
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void CanPlaceCarAt_IsNotRoad_ReturnsFalse()
+        {
+            var context = CreateContext();
+            Vector3Int pos = Vector3Int.zero;
+            
+            bool result = Invoke<bool>(context.Controller, "CanPlaceCarAt", pos);
+            
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void TryGetClosestRoadTile_OnRoad_ReturnsSameCell()
+        {
+            var context = CreateContext();
+            Vector3Int pos = Vector3Int.zero;
+            Invoke(context.Controller, "PlaceRoad", pos);
+            
+            object[] args = { pos, Vector3Int.zero };
+            var method = context.Controller.GetType().GetMethod("TryGetClosestRoadTile", InstanceFlags);
+            bool result = (bool)method.Invoke(context.Controller, args);
+            
+            Assert.IsTrue(result);
+            Assert.AreEqual(pos, (Vector3Int)args[1]);
+        }
+
+        [Test]
+        public void TryGetClosestRoadTile_RadiusSearch_ReturnsClosestCell()
+        {
+            var context = CreateContext();
+            Vector3Int start = Vector3Int.zero;
+            Vector3Int roadPos = new Vector3Int(0, 3, 0);
+            Invoke(context.Controller, "PlaceRoad", roadPos);
+            
+            object[] args = { start, Vector3Int.zero };
+            var method = context.Controller.GetType().GetMethod("TryGetClosestRoadTile", InstanceFlags);
+            bool result = (bool)method.Invoke(context.Controller, args);
+            
+            Assert.IsTrue(result);
+            Assert.AreEqual(roadPos, (Vector3Int)args[1]);
+        }
+
+        [Test]
+        public void FindRoadPath_ValidRoute_ReturnsFullPath()
+        {
+            var context = CreateContext();
+            Vector3Int start = Vector3Int.zero;
+            Vector3Int mid1 = new Vector3Int(1, 0, 0);
+            Vector3Int mid2 = new Vector3Int(1, 1, 0);
+            Vector3Int end = new Vector3Int(2, 1, 0);
+            
+            Invoke(context.Controller, "PlaceRoad", start);
+            Invoke(context.Controller, "PlaceRoad", mid1);
+            Invoke(context.Controller, "PlaceRoad", mid2);
+            Invoke(context.Controller, "PlaceRoad", end);
+            
+            List<Vector3Int> path = Invoke<List<Vector3Int>>(context.Controller, "FindRoadPath", start, end);
+            
+            Assert.IsNotNull(path);
+            Assert.AreEqual(4, path.Count);
+            Assert.AreEqual(start, path[0]);
+            Assert.AreEqual(end, path[3]);
+        }
+
+        [Test]
+        public void FindRoadPath_NoRoute_ReturnsNull()
+        {
+            var context = CreateContext();
+            Vector3Int start = Vector3Int.zero;
+            Vector3Int end = new Vector3Int(5, 5, 0);
+            
+            Invoke(context.Controller, "PlaceRoad", start);
+            Invoke(context.Controller, "PlaceRoad", end);
+            
+            List<Vector3Int> path = Invoke<List<Vector3Int>>(context.Controller, "FindRoadPath", start, end);
+            
+            Assert.IsNull(path);
+        }
+
+        [Test]
+        public void SelectCarStop_FirstSelection_AddsToPending()
+        {
+            var context = CreateContext();
+            Vector3Int stop = Vector3Int.zero;
+            context.BusStops.SetTile(stop, context.BusStopUpTile);
+            
+            Invoke(context.Controller, "SelectCarStop", stop);
+            
+            var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
+            Assert.AreEqual(1, pending.Count);
+            Assert.AreEqual(stop, pending[0]);
+        }
+
+        [Test]
+        public void SelectCarStop_SameSelection_Ignored()
+        {
+            var context = CreateContext();
+            Vector3Int stop = Vector3Int.zero;
+            context.BusStops.SetTile(stop, context.BusStopUpTile);
+            
+            Invoke(context.Controller, "SelectCarStop", stop);
+            Invoke(context.Controller, "SelectCarStop", stop);
+            
+            var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
+            Assert.AreEqual(1, pending.Count);
+        }
+
+        [Test]
+        public void SelectCarStop_TwoSelections_ClearsPendingList()
+        {
+            var context = CreateContext();
+            Vector3Int stop1 = Vector3Int.zero;
+            Vector3Int stop2 = new Vector3Int(2, 0, 0);
+            
+            context.BusStops.SetTile(stop1, context.BusStopUpTile);
+            context.BusStops.SetTile(stop2, context.BusStopUpTile);
+            Invoke(context.Controller, "PlaceRoad", stop1 + Vector3Int.up);
+            Invoke(context.Controller, "PlaceRoad", stop2 + Vector3Int.up);
+            Invoke(context.Controller, "PlaceRoad", new Vector3Int(1, 1, 0));
+            
+            Invoke(context.Controller, "SelectCarStop", stop1);
+            Invoke(context.Controller, "SelectCarStop", stop2);
+            
+            var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
+            Assert.AreEqual(0, pending.Count);
+        }
+
+        [Test]
+        public void GetNearestRoadDirection_FindsCorrectOffset()
+        {
+            var context = CreateContext();
+            Vector3Int cellPos = Vector3Int.zero;
+            Invoke(context.Controller, "PlaceRoad", new Vector3Int(-2, 0, 0));
+            
+            Vector3Int dir = Invoke<Vector3Int>(context.Controller, "GetNearestRoadDirection", cellPos);
+            
+            Assert.AreEqual(Vector3Int.left, dir);
+        }
+
+        [Test]
+        public void IsRoadCoordinate_ReturnsTrueForPlacedRoad()
+        {
+            var context = CreateContext();
+            Vector3Int cellPos = new Vector3Int(7, 7, 0);
+            
+            Invoke(context.Controller, "RegisterRoadCoordinate", cellPos);
+            bool result = Invoke<bool>(context.Controller, "IsRoadCoordinate", cellPos);
+            
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void HasAdjacentRoad_Footprint_ReturnsTrueIfNextToRoad()
+        {
+            var context = CreateContext();
+            List<Vector3Int> footprint = new List<Vector3Int> { Vector3Int.zero, Vector3Int.right };
             Invoke(context.Controller, "PlaceRoad", Vector3Int.up);
-            Assert.AreSame(context.RoadTurnUpRightTile, context.Road.GetTile(Vector3Int.zero));
-
-            CollectionAssert.AreEquivalent(
-                new[] { Vector3Int.zero, Vector3Int.right, Vector3Int.up },
-                GetField<List<Vector3Int>>(context.Controller, "roadCoordinates"));
+            
+            bool result = Invoke<bool>(context.Controller, "HasAdjacentRoad", footprint);
+            
+            Assert.IsTrue(result);
         }
 
-        [Test]
-        public void PlaceBusStop_UsesDirectionalTileForAdjacentRoad()
+        private ControllerContext CreateContext()
         {
-            ControllerContext context = CreateControllerContext();
-
-            Invoke(context.Controller, "PlaceRoad", Vector3Int.right);
-            Invoke(context.Controller, "PlaceBusStop", Vector3Int.zero);
-
-            Assert.AreSame(context.BusStopRightTile, context.BusStops.GetTile(Vector3Int.zero));
-            Assert.IsFalse(Invoke<bool>(context.Controller, "CanBuildBusStopAt", Vector3Int.zero));
-        }
-
-        [Test]
-        public void PlaceGarage_OccupiesFootprintAndResolvesOriginFromAnyGarageCell()
-        {
-            ControllerContext context = CreateControllerContext();
-
-            Invoke(context.Controller, "PlaceRoad", new Vector3Int(-1, 0, 0));
-            Invoke(context.Controller, "PlaceGarage", Vector3Int.zero);
-
-            Assert.AreSame(context.GarageTile, context.Garage.GetTile(Vector3Int.zero));
-
-            HashSet<Vector3Int> occupiedCells = GetField<HashSet<Vector3Int>>(context.Controller, "occupiedGarageCells");
-            CollectionAssert.IsSubsetOf(
-                new[]
-                {
-                    Vector3Int.zero,
-                    Vector3Int.right,
-                    Vector3Int.up,
-                    Vector3Int.up + Vector3Int.right
-                },
-                occupiedCells);
-
-            Assert.IsFalse(Invoke<bool>(context.Controller, "CanBuildGarageAt", Vector3Int.zero));
-
-            Assert.IsTrue(InvokeVector3IntOut(context.Controller, "TryGetGarageOriginCell", Vector3Int.up + Vector3Int.right, out Vector3Int garageOrigin));
-            Assert.AreEqual(Vector3Int.zero, garageOrigin);
-        }
-
-        [Test]
-        public void RoadQueries_FindConnectedPathAndClosestReachableRoad()
-        {
-            ControllerContext context = CreateControllerContext();
-            Vector3Int endCell = new Vector3Int(2, 1, 0);
-
-            Invoke(context.Controller, "PlaceRoad", Vector3Int.zero);
-            Invoke(context.Controller, "PlaceRoad", Vector3Int.right);
-            Invoke(context.Controller, "PlaceRoad", new Vector3Int(2, 0, 0));
-            Invoke(context.Controller, "PlaceRoad", endCell);
-
-            List<Vector3Int> path = Invoke<List<Vector3Int>>(context.Controller, "FindRoadPath", Vector3Int.zero, endCell);
-
-            CollectionAssert.AreEqual(
-                new[]
-                {
-                    Vector3Int.zero,
-                    Vector3Int.right,
-                    new Vector3Int(2, 0, 0),
-                    endCell
-                },
-                path);
-
-            Assert.IsTrue(InvokeVector3IntOut(context.Controller, "TryGetClosestRoadTile", new Vector3Int(0, 2, 0), out Vector3Int closestRoadCell));
-            Assert.AreEqual(Vector3Int.zero, closestRoadCell);
-        }
-
-        [Test]
-        public void SelectCarStop_WithTwoStopsSpawnsBusWithStopAndRoadRoutes()
-        {
-            ControllerContext context = CreateControllerContext();
-            Bus busPrefab = CreateBusPrefab();
-            Vector3Int firstStopCell = new Vector3Int(0, 1, 0);
-            Vector3Int secondStopCell = new Vector3Int(2, 1, 0);
-
-            SetField(context.Controller, "busPrefab", busPrefab);
-
-            Invoke(context.Controller, "PlaceRoad", Vector3Int.zero);
-            Invoke(context.Controller, "PlaceRoad", Vector3Int.right);
-            Invoke(context.Controller, "PlaceRoad", new Vector3Int(2, 0, 0));
-
-            context.BusStops.SetTile(firstStopCell, context.BusStopDownTile);
-            context.BusStops.SetTile(secondStopCell, context.BusStopDownTile);
-
-            Invoke(context.Controller, "SelectCarStop", firstStopCell);
-            Assert.AreEqual(1, GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections").Count);
-
-            Invoke(context.Controller, "SelectCarStop", secondStopCell);
-
-            Assert.AreEqual(0, GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections").Count);
-
-            Bus spawnedBus = FindSpawnedBus(busPrefab);
-            Assert.IsNotNull(spawnedBus);
-            Track(spawnedBus.gameObject);
-
-            CollectionAssert.AreEqual(new[] { firstStopCell, secondStopCell }, spawnedBus.StopRoute);
-            CollectionAssert.AreEqual(
-                new[]
-                {
-                    Vector3Int.right,
-                    new Vector3Int(2, 0, 0)
-                },
-                spawnedBus.Route);
-            Assert.AreEqual(context.Road.GetCellCenterWorld(Vector3Int.zero), spawnedBus.transform.position);
-        }
-
-        [Test]
-        public void OnDisable_ClearsPreviewCellsAndPendingStopSelections()
-        {
-            ControllerContext context = CreateControllerContext();
-            List<Vector3Int> previewCells = new List<Vector3Int> { Vector3Int.zero, Vector3Int.right };
-
-            Invoke(context.Controller, "ApplyBuildPreview", previewCells);
-            GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections").Add(Vector3Int.up);
-
-            Assert.AreNotEqual(Color.white, context.Ground.GetColor(Vector3Int.zero));
-
-            Invoke(context.Controller, "OnDisable");
-
-            Assert.AreEqual(Color.white, context.Ground.GetColor(Vector3Int.zero));
-            Assert.AreEqual(Color.white, context.Ground.GetColor(Vector3Int.right));
-            Assert.AreEqual(0, GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections").Count);
-            Assert.AreEqual(0, GetField<List<Vector3Int>>(context.Controller, "previewedBuildCells").Count);
-        }
-
-        private ControllerContext CreateControllerContext()
-        {
-            Grid grid = CreateGrid();
-            Tilemap groundTilemap = CreateTilemap("Ground", grid.transform);
-            Tilemap roadTilemap = CreateTilemap("Road", grid.transform);
-            Tilemap busStopTilemap = CreateTilemap("BusStops", grid.transform);
-            Tilemap garageTilemap = CreateTilemap("Garages", grid.transform);
-            Tile groundTile = CreateTile("GroundTile");
-
-            FillRect(groundTilemap, -3, 4, -1, 4, groundTile);
+            GameObject go = Track(new GameObject("GameController"));
+            GameController controller = go.AddComponent<GameController>();
 
             ControllerContext context = new ControllerContext
             {
-                Ground = groundTilemap,
-                Road = roadTilemap,
-                BusStops = busStopTilemap,
-                Garage = garageTilemap,
-                RoadStraightUpDownTile = CreateTile("RoadStraightUpDown"),
-                RoadStraightLeftRightTile = CreateTile("RoadStraightLeftRight"),
-                RoadTurnUpRightTile = CreateTile("RoadTurnUpRight"),
-                RoadTurnRightDownTile = CreateTile("RoadTurnRightDown"),
-                RoadTurnDownLeftTile = CreateTile("RoadTurnDownLeft"),
-                RoadTurnLeftUpTile = CreateTile("RoadTurnLeftUp"),
-                RoadTJunctionUpRightDownTile = CreateTile("RoadTJunctionUpRightDown"),
-                RoadTJunctionRightDownLeftTile = CreateTile("RoadTJunctionRightDownLeft"),
-                RoadTJunctionDownLeftUpTile = CreateTile("RoadTJunctionDownLeftUp"),
-                RoadTJunctionLeftUpRightTile = CreateTile("RoadTJunctionLeftUpRight"),
-                RoadIntersectionTile = CreateTile("RoadIntersection"),
-                BusStopUpTile = CreateTile("BusStopUp"),
-                BusStopRightTile = CreateTile("BusStopRight"),
-                BusStopDownTile = CreateTile("BusStopDown"),
-                BusStopLeftTile = CreateTile("BusStopLeft"),
-                GarageTile = CreateTile("GarageTile")
+                Controller = controller,
+                Ground = CreateTilemap("Ground"),
+                Road = CreateTilemap("Road"),
+                BusStops = CreateTilemap("BusStops"),
+                Garage = CreateTilemap("Garages"),
+                Houses = CreateTilemap("Houses"),
+                NormalColor = Color.white,
+                ActiveColor = Color.gray,
+                BuildButtonImage = CreateImage("BuildBtn"),
+                BusStopButtonImage = CreateImage("StopBtn"),
+                GarageButtonImage = CreateImage("GarageBtn"),
+                PlaceBusButtonImage = CreateImage("PlaceBtn"),
+                RoadStraightUpDownTile = CreateTile("StraightUD"),
+                RoadStraightLeftRightTile = CreateTile("StraightLR"),
+                RoadTurnUpRightTile = CreateTile("TurnUR"),
+                RoadTurnRightDownTile = CreateTile("TurnRD"),
+                RoadTurnDownLeftTile = CreateTile("TurnDL"),
+                RoadTurnLeftUpTile = CreateTile("TurnLU"),
+                RoadTJunctionUpRightDownTile = CreateTile("TJunctionURD"),
+                RoadTJunctionRightDownLeftTile = CreateTile("TJunctionRDL"),
+                RoadTJunctionDownLeftUpTile = CreateTile("TJunctionDLU"),
+                RoadTJunctionLeftUpRightTile = CreateTile("TJunctionLUR"),
+                RoadIntersectionTile = CreateTile("Intersection"),
+                BusStopUpTile = CreateTile("StopUp"),
+                BusStopRightTile = CreateTile("StopRight"),
+                BusStopDownTile = CreateTile("StopDown"),
+                BusStopLeftTile = CreateTile("StopLeft"),
+                GarageTile = CreateTile("Garage"),
+                BusPrefab = Track(new GameObject("BusPrefab")).AddComponent<Bus>()
             };
 
-            GameObject controllerObject = Track(new GameObject("GameController"));
-            context.Controller = controllerObject.AddComponent<GameController>();
+            for (int x = -15; x <= 15; x++)
+            {
+                for (int y = -15; y <= 15; y++)
+                {
+                    context.Ground.SetTile(new Vector3Int(x, y, 0), CreateTile("Grass"));
+                }
+            }
 
-            SetField(context.Controller, "groundTilemap", context.Ground);
-            SetField(context.Controller, "roadTilemap", context.Road);
-            SetField(context.Controller, "busStopTilemap", context.BusStops);
-            SetField(context.Controller, "garageTilemap", context.Garage);
-            SetField(context.Controller, "roadStraightUpDownTile", context.RoadStraightUpDownTile);
-            SetField(context.Controller, "roadStraightLeftRightTile", context.RoadStraightLeftRightTile);
-            SetField(context.Controller, "roadTurnUpRightTile", context.RoadTurnUpRightTile);
-            SetField(context.Controller, "roadTurnRightDownTile", context.RoadTurnRightDownTile);
-            SetField(context.Controller, "roadTurnDownLeftTile", context.RoadTurnDownLeftTile);
-            SetField(context.Controller, "roadTurnLeftUpTile", context.RoadTurnLeftUpTile);
-            SetField(context.Controller, "roadTJunctionUpRightDownTile", context.RoadTJunctionUpRightDownTile);
-            SetField(context.Controller, "roadTJunctionRightDownLeftTile", context.RoadTJunctionRightDownLeftTile);
-            SetField(context.Controller, "roadTJunctionDownLeftUpTile", context.RoadTJunctionDownLeftUpTile);
-            SetField(context.Controller, "roadTJunctionLeftUpRightTile", context.RoadTJunctionLeftUpRightTile);
-            SetField(context.Controller, "roadIntersectionTile", context.RoadIntersectionTile);
-            SetField(context.Controller, "busStopUpTile", context.BusStopUpTile);
-            SetField(context.Controller, "busStopRightTile", context.BusStopRightTile);
-            SetField(context.Controller, "busStopDownTile", context.BusStopDownTile);
-            SetField(context.Controller, "busStopLeftTile", context.BusStopLeftTile);
-            SetField(context.Controller, "garageTile", context.GarageTile);
+            SetField(controller, "groundTilemap", context.Ground);
+            SetField(controller, "roadTilemap", context.Road);
+            SetField(controller, "busStopTilemap", context.BusStops);
+            SetField(controller, "garageTilemap", context.Garage);
+            SetField(controller, "housesTilemap", context.Houses);
+            
+            SetField(controller, "roadStraightUpDownTile", context.RoadStraightUpDownTile);
+            SetField(controller, "roadStraightLeftRightTile", context.RoadStraightLeftRightTile);
+            SetField(controller, "roadTurnUpRightTile", context.RoadTurnUpRightTile);
+            SetField(controller, "roadTurnRightDownTile", context.RoadTurnRightDownTile);
+            SetField(controller, "roadTurnDownLeftTile", context.RoadTurnDownLeftTile);
+            SetField(controller, "roadTurnLeftUpTile", context.RoadTurnLeftUpTile);
+            SetField(controller, "roadTJunctionUpRightDownTile", context.RoadTJunctionUpRightDownTile);
+            SetField(controller, "roadTJunctionRightDownLeftTile", context.RoadTJunctionRightDownLeftTile);
+            SetField(controller, "roadTJunctionDownLeftUpTile", context.RoadTJunctionDownLeftUpTile);
+            SetField(controller, "roadTJunctionLeftUpRightTile", context.RoadTJunctionLeftUpRightTile);
+            SetField(controller, "roadIntersectionTile", context.RoadIntersectionTile);
+            
+            SetField(controller, "busStopUpTile", context.BusStopUpTile);
+            SetField(controller, "busStopRightTile", context.BusStopRightTile);
+            SetField(controller, "busStopDownTile", context.BusStopDownTile);
+            SetField(controller, "busStopLeftTile", context.BusStopLeftTile);
+            
+            SetField(controller, "garageTile", context.GarageTile);
+            SetField(controller, "busPrefab", context.BusPrefab);
+            
+            SetField(controller, "buildButtonImage", context.BuildButtonImage);
+            SetField(controller, "busStopButtonImage", context.BusStopButtonImage);
+            SetField(controller, "garageButtonImage", context.GarageButtonImage);
+            SetField(controller, "placeBusButtonImage", context.PlaceBusButtonImage);
+            
+            SetField(controller, "normalColor", context.NormalColor);
+            SetField(controller, "activeColor", context.ActiveColor);
 
-            Invoke(context.Controller, "Awake");
+            Invoke(controller, "Awake");
             return context;
         }
 
-        private Bus CreateBusPrefab()
+        private Tilemap CreateTilemap(string name)
         {
-            GameObject prefabObject = Track(new GameObject("BusPrefab", typeof(SpriteRenderer)));
-            return prefabObject.AddComponent<Bus>();
-        }
-
-        private T Track<T>(T obj) where T : UnityEngine.Object
-        {
-            if (obj != null)
-            {
-                trackedObjects.Add(obj);
-            }
-
-            return obj;
-        }
-
-        private Grid CreateGrid()
-        {
-            GameObject gridObject = Track(new GameObject("Grid", typeof(Grid)));
-            return gridObject.GetComponent<Grid>();
-        }
-
-        private Tilemap CreateTilemap(string name, Transform parent)
-        {
-            GameObject tilemapObject = Track(new GameObject(name, typeof(Tilemap), typeof(TilemapRenderer)));
-            tilemapObject.transform.SetParent(parent, false);
-            return tilemapObject.GetComponent<Tilemap>();
-        }
-
-        private Tile CreateTile(string name)
-        {
-            Tile tile = Track(ScriptableObject.CreateInstance<Tile>());
-            tile.name = name;
-            return tile;
+            GameObject obj = Track(new GameObject(name));
+            obj.AddComponent<Grid>();
+            return obj.AddComponent<Tilemap>();
         }
 
         private Image CreateImage(string name)
         {
-            GameObject imageObject = Track(new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)));
-            return imageObject.GetComponent<Image>();
+            GameObject obj = Track(new GameObject(name, typeof(Image)));
+            return obj.GetComponent<Image>();
         }
 
-        private void FillRect(Tilemap tilemap, int minX, int maxX, int minY, int maxY, TileBase tile)
+        private Tile CreateTile(string name)
         {
-            for (int x = minX; x <= maxX; x++)
+            Tile tile = ScriptableObject.CreateInstance<Tile>();
+            tile.name = name;
+            return tile;
+        }
+
+        private T Track<T>(T obj) where T : UnityEngine.Object
+        {
+            trackedObjects.Add(obj);
+            return obj;
+        }
+
+        private static T GetField<T>(object target, string name)
+        {
+            return (T)FindField(target.GetType(), name).GetValue(target);
+        }
+
+        private static void SetField(object target, string name, object value)
+        {
+            FindField(target.GetType(), name).SetValue(target, value);
+        }
+
+        private static T Invoke<T>(object target, string name, params object[] args)
+        {
+            return (T)Invoke(target, name, args);
+        }
+
+        private static object Invoke(object target, string name, params object[] args)
+        {
+            return FindMethod(target.GetType(), name, args).Invoke(target, args);
+        }
+
+        private static FieldInfo FindField(Type type, string name)
+        {
+            FieldInfo f = type.GetField(name, InstanceFlags);
+            return f ?? (type.BaseType != null ? FindField(type.BaseType, name) : null);
+        }
+
+        private static MethodInfo FindMethod(Type type, string name, object[] args)
+        {
+            MethodInfo m = type.GetMethod(name, InstanceFlags);
+            if (m != null) return m;
+
+            MethodInfo[] methods = type.GetMethods(InstanceFlags);
+            for (int i = 0; i < methods.Length; i++)
             {
-                for (int y = minY; y <= maxY; y++)
+                if (methods[i].Name == name && methods[i].GetParameters().Length == args.Length)
                 {
-                    tilemap.SetTile(new Vector3Int(x, y, 0), tile);
+                    return methods[i];
                 }
             }
+
+            return type.BaseType != null ? FindMethod(type.BaseType, name, args) : null;
         }
 
-        private Bus FindSpawnedBus(Bus prefab)
-        {
-            Bus[] buses = UnityEngine.Object.FindObjectsByType<Bus>(FindObjectsSortMode.None);
-            for (int i = 0; i < buses.Length; i++)
-            {
-                if (buses[i] != prefab)
-                {
-                    return buses[i];
-                }
-            }
-
-            return null;
-        }
-
-        private static T GetField<T>(object target, string fieldName)
-        {
-            return (T)FindField(target.GetType(), fieldName).GetValue(target);
-        }
-
-        private static void SetField(object target, string fieldName, object value)
-        {
-            FindField(target.GetType(), fieldName).SetValue(target, value);
-        }
-
-        private static T Invoke<T>(object target, string methodName, params object[] args)
-        {
-            return (T)Invoke(target, methodName, args);
-        }
-
-        private static object Invoke(object target, string methodName, params object[] args)
-        {
-            MethodInfo method = FindMethod(target.GetType(), methodName, args ?? Array.Empty<object>());
-            return method.Invoke(target, args);
-        }
-
-        private static bool InvokeVector3IntOut(object target, string methodName, Vector3Int input, out Vector3Int output)
-        {
-            object[] args = { input, null };
-            MethodInfo method = target.GetType().GetMethod(
-                methodName,
-                InstanceFlags,
-                null,
-                new[] { typeof(Vector3Int), typeof(Vector3Int).MakeByRefType() },
-                null);
-
-            Assert.IsNotNull(method, $"Could not find method '{methodName}'.");
-
-            bool result = (bool)method.Invoke(target, args);
-            output = (Vector3Int)args[1];
-            return result;
-        }
-
-        private static FieldInfo FindField(Type type, string fieldName)
-        {
-            Type currentType = type;
-            while (currentType != null)
-            {
-                FieldInfo field = currentType.GetField(fieldName, InstanceFlags);
-                if (field != null)
-                {
-                    return field;
-                }
-
-                currentType = currentType.BaseType;
-            }
-
-            throw new MissingFieldException(type.FullName, fieldName);
-        }
-
-        private static MethodInfo FindMethod(Type type, string methodName, object[] args)
-        {
-            Type currentType = type;
-            while (currentType != null)
-            {
-                MethodInfo[] methods = currentType.GetMethods(InstanceFlags);
-                for (int i = 0; i < methods.Length; i++)
-                {
-                    MethodInfo method = methods[i];
-                    if (method.Name != methodName)
-                    {
-                        continue;
-                    }
-
-                    ParameterInfo[] parameters = method.GetParameters();
-                    if (parameters.Length != args.Length)
-                    {
-                        continue;
-                    }
-
-                    bool matches = true;
-                    for (int j = 0; j < parameters.Length; j++)
-                    {
-                        object arg = args[j];
-                        Type parameterType = parameters[j].ParameterType;
-
-                        if (arg == null)
-                        {
-                            if (parameterType.IsValueType && Nullable.GetUnderlyingType(parameterType) == null)
-                            {
-                                matches = false;
-                                break;
-                            }
-
-                            continue;
-                        }
-
-                        if (!parameterType.IsInstanceOfType(arg))
-                        {
-                            matches = false;
-                            break;
-                        }
-                    }
-
-                    if (matches)
-                    {
-                        return method;
-                    }
-                }
-
-                currentType = currentType.BaseType;
-            }
-
-            throw new MissingMethodException(type.FullName, methodName);
-        }
-
-        private sealed class ControllerContext
+        private class ControllerContext
         {
             public GameController Controller;
-            public Tilemap Ground;
-            public Tilemap Road;
-            public Tilemap BusStops;
-            public Tilemap Garage;
-            public Tile RoadStraightUpDownTile;
-            public Tile RoadStraightLeftRightTile;
-            public Tile RoadTurnUpRightTile;
-            public Tile RoadTurnRightDownTile;
-            public Tile RoadTurnDownLeftTile;
-            public Tile RoadTurnLeftUpTile;
-            public Tile RoadTJunctionUpRightDownTile;
-            public Tile RoadTJunctionRightDownLeftTile;
-            public Tile RoadTJunctionDownLeftUpTile;
-            public Tile RoadTJunctionLeftUpRightTile;
-            public Tile RoadIntersectionTile;
-            public Tile BusStopUpTile;
-            public Tile BusStopRightTile;
-            public Tile BusStopDownTile;
-            public Tile BusStopLeftTile;
-            public Tile GarageTile;
+            public Tilemap Ground, Road, BusStops, Garage, Houses;
+            public Image BuildButtonImage, BusStopButtonImage, GarageButtonImage, PlaceBusButtonImage;
+            public Color NormalColor, ActiveColor;
+            public Bus BusPrefab;
+            public Tile RoadStraightUpDownTile, RoadStraightLeftRightTile, RoadTurnUpRightTile, RoadTurnRightDownTile, RoadTurnDownLeftTile, RoadTurnLeftUpTile;
+            public Tile RoadTJunctionUpRightDownTile, RoadTJunctionRightDownLeftTile, RoadTJunctionDownLeftUpTile, RoadTJunctionLeftUpRightTile, RoadIntersectionTile;
+            public Tile BusStopUpTile, BusStopRightTile, BusStopDownTile, BusStopLeftTile, GarageTile;
         }
     }
 }

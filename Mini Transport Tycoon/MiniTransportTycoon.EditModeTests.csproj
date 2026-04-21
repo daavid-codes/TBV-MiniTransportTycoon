@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets/Tests/CarTypeTests.cs" />
+    <Compile Include="Assets/Tests/GameDataTest.cs" />
     <Compile Include="Assets/Tests/GameControllerTests.cs" />
     <Compile Include="Assets/Tests/CarTests.cs" />
     <Compile Include="Assets/Tests/BusTests.cs" />
