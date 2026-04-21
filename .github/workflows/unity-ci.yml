@@ -39,14 +39,22 @@ jobs:
           enableCodeCoverage: true
           coverageOptions: generateAdditionalMetrics;generateHtmlReport
 
+      - name: Debug Coverage Paths
+        if: always()
+        run: |
+          echo "artifactsPath=${{ steps.tests.outputs.artifactsPath }}"
+          echo "coveragePath=${{ steps.tests.outputs.coveragePath }}"
+          ls -la "${{ steps.tests.outputs.artifactsPath }}" || true
+          ls -la "${{ steps.tests.outputs.coveragePath }}" || true
+
       - name: Upload Coverage Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: code-coverage
           path: |
-            artifacts/**/CoverageReport/**
-            artifacts/**/CodeCoverage/**
-            Mini Transport Tycoon/CodeCoverage/**
+            ${{ steps.tests.outputs.coveragePath }}
+            ${{ steps.tests.outputs.artifactsPath }}/**/CodeCoverage/**
 
   build:
     name: Build Unity Project
