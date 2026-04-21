@@ -122,10 +122,11 @@ namespace MiniTransportTycoon
         {
             Car car = CreateCar();
             List<Vector3Int> path = new List<Vector3Int> { new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(2, 0, 0) };
+            car.SetRoadCoordinates(path);
             car.SetShuttleRoute(path);
 
-            SetPropertyOrField(car, "IsMoving", false);
-            SetPropertyOrField(car, "Route", new List<Vector3Int> { new Vector3Int(0, 0, 0) });
+            SetPropertyOrField(car, "isMoving", false);
+            SetPropertyOrField(car, "route", new List<Vector3Int> { new Vector3Int(0, 0, 0) });
 
             bool initialForwardState = GetField<bool>(car, "nextShuttleLegIsForward");
 
