@@ -13,6 +13,10 @@ namespace MiniTransportTycoon
         {
             if (vehicleSubMenu != null)
             {
+                if (GarageMenu != null && GarageMenu.activeSelf)
+                {
+                    GarageMenu.SetActive(false);
+                }
                 vehicleSubMenu.SetActive(!vehicleSubMenu.activeSelf);
             }
         }
@@ -21,6 +25,10 @@ namespace MiniTransportTycoon
         {
             if (GarageMenu != null)
             {
+                if (vehicleSubMenu != null && vehicleSubMenu.activeSelf)
+                {
+                    vehicleSubMenu.SetActive(false);
+                }
                 GarageMenu.SetActive(!GarageMenu.activeSelf);
             }
         }
