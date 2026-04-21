@@ -148,7 +148,7 @@ namespace MiniTransportTycoon
         }
 
         [Test]
-        public void SelectCarStop_WithTwoStopsSpawnsBusWithStopAndRoadRoutes()
+        public void SelectCarStop_FinalizesLoopWhenFirstPointIsClickedAgain()
         {
             ControllerContext context = CreateControllerContext();
             Bus busPrefab = CreateBusPrefab();
@@ -169,6 +169,10 @@ namespace MiniTransportTycoon
 
             Invoke(context.Controller, "SelectCarStop", secondStopCell);
 
+            Assert.AreEqual(2, GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections").Count);
+
+            Invoke(context.Controller, "SelectCarStop", firstStopCell);
+
             Assert.AreEqual(0, GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections").Count);
 
             Bus spawnedBus = FindSpawnedBus(busPrefab);
@@ -176,6 +180,47 @@ namespace MiniTransportTycoon
             Track(spawnedBus.gameObject);
 
             CollectionAssert.AreEqual(new[] { firstStopCell, secondStopCell }, spawnedBus.StopRoute);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    Vector3Int.right,
+                    new Vector3Int(2, 0, 0)
+                },
+                spawnedBus.Route);
+            Assert.AreEqual(context.Road.GetCellCenterWorld(Vector3Int.zero), spawnedBus.transform.position);
+        }
+
+        [Test]
+        public void SelectCarStop_AllowsGarageAsRoutePointInLoop()
+        {
+            ControllerContext context = CreateControllerContext();
+            Bus busPrefab = CreateBusPrefab();
+            Vector3Int firstStopCell = new Vector3Int(0, 1, 0);
+            Vector3Int garageOriginCell = new Vector3Int(2, 2, 0);
+            Vector3Int thirdStopCell = new Vector3Int(4, 1, 0);
+
+            SetField(context.Controller, "busPrefab", busPrefab);
+
+            Invoke(context.Controller, "PlaceRoad", Vector3Int.zero);
+            Invoke(context.Controller, "PlaceRoad", Vector3Int.right);
+            Invoke(context.Controller, "PlaceRoad", new Vector3Int(2, 0, 0));
+            Invoke(context.Controller, "PlaceRoad", new Vector3Int(3, 0, 0));
+            Invoke(context.Controller, "PlaceRoad", new Vector3Int(4, 0, 0));
+
+            context.BusStops.SetTile(firstStopCell, context.BusStopDownTile);
+            context.BusStops.SetTile(thirdStopCell, context.BusStopDownTile);
+            Invoke(context.Controller, "PlaceGarage", garageOriginCell);
+
+            Invoke(context.Controller, "SelectCarStop", firstStopCell);
+            Invoke(context.Controller, "SelectCarStop", garageOriginCell);
+            Invoke(context.Controller, "SelectCarStop", thirdStopCell);
+            Invoke(context.Controller, "SelectCarStop", firstStopCell);
+
+            Bus spawnedBus = FindSpawnedBus(busPrefab);
+            Assert.IsNotNull(spawnedBus);
+            Track(spawnedBus.gameObject);
+
+            CollectionAssert.AreEqual(new[] { firstStopCell, garageOriginCell, thirdStopCell }, spawnedBus.StopRoute);
             CollectionAssert.AreEqual(
                 new[]
                 {

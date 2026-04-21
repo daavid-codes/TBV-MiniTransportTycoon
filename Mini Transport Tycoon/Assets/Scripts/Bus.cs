@@ -5,10 +5,10 @@ namespace MiniTransportTycoon
 {
     public class Bus : Vehicle
     {
-    private List<Vector3Int> shuttleRouteForward = new List<Vector3Int>();
-    private List<Vector3Int> shuttleRouteBackward = new List<Vector3Int>();
-    private bool useShuttleRoute;
-    private bool nextShuttleLegIsForward;
+    private readonly List<List<Vector3Int>> loopRouteLegs = new List<List<Vector3Int>>();
+    private bool useLoopRoute;
+    private int nextLoopLegIndex;
+    private GameData gameData;
 
     private void Awake()
     {
@@ -18,47 +18,80 @@ namespace MiniTransportTycoon
     protected override void Start()
     {
         base.Start();
-
+        gameData = FindObjectOfType<GameData>();
     }
 
     protected override void Update()
     {
         base.Update();
 
-        if (!useShuttleRoute || IsMoving)
+        if (!useLoopRoute || IsMoving)
             return;
 
-        if (Route == null || Route.Count == 0)
+        if (loopRouteLegs.Count == 0)
         {
-            useShuttleRoute = false;
+            useLoopRoute = false;
             return;
         }
 
-        StartNextShuttleLeg();
+        StartNextLoopLeg();
     }
 
     public override void SetRoute(List<Vector3Int> newRoute)
     {
-        useShuttleRoute = false;
-        shuttleRouteForward = new List<Vector3Int>();
-        shuttleRouteBackward = new List<Vector3Int>();
+        useLoopRoute = false;
+        loopRouteLegs.Clear();
+        nextLoopLegIndex = 0;
         base.SetRoute(newRoute);
     }
 
     public void SetShuttleRoute(List<Vector3Int> fullRoadPath)
     {
-        shuttleRouteForward = BuildShuttleLeg(fullRoadPath, reverse: false);
-        shuttleRouteBackward = BuildShuttleLeg(fullRoadPath, reverse: true);
-        useShuttleRoute = shuttleRouteForward.Count > 0 && shuttleRouteBackward.Count > 0;
-        nextShuttleLegIsForward = false;
-
-        if (!useShuttleRoute)
+        List<List<Vector3Int>> shuttleLegs = new List<List<Vector3Int>>
         {
-            base.SetRoute(shuttleRouteForward);
+            BuildLoopLeg(fullRoadPath, reverse: false),
+            BuildLoopLeg(fullRoadPath, reverse: true)
+        };
+
+        SetLoopRoute(shuttleLegs);
+    }
+
+    public void SetLoopRoute(List<List<Vector3Int>> newLoopLegs)
+    {
+        useLoopRoute = false;
+        loopRouteLegs.Clear();
+        nextLoopLegIndex = 0;
+
+        if (newLoopLegs == null)
+        {
+            base.SetRoute(null);
             return;
         }
 
-        base.SetRoute(shuttleRouteForward);
+        for (int i = 0; i < newLoopLegs.Count; i++)
+        {
+            List<Vector3Int> leg = TrimLegStart(newLoopLegs[i]);
+
+            if (leg.Count == 0)
+                continue;
+
+            loopRouteLegs.Add(leg);
+        }
+
+        if (loopRouteLegs.Count == 0)
+        {
+            base.SetRoute(null);
+            return;
+        }
+
+        useLoopRoute = true;
+        StartNextLoopLeg();
+    }
+
+    public void Maintain()
+    {
+
+        gameData.Money -= maintenanceCost;
     }
 
     private void Reset()
@@ -71,21 +104,18 @@ namespace MiniTransportTycoon
         type = CarType.Bus;
     }
 
-    private void StartNextShuttleLeg()
+    private void StartNextLoopLeg()
     {
-        List<Vector3Int> nextRoute = nextShuttleLegIsForward ? shuttleRouteForward : shuttleRouteBackward;
-
-        if (nextRoute == null || nextRoute.Count == 0)
-        {
-            useShuttleRoute = false;
+        if (loopRouteLegs.Count == 0)
             return;
-        }
+
+        List<Vector3Int> nextRoute = loopRouteLegs[nextLoopLegIndex];
 
         base.SetRoute(nextRoute);
-        nextShuttleLegIsForward = !nextShuttleLegIsForward;
+        nextLoopLegIndex = (nextLoopLegIndex + 1) % loopRouteLegs.Count;
     }
 
-    private List<Vector3Int> BuildShuttleLeg(List<Vector3Int> fullRoadPath, bool reverse)
+    private List<Vector3Int> BuildLoopLeg(List<Vector3Int> fullRoadPath, bool reverse)
     {
         List<Vector3Int> leg = fullRoadPath != null ? new List<Vector3Int>(fullRoadPath) : new List<Vector3Int>();
 
@@ -94,12 +124,17 @@ namespace MiniTransportTycoon
             leg.Reverse();
         }
 
-        if (leg.Count > 0)
-        {
-            leg.RemoveAt(0);
-        }
+        return TrimLegStart(leg);
+    }
 
-        return leg;
+    private List<Vector3Int> TrimLegStart(List<Vector3Int> leg)
+    {
+        List<Vector3Int> trimmedLeg = leg != null ? new List<Vector3Int>(leg) : new List<Vector3Int>();
+
+        if (trimmedLeg.Count > 0)
+            trimmedLeg.RemoveAt(0);
+
+        return trimmedLeg;
     }
     }
 }

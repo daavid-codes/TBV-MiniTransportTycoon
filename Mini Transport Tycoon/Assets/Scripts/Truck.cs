@@ -9,6 +9,7 @@ namespace MiniTransportTycoon
     private List<Vector3Int> shuttleRouteBackward = new List<Vector3Int>();
     private bool useShuttleRoute;
     private bool nextShuttleLegIsForward;
+    private GameData gameData;
 
     private void Awake()
     {
@@ -18,7 +19,7 @@ namespace MiniTransportTycoon
     protected override void Start()
     {
         base.Start();
-
+        gameData = FindObjectOfType<GameData>();
     }
 
     protected override void Update()
@@ -59,6 +60,11 @@ namespace MiniTransportTycoon
         }
 
         base.SetRoute(shuttleRouteForward);
+    }
+
+    public void Maintain()
+    {
+        gameData.Money -= maintenanceCost;
     }
 
     private void Reset()
