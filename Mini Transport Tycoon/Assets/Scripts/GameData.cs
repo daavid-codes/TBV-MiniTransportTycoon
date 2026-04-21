@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.Win32.SafeHandles;
 
 namespace MiniTransportTycoon
 {
@@ -19,9 +20,11 @@ namespace MiniTransportTycoon
         [SerializeField] private int steel = 0;
         [SerializeField] private int wood = 0;
         [SerializeField] private int paper = 0;
-        [SerializeField] private int copper = 0;
+        [SerializeField] private int coal = 0;
 
         private List<Facility> facilities = new List<Facility>();
+
+        public event Action OnDayChanged;
 
         private DateTime currentDate;
 
@@ -76,22 +79,55 @@ namespace MiniTransportTycoon
             }
         }
 
+        public static GameData Instance { get; private set; }
+
+        public void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+        }
+
+        public void TrySpendMoney(int amount)
+        {
+            if (money >= amount)
+            {
+                money -= amount;
+                OnDataChanged?.Invoke();
+            }
+        }
+
         private void Start()
         {
             currentDate = new DateTime(2026, 1, 1, 8, 0, 0);
             StartCoroutine(TimeRoutine());
-            //OnDayChanged += ProduceAllFacilities;
+            OnDayChanged += ProduceAllFacilities;
+
             OnDataChanged?.Invoke();
         }
 
         private IEnumerator TimeRoutine()
         {
+            DateTime previousDate;
             while (true)
             {
                 yield return new WaitForSeconds(timeMultiplier);
+                previousDate = CurrentDate;
                 CurrentDate = CurrentDate.AddMinutes(1);
+
+                if (CurrentDate.Day != previousDate.Day)
+                {
+                    OnDayChanged?.Invoke();
+                }
             }
         }
+
         //----Resource Fields
         public int Iron
         {
@@ -133,16 +169,62 @@ namespace MiniTransportTycoon
             }
         }
 
-        public int Copper
+        public int Coal
         {
-            get { return copper; }
+            get { return coal; }
             set
             {
-                copper = value;
+                coal = value;
                 OnDataChanged?.Invoke();
             }
         }
         //----Resource Fields END
+
+        public void AddMaterial(Materials material, int amount)
+        {
+            if (amount == 0)
+                return;
+
+            switch (material)
+            {
+                case Materials.Wood:
+                    wood += amount;
+                    break;
+                case Materials.Steel:
+                    steel += amount;
+                    break;
+                case Materials.Paper:
+                    paper += amount;
+                    break;
+                case Materials.Iron:
+                    iron += amount;
+                    break;
+                case Materials.Coal:
+                    coal += amount;
+                    break;
+            }
+
+            OnDataChanged?.Invoke();
+        }
+
+        public int GetMaterialAmount(Materials material)
+        {
+            switch (material)
+            {
+                case Materials.Wood:
+                    return wood;
+                case Materials.Steel:
+                    return steel;
+                case Materials.Paper:
+                    return paper;
+                case Materials.Iron:
+                    return iron;
+                case Materials.Coal:
+                    return coal;
+                default:
+                    return 0;
+            }
+        }
 
         public void AddFacility(Facility f)
         {

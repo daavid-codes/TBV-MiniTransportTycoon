@@ -1113,10 +1113,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="MiniTransportTycoon.GameController.EditModeTests.csproj">
-      <Project>{D81950D7-04E1-C88B-0370-6B13EAFD7B87}</Project>
-      <Name>MiniTransportTycoon.GameController.EditModeTests</Name>
-    </ProjectReference>
     <ProjectReference Include="Scripts.csproj">
       <Project>{397A8290-BCC5-9EDB-47D9-658500F4EC0F}</Project>
       <Name>Scripts</Name>

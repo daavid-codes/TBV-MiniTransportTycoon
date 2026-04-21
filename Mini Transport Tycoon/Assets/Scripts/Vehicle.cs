@@ -16,6 +16,7 @@ namespace MiniTransportTycoon
 
     [Header("Road")]
     [SerializeField] protected Tilemap roadTilemap;
+    [SerializeField] protected Tilemap garageTilemap;
 
     [Header("Directional Sprites")]
     [SerializeField] protected Sprite leftUpSprite;
@@ -109,10 +110,20 @@ namespace MiniTransportTycoon
         roadTilemap = newRoadTilemap;
     }
 
+    public void SetGarageTilemap(Tilemap newGarageTilemap)
+    {
+        garageTilemap = newGarageTilemap;
+    }
+
     public void SetRoadCoordinates(List<Vector3Int> newRoadCoordinates)
     {
         roadCoordinates = newRoadCoordinates != null ? new List<Vector3Int>(newRoadCoordinates) : new List<Vector3Int>();
         roadCoordinateLookup = new HashSet<Vector3Int>(roadCoordinates);
+    }
+
+    public void SetSpeed(float newSpeed)
+    {
+        speed = Mathf.Max(0f, newSpeed);
     }
 
     protected Vector3 GetWorldPosition(Vector3Int cell)

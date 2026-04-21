@@ -33,9 +33,9 @@ jobs:
         with:
           unityVersion: 2022.3.62f3
           projectPath: Mini Transport Tycoon
-          githubToken: ""                # NE írjon PR kommentet
-          enableTestReporting: false     # NE próbáljon GitHub API-t hívni
-          enableCodeCoverage: true
+          githubToken: ""
+          testMode: editmode
+          coverageOptions: generateAdditionalReport
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
