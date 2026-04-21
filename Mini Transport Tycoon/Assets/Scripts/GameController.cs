@@ -79,6 +79,7 @@ namespace MiniTransportTycoon
     [Header("Vehicle Placement")]
     [SerializeField] private bool placeBus= false;
     [SerializeField] private Bus busPrefab;
+    [SerializeField] private int busPlacementCapacity = 50;
     [SerializeField] private bool placeTruck = false;
     [SerializeField] private Truck truckPrefab;
     [SerializeField] private Materials truckPlacementMaterial = Materials.Wood;
@@ -198,6 +199,16 @@ namespace MiniTransportTycoon
         {
             SetNavigationMode(NavigationMode.Camera);
         }
+        UpdateButtonColor();
+    }
+
+    public void StartBusPlacement(int capacity)
+    {
+        busPlacementCapacity = Mathf.Max(0, capacity);
+        placeBus = true;
+        placeTruck = false;
+        ClearPendingTruckStopSelections();
+        SetNavigationMode(NavigationMode.Camera);
         UpdateButtonColor();
     }
 
@@ -840,6 +851,11 @@ namespace MiniTransportTycoon
 
     void SelectCarStop(Vector3Int stopCellPos)
     {
+        SelectCarStop(stopCellPos, busPlacementCapacity);
+    }
+
+    void SelectCarStop(Vector3Int stopCellPos, int capacity)
+    {
         Vector3Int normalizedRoutePoint = NormalizeRoutePoint(stopCellPos);
 
         if (normalizedRoutePoint == InvalidCellPosition)
@@ -850,7 +866,7 @@ namespace MiniTransportTycoon
 
         if (pendingCarStopSelections.Count >= 2 && normalizedRoutePoint == pendingCarStopSelections[0])
         {
-            bool placedBus = TryPlaceCarFromSelectedStops(new List<Vector3Int>(pendingCarStopSelections));
+            bool placedBus = TryPlaceCarFromSelectedStops(new List<Vector3Int>(pendingCarStopSelections), capacity);
 
             if (!placedBus)
             {
@@ -873,6 +889,11 @@ namespace MiniTransportTycoon
     }
 
     bool TryPlaceCarFromSelectedStops(List<Vector3Int> selectedRoutePoints)
+    {
+        return TryPlaceCarFromSelectedStops(selectedRoutePoints, busPlacementCapacity);
+    }
+
+    bool TryPlaceCarFromSelectedStops(List<Vector3Int> selectedRoutePoints, int capacity)
     {
         if (busPrefab == null)
         {
@@ -942,8 +963,9 @@ namespace MiniTransportTycoon
         carInstance.SetGarageTilemap(garageTilemap);
         carInstance.SetRoadCoordinates(roadCoordinates);
         carInstance.SetStopRoute(normalizedRoutePoints);
+        carInstance.SetMaxCarryingAmount(capacity);
         carInstance.SetLoopRoute(loopRouteLegs);
-        Debug.Log("Placed car at: " + spawnRoadCell + " with loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        Debug.Log("Placed car at: " + spawnRoadCell + " with capacity " + Mathf.Max(0, capacity) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         return true;
     }
 

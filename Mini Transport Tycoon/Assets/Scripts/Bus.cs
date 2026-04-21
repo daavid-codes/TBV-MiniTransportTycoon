@@ -10,6 +10,8 @@ namespace MiniTransportTycoon
     private int nextLoopLegIndex;
     private bool hasStartedLoopLeg;
     private GameData gameData;
+    [SerializeField] private int carryingAmount;
+    [SerializeField] private int maxCarryingAmount = 50;
 
     private void Awake()
     {
@@ -97,6 +99,12 @@ namespace MiniTransportTycoon
         gameData.Money -= maintenanceCost;
     }
 
+    public void SetMaxCarryingAmount(int maxAmount)
+    {
+        maxCarryingAmount = Mathf.Max(0, maxAmount);
+        carryingAmount = Mathf.Clamp(carryingAmount, 0, maxCarryingAmount);
+    }
+
     private void Reset()
     {
         type = CarType.Bus;
@@ -105,6 +113,8 @@ namespace MiniTransportTycoon
     private void OnValidate()
     {
         type = CarType.Bus;
+        maxCarryingAmount = Mathf.Max(0, maxCarryingAmount);
+        carryingAmount = Mathf.Clamp(carryingAmount, 0, maxCarryingAmount);
     }
 
     private void StartNextLoopLeg()
@@ -157,5 +167,8 @@ namespace MiniTransportTycoon
 
         return trimmedLeg;
     }
+
+    public int CarryingAmount => carryingAmount;
+    public int MaxCarryingAmount => maxCarryingAmount;
     }
 }
