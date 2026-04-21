@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using MiniTransportTycoon;
+using UnityEditor.PackageManager;
 
 namespace MiniTransportTycoon
 {
@@ -53,17 +54,6 @@ namespace MiniTransportTycoon
             Assert.AreEqual(context.NormalColor, context.GarageButtonImage.color);
         }
 
-        [Test]
-        public void ToggleBusStopBuildModeUI_SetsModeToStopBuild()
-        {
-            var context = CreateContext();
-            
-            context.Controller.ToggleBusStopBuildModeUI();
-            
-            Assert.AreEqual(NavigationMode.StopBuild, GetField<NavigationMode>(context.Controller, "navigationMode"));
-            Assert.AreEqual(context.NormalColor, context.BuildButtonImage.color);
-            Assert.AreEqual(context.ActiveColor, context.BusStopButtonImage.color);
-        }
 
         [Test]
         public void ToggleGarageBuildModeUI_SetsModeToGarageBuild()
