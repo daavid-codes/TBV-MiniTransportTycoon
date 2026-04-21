@@ -73,6 +73,10 @@ namespace MiniTransportTycoon
     [SerializeField] private bool placeBus= false;
     [SerializeField] private Bus busPrefab;
 
+    [Header("Warehouse Runtime")]
+    [SerializeField] private Warehouse warehousePrefab;
+    [SerializeField] private Transform warehouseRuntimeRoot;
+
     [Header("Navigation")]
     [SerializeField] private NavigationMode navigationMode = NavigationMode.Camera;
 
@@ -89,15 +93,18 @@ namespace MiniTransportTycoon
     private readonly List<TileFlags> previewedBuildCellFlags = new List<TileFlags>();
     private readonly HashSet<Vector3Int> occupiedGarageCells = new HashSet<Vector3Int>();
     private readonly HashSet<Vector3Int> occupiedWarehouseCells = new HashSet<Vector3Int>();
+    private readonly Dictionary<Vector3Int, Warehouse> warehousesByOrigin = new Dictionary<Vector3Int, Warehouse>();
     private readonly List<Vector3Int> pendingCarStopSelections = new List<Vector3Int>(2);
     private readonly List<Vector3Int> roadCoordinates = new List<Vector3Int>();
     private readonly HashSet<Vector3Int> roadCoordinateLookup = new HashSet<Vector3Int>();
+    private int nextWarehouseId = 1;
     private bool pointerStartedOverUI;
 
     void Awake()
     {
         allTilemaps = new Tilemap[] { groundTilemap, roadTilemap, busStopTilemap, garageTilemap, warehouseTilemap, housesTilemap };
         RefreshWarehouseFootprintOccupancy();
+        InitializeWarehousesFromTilemap();
         RefreshRoadCoordinates();
     }
 
@@ -346,10 +353,27 @@ namespace MiniTransportTycoon
 
         Vector3Int clickedCellPos = GetMouseCellPosition(warehouseTilemap);
 
-        if (!TryGetWarehouseOriginCell(clickedCellPos, out Vector3Int warehouseOriginCell))
+        if (!TryGetWarehouseAtCell(clickedCellPos, out Vector3Int warehouseOriginCell, out Warehouse warehouse))
             return false;
 
-        Debug.Log("Clicked warehouse at: " + warehouseOriginCell + " (footprint cell: " + clickedCellPos + ")");
+        if (warehouse == null)
+        {
+            Debug.LogWarning("Clicked warehouse at: " + warehouseOriginCell + " but no Warehouse script instance is registered.");
+            return true;
+        }
+
+        Debug.Log("Clicked warehouse id " + warehouse.Id + " at: " + warehouseOriginCell + " (footprint cell: " + clickedCellPos + ")");
+        return true;
+    }
+
+    bool TryGetWarehouseAtCell(Vector3Int clickedCellPos, out Vector3Int warehouseOriginCell, out Warehouse warehouse)
+    {
+        warehouse = null;
+
+        if (!TryGetWarehouseOriginCell(clickedCellPos, out warehouseOriginCell))
+            return false;
+
+        warehousesByOrigin.TryGetValue(warehouseOriginCell, out warehouse);
         return true;
     }
 
@@ -1019,6 +1043,68 @@ namespace MiniTransportTycoon
                 occupiedWarehouseCells.Add(warehouseFootprint[i]);
             }
         }
+    }
+
+    void InitializeWarehousesFromTilemap()
+    {
+        warehousesByOrigin.Clear();
+        nextWarehouseId = 1;
+
+        if (warehouseTilemap == null)
+            return;
+
+        if (warehousePrefab == null)
+        {
+            Debug.LogWarning("Warehouse tilemap is assigned, but warehousePrefab is missing. Cannot spawn warehouse scripts.");
+            return;
+        }
+
+        HashSet<Vector3Int> warehouseOrigins = new HashSet<Vector3Int>();
+        BoundsInt cellBounds = warehouseTilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!warehouseTilemap.HasTile(cellPos))
+                continue;
+
+            if (TryGetWarehouseOriginCell(cellPos, out Vector3Int warehouseOriginCell))
+            {
+                warehouseOrigins.Add(warehouseOriginCell);
+            }
+        }
+
+        foreach (Vector3Int warehouseOriginCell in warehouseOrigins)
+        {
+            RegisterWarehouseInstance(warehouseOriginCell);
+        }
+    }
+
+    public void RegisterPlacedWarehouse(Vector3Int warehouseOriginCell)
+    {
+        RefreshWarehouseFootprintOccupancy();
+        RegisterWarehouseInstance(warehouseOriginCell);
+    }
+
+    Warehouse RegisterWarehouseInstance(Vector3Int warehouseOriginCell)
+    {
+        if (warehousesByOrigin.TryGetValue(warehouseOriginCell, out Warehouse existingWarehouse) && existingWarehouse != null)
+            return existingWarehouse;
+
+        if (warehousePrefab == null || warehouseTilemap == null)
+            return null;
+
+        Vector3 spawnPosition = warehouseTilemap.GetCellCenterWorld(warehouseOriginCell);
+        spawnPosition.z = warehousePrefab.transform.position.z;
+
+        Warehouse warehouseInstance = Instantiate(
+            warehousePrefab,
+            spawnPosition,
+            warehousePrefab.transform.rotation,
+            warehouseRuntimeRoot);
+
+        warehouseInstance.Initialize(nextWarehouseId++);
+        warehousesByOrigin[warehouseOriginCell] = warehouseInstance;
+        return warehouseInstance;
     }
 
     void RegisterRoadCoordinate(Vector3Int cellPos)

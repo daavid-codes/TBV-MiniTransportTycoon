@@ -47,6 +47,21 @@ namespace MiniTransportTycoon
             SetAmount(needs, material, amount);
         }
 
+        public void Initialize(int warehouseId, List<MaterialAmount> initialNeeds = null, List<MaterialAmount> initialInventory = null)
+        {
+            id = warehouseId;
+
+            if (initialNeeds != null)
+            {
+                needs = CloneEntries(initialNeeds);
+            }
+
+            if (initialInventory != null)
+            {
+                inventory = CloneEntries(initialInventory);
+            }
+        }
+
         private static int GetAmount(List<MaterialAmount> source, Materials material)
         {
             for (int i = 0; i < source.Count; i++)
@@ -72,6 +87,19 @@ namespace MiniTransportTycoon
             }
 
             target.Add(new MaterialAmount(material, amount));
+        }
+
+        private static List<MaterialAmount> CloneEntries(List<MaterialAmount> source)
+        {
+            List<MaterialAmount> clone = new List<MaterialAmount>(source.Count);
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                MaterialAmount entry = source[i];
+                clone.Add(new MaterialAmount(entry.material, entry.amount));
+            }
+
+            return clone;
         }
 
         private void Reset()
