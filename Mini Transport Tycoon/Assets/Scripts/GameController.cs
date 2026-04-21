@@ -171,6 +171,7 @@ namespace MiniTransportTycoon
     public void ToggleBusStopBuildModeUI()
     {
         ToggleNavigationMode(NavigationMode.StopBuild);
+        GameData.Instance.TrySpendMoney(100);
     }
 
     public void ToggleGarageBuildModeUI()
@@ -217,22 +218,28 @@ namespace MiniTransportTycoon
         placeTruck = false;
         ClearPendingTruckStopSelections();
         SetNavigationMode(NavigationMode.Camera);
+        
         UpdateButtonColor();
+        
+        
     }
 
     public void ButtonStartBusPlacementSmall()
     {
         StartBusPlacement(15, 2.5f);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartBusPlacementMedium()
     {
         StartBusPlacement(30, 2f);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartBusPlacementLarge()
     {
         StartBusPlacement(50, 1.5f);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void TogglePlaceTruckModeUI()
@@ -273,76 +280,91 @@ namespace MiniTransportTycoon
     public void ButtonStartTruckPlacementWoodSmall()
     {
         StartTruckPlacement(Materials.Wood, 200, 2.5f);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementWoodMedium()
     {
         StartTruckPlacement(Materials.Wood, 350, 2f);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementWoodLarge()
     {
         StartTruckPlacement(Materials.Wood, 500, 1.5f);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void ButtonStartTruckPlacementPaperSmall()
     {
         StartTruckPlacement(Materials.Paper, 200, 2.5f);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementPaperMedium()
     {
         StartTruckPlacement(Materials.Paper, 350, 2f);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementPaperLarge()
     {
         StartTruckPlacement(Materials.Paper, 500, 1.5f);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void ButtonStartTruckPlacementIronSmall()
     {
         StartTruckPlacement(Materials.Iron, 200, 2.5f);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementIronMedium()
     {
         StartTruckPlacement(Materials.Iron, 350, 2f);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementIronLarge()
     {
         StartTruckPlacement(Materials.Iron, 500, 1.5f);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void ButtonStartTruckPlacementCoalSmall()
     {
         StartTruckPlacement(Materials.Coal, 200, 2.5f);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementCoalMedium()
     {
         StartTruckPlacement(Materials.Coal, 350, 2f);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementCoalLarge()
     {
         StartTruckPlacement(Materials.Coal, 500, 1.5f);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void ButtonStartTruckPlacementSteelSmall()
     {
         StartTruckPlacement(Materials.Steel, 200, 2.5f);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementSteelMedium()
     {
         StartTruckPlacement(Materials.Steel, 350, 2f);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementSteelLarge()
     {
         StartTruckPlacement(Materials.Steel, 500, 1.5f);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     private void UpdateButtonColor()
@@ -443,10 +465,12 @@ namespace MiniTransportTycoon
             if (navigationMode == NavigationMode.GarageBuild)
             {
                 PlaceGarageAtMousePosition();
+                SetNavigationMode(NavigationMode.Camera);
             }
             else if (navigationMode == NavigationMode.StopBuild)
             {
                 PlaceBusStopAtMousePosition();
+                SetNavigationMode(NavigationMode.Camera);
             }
             else if (navigationMode == NavigationMode.RoadBuild)
             {
@@ -747,6 +771,7 @@ namespace MiniTransportTycoon
         pointerStartedOverUI = false;
         ClearBuildPreview();
         ClearPendingCarStopSelections();
+    
     }
 
     void UpdateBuildPreview()
@@ -1071,6 +1096,7 @@ namespace MiniTransportTycoon
         carInstance.SetSpeed(speed);
         carInstance.SetLoopRoute(loopRouteLegs);
         Debug.Log("Placed car at: " + spawnRoadCell + " with capacity " + Mathf.Max(0, capacity) + ", speed " + Mathf.Max(0f, speed) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        placeBus = false;
         return true;
     }
 
@@ -1202,6 +1228,7 @@ namespace MiniTransportTycoon
         truckInstance.SetSpeed(speed);
         truckInstance.SetLoopRoute(loopRouteLegs);
         Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with capacity " + Mathf.Max(0, capacity) + ", speed " + Mathf.Max(0f, speed) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        placeTruck = false;
         return true;
     }
 
