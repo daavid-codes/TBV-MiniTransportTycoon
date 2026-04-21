@@ -30,6 +30,7 @@ public abstract class Facility : Site
         }
 
         callCount += 1;
+        //UnityEngine.Debug.Log("updateProductivity called");
     }
 
     public abstract void produce(GameData game);
