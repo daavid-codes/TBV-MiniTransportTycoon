@@ -1,0 +1,23 @@
+{
+    "name": "MiniTransportTycoon.Bus.EditModeTests",
+    "references": [
+        "Scripts",
+        "UnityEngine.UI",
+        "UnityEngine.EventSystems",
+        "Unity.TextMeshPro",
+        "nunit.framework",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": []
+}
