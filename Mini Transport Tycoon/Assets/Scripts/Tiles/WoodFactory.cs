@@ -6,17 +6,17 @@ namespace MiniTransportTycoon
     {
         private void Reset()
         {
-            SetResourceType(Resource.WOOD);
+            SetResourceType(Materials.Wood);
         }
 
         private void OnValidate()
         {
-            SetResourceType(Resource.WOOD);
+            SetResourceType(Materials.Wood);
         }
 
         private void Awake()
         {
-            SetResourceType(Resource.WOOD);
+            SetResourceType(Materials.Wood);
         }
 
         public override void produce(GameData game)
