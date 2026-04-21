@@ -171,7 +171,7 @@ namespace MiniTransportTycoon
     public void ToggleBusStopBuildModeUI()
     {
         ToggleNavigationMode(NavigationMode.StopBuild);
-        TrySpendMoneyIfGameDataAvailable(100);
+        GameData.Instance.TrySpendMoney(100);
     }
 
     public void ToggleGarageBuildModeUI()
@@ -227,19 +227,19 @@ namespace MiniTransportTycoon
     public void ButtonStartBusPlacementSmall()
     {
         StartBusPlacement(15, 2.5f);
-        TrySpendMoneyIfGameDataAvailable(300);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartBusPlacementMedium()
     {
         StartBusPlacement(30, 2f);
-        TrySpendMoneyIfGameDataAvailable(500);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartBusPlacementLarge()
     {
         StartBusPlacement(50, 1.5f);
-        TrySpendMoneyIfGameDataAvailable(700);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void TogglePlaceTruckModeUI()
@@ -280,99 +280,91 @@ namespace MiniTransportTycoon
     public void ButtonStartTruckPlacementWoodSmall()
     {
         StartTruckPlacement(Materials.Wood, 200, 2.5f);
-        TrySpendMoneyIfGameDataAvailable(300);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementWoodMedium()
     {
         StartTruckPlacement(Materials.Wood, 350, 2f);
-        TrySpendMoneyIfGameDataAvailable(500);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementWoodLarge()
     {
         StartTruckPlacement(Materials.Wood, 500, 1.5f);
-        TrySpendMoneyIfGameDataAvailable(700);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void ButtonStartTruckPlacementPaperSmall()
     {
         StartTruckPlacement(Materials.Paper, 200, 2.5f);
-        TrySpendMoneyIfGameDataAvailable(300);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementPaperMedium()
     {
         StartTruckPlacement(Materials.Paper, 350, 2f);
-        TrySpendMoneyIfGameDataAvailable(500);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementPaperLarge()
     {
         StartTruckPlacement(Materials.Paper, 500, 1.5f);
-        TrySpendMoneyIfGameDataAvailable(700);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void ButtonStartTruckPlacementIronSmall()
     {
         StartTruckPlacement(Materials.Iron, 200, 2.5f);
-        TrySpendMoneyIfGameDataAvailable(300);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementIronMedium()
     {
         StartTruckPlacement(Materials.Iron, 350, 2f);
-        TrySpendMoneyIfGameDataAvailable(500);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementIronLarge()
     {
         StartTruckPlacement(Materials.Iron, 500, 1.5f);
-        TrySpendMoneyIfGameDataAvailable(700);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void ButtonStartTruckPlacementCoalSmall()
     {
         StartTruckPlacement(Materials.Coal, 200, 2.5f);
-        TrySpendMoneyIfGameDataAvailable(300);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementCoalMedium()
     {
         StartTruckPlacement(Materials.Coal, 350, 2f);
-        TrySpendMoneyIfGameDataAvailable(500);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementCoalLarge()
     {
         StartTruckPlacement(Materials.Coal, 500, 1.5f);
-        TrySpendMoneyIfGameDataAvailable(700);
+        GameData.Instance.TrySpendMoney(700);
     }
 
     public void ButtonStartTruckPlacementSteelSmall()
     {
         StartTruckPlacement(Materials.Steel, 200, 2.5f);
-        TrySpendMoneyIfGameDataAvailable(300);
+        GameData.Instance.TrySpendMoney(300);
     }
 
     public void ButtonStartTruckPlacementSteelMedium()
     {
         StartTruckPlacement(Materials.Steel, 350, 2f);
-        TrySpendMoneyIfGameDataAvailable(500);
+        GameData.Instance.TrySpendMoney(500);
     }
 
     public void ButtonStartTruckPlacementSteelLarge()
     {
         StartTruckPlacement(Materials.Steel, 500, 1.5f);
-        TrySpendMoneyIfGameDataAvailable(700);
-    }
-
-    void TrySpendMoneyIfGameDataAvailable(int amount)
-    {
-        if (GameData.Instance != null)
-        {
-            GameData.Instance.TrySpendMoney(amount);
-        }
+        GameData.Instance.TrySpendMoney(700);
     }
 
     private void UpdateButtonColor()
