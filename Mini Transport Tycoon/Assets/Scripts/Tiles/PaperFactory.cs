@@ -1,18 +1,34 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using MiniTransportTycoon;
 
-public class PaperFactory : Facility
+namespace MiniTransportTycoon
 {
-    public PaperFactory(int x, int y, Orientation o) : base(x, y, o)
+    public class PaperFactory : Facility
     {
-        resourceType = Resource.PAPER;
-    }
+        private void ConfigureFactory()
+        {
+            SetResourceType(Materials.Wood);
+            SetProducedMaterialType(Materials.Paper);
+            SetInputRequirements(Materials.Wood, Materials.Coal);
+        }
 
-    public override void produce(GameData game)
-    {
-        updateProductivity();
-        game.Paper += (int)(resourceAmount * productivityMultiplier);
+        private void Reset()
+        {
+            ConfigureFactory();
+        }
+
+        private void OnValidate()
+        {
+            ConfigureFactory();
+        }
+
+        private void Awake()
+        {
+            ConfigureFactory();
+        }
+
+        public override void produce(GameData game)
+        {
+            ProduceOwnMaterial(game);
+        }
     }
 }

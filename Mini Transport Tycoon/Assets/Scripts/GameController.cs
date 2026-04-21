@@ -61,6 +61,16 @@ namespace MiniTransportTycoon
     [SerializeField] private UnityTilemap garageTilemap;
     [SerializeField] private TileBase garageTile;
 
+    [Header("Warehouse Tiles")]
+    [SerializeField] private UnityTilemap warehouseTilemap;
+
+    [Header("Facility Tiles")]
+    [SerializeField] private UnityTilemap ironFactoryTilemap;
+    [SerializeField] private UnityTilemap paperFactoryTilemap;
+    [SerializeField] private UnityTilemap steelFactoryTilemap;
+    [SerializeField] private UnityTilemap woodFactoryTilemap;
+    [SerializeField] private UnityTilemap coalFactoryTilemap;
+
     [Header("Houses Tiles")]
     [SerializeField] private UnityTilemap housesTilemap;
 
@@ -69,6 +79,21 @@ namespace MiniTransportTycoon
     [Header("Vehicle Placement")]
     [SerializeField] private bool placeBus= false;
     [SerializeField] private Bus busPrefab;
+    [SerializeField] private bool placeTruck = false;
+    [SerializeField] private Truck truckPrefab;
+    [SerializeField] private Materials truckPlacementMaterial = Materials.Wood;
+
+    [Header("Warehouse Runtime")]
+    [SerializeField] private Warehouse warehousePrefab;
+    [SerializeField] private Transform warehouseRuntimeRoot;
+
+    [Header("Facility Runtime")]
+    [SerializeField] private IronFactory ironFoundryPrefab;
+    [SerializeField] private PaperFactory paperFactoryPrefab;
+    [SerializeField] private SteelFactory steelFoundryPrefab;
+    [SerializeField] private WoodFactory woodFactoryPrefab;
+    [SerializeField] private CoalFactory copperRefineryPrefab;
+    [SerializeField] private Transform facilityRuntimeRoot;
 
     [Header("Navigation")]
     [SerializeField] private NavigationMode navigationMode = NavigationMode.Camera;
@@ -85,14 +110,38 @@ namespace MiniTransportTycoon
     private readonly List<Vector3Int> previewedBuildCells = new List<Vector3Int>();
     private readonly List<TileFlags> previewedBuildCellFlags = new List<TileFlags>();
     private readonly HashSet<Vector3Int> occupiedGarageCells = new HashSet<Vector3Int>();
+    private readonly HashSet<Vector3Int> occupiedWarehouseCells = new HashSet<Vector3Int>();
+    private readonly HashSet<Vector3Int> occupiedFacilityCells = new HashSet<Vector3Int>();
+    private readonly Dictionary<Vector3Int, Warehouse> warehousesByOrigin = new Dictionary<Vector3Int, Warehouse>();
+    private readonly Dictionary<Vector3Int, Facility> facilitiesByOrigin = new Dictionary<Vector3Int, Facility>();
     private readonly List<Vector3Int> pendingCarStopSelections = new List<Vector3Int>(2);
+    private readonly List<Vector3Int> pendingTruckStopSelections = new List<Vector3Int>(2);
     private readonly List<Vector3Int> roadCoordinates = new List<Vector3Int>();
     private readonly HashSet<Vector3Int> roadCoordinateLookup = new HashSet<Vector3Int>();
+    private int nextWarehouseId = 1;
+    private int nextFacilityId = 1;
     private bool pointerStartedOverUI;
 
     void Awake()
     {
-        allTilemaps = new Tilemap[] { groundTilemap, roadTilemap, busStopTilemap, garageTilemap, housesTilemap };
+        allTilemaps = new Tilemap[]
+        {
+            groundTilemap,
+            roadTilemap,
+            busStopTilemap,
+            garageTilemap,
+            warehouseTilemap,
+            ironFactoryTilemap,
+            paperFactoryTilemap,
+            steelFactoryTilemap,
+            woodFactoryTilemap,
+            coalFactoryTilemap,
+            housesTilemap
+        };
+        RefreshWarehouseFootprintOccupancy();
+        RefreshFacilityFootprintOccupancy();
+        InitializeWarehousesFromTilemap();
+        InitializeFacilitiesFromTilemaps();
         RefreshRoadCoordinates();
     }
 
@@ -140,8 +189,37 @@ namespace MiniTransportTycoon
         placeBus = !placeBus;
         if (placeBus)
         {
+            placeTruck = false;
+            ClearPendingTruckStopSelections();
+        }
+
+        if (placeBus)
+        {
             SetNavigationMode(NavigationMode.Camera);
         }
+        UpdateButtonColor();
+    }
+
+    public void TogglePlaceTruckModeUI()
+    {
+        placeTruck = !placeTruck;
+        if (placeTruck)
+        {
+            placeBus = false;
+            ClearPendingCarStopSelections();
+            SetNavigationMode(NavigationMode.Camera);
+        }
+
+        UpdateButtonColor();
+    }
+
+    public void StartTruckPlacement(Materials material)
+    {
+        truckPlacementMaterial = material;
+        placeTruck = true;
+        placeBus = false;
+        ClearPendingCarStopSelections();
+        SetNavigationMode(NavigationMode.Camera);
         UpdateButtonColor();
     }
 
@@ -225,6 +303,7 @@ namespace MiniTransportTycoon
     {
         bool isCameraMode = navigationMode == NavigationMode.Camera;
         bool canPlaceCarInCurrentMode = placeBus&& navigationMode == NavigationMode.Camera;
+        bool canPlaceTruckInCurrentMode = placeTruck && navigationMode == NavigationMode.Camera;
 
         if (!IsBuildPlacementMode() && !isCameraMode)
             return;
@@ -257,6 +336,18 @@ namespace MiniTransportTycoon
                 if (canPlaceCarInCurrentMode)
                 {
                     PlaceCarAtMousePosition();
+                }
+                else if (canPlaceTruckInCurrentMode)
+                {
+                    PlaceTruckAtMousePosition();
+                }
+                else if (LogFacilityClickAtMousePosition())
+                {
+                    return;
+                }
+                else if (LogWarehouseClickAtMousePosition())
+                {
+                    return;
                 }
                 else if (LogGarageClickAtMousePosition())
                 {
@@ -330,6 +421,116 @@ namespace MiniTransportTycoon
         return true;
     }
 
+    bool LogWarehouseClickAtMousePosition()
+    {
+        if (warehouseTilemap == null)
+            return false;
+
+        Vector3Int clickedCellPos = GetMouseCellPosition(warehouseTilemap);
+
+        if (!TryGetWarehouseAtCell(clickedCellPos, out Vector3Int warehouseOriginCell, out Warehouse warehouse))
+            return false;
+
+        if (warehouse == null)
+        {
+            Debug.LogWarning("Clicked warehouse at: " + warehouseOriginCell + " but no Warehouse script instance is registered.");
+            return true;
+        }
+
+        Debug.Log("Clicked warehouse id " + warehouse.Id + " at: " + warehouseOriginCell + " (footprint cell: " + clickedCellPos + ")");
+        return true;
+    }
+
+    bool LogFacilityClickAtMousePosition()
+    {
+        if (!TryGetFacilityAtMousePosition(out Vector3Int clickedCellPos, out Vector3Int facilityOriginCell, out Facility facility))
+            return false;
+
+        if (facility == null)
+        {
+            Debug.LogWarning("Clicked facility at: " + facilityOriginCell + " but no Facility script instance is registered.");
+            return true;
+        }
+
+        Debug.Log("Clicked facility " + facility.GetType().Name + " id " + facility.Id + " at: " + facilityOriginCell + " (footprint cell: " + clickedCellPos + ")");
+        return true;
+    }
+
+    bool TryGetFacilityAtMousePosition(out Vector3Int clickedCellPos, out Vector3Int facilityOriginCell, out Facility facility)
+    {
+        clickedCellPos = InvalidCellPosition;
+        facilityOriginCell = InvalidCellPosition;
+        facility = null;
+
+        if (TryGetFacilityAtTilemapCell(ironFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        if (TryGetFacilityAtTilemapCell(paperFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        if (TryGetFacilityAtTilemapCell(steelFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        if (TryGetFacilityAtTilemapCell(woodFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        if (TryGetFacilityAtTilemapCell(coalFactoryTilemap, out clickedCellPos, out facilityOriginCell, out facility))
+            return true;
+
+        return false;
+    }
+
+    bool TryGetFacilityAtTilemapCell(UnityTilemap tilemap, out Vector3Int clickedCellPos, out Vector3Int facilityOriginCell, out Facility facility)
+    {
+        clickedCellPos = InvalidCellPosition;
+        facilityOriginCell = InvalidCellPosition;
+        facility = null;
+
+        if (tilemap == null)
+            return false;
+
+        clickedCellPos = GetMouseCellPosition(tilemap);
+
+        if (!TryGetFacilityOriginCell(clickedCellPos, tilemap, out facilityOriginCell))
+            return false;
+
+        facilitiesByOrigin.TryGetValue(facilityOriginCell, out facility);
+        return true;
+    }
+
+    bool TryGetWarehouseAtCell(Vector3Int clickedCellPos, out Vector3Int warehouseOriginCell, out Warehouse warehouse)
+    {
+        warehouse = null;
+
+        if (!TryGetWarehouseOriginCell(clickedCellPos, out warehouseOriginCell))
+            return false;
+
+        warehousesByOrigin.TryGetValue(warehouseOriginCell, out warehouse);
+        return true;
+    }
+
+    public bool TryGetWarehouseAtRoutePoint(Vector3Int routePoint, out Warehouse warehouse)
+    {
+        warehouse = null;
+
+        if (!warehousesByOrigin.TryGetValue(routePoint, out Warehouse routeWarehouse) || routeWarehouse == null)
+            return false;
+
+        warehouse = routeWarehouse;
+        return true;
+    }
+
+    public bool TryGetFacilityAtRoutePoint(Vector3Int routePoint, out Facility facility)
+    {
+        facility = null;
+
+        if (!facilitiesByOrigin.TryGetValue(routePoint, out Facility routeFacility) || routeFacility == null)
+            return false;
+
+        facility = routeFacility;
+        return true;
+    }
+
     bool TryGetGarageOriginCell(Vector3Int clickedCellPos, out Vector3Int garageOriginCell)
     {
         garageOriginCell = InvalidCellPosition;
@@ -345,6 +546,48 @@ namespace MiniTransportTycoon
                 continue;
 
             garageOriginCell = candidateOriginCell;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool TryGetWarehouseOriginCell(Vector3Int clickedCellPos, out Vector3Int warehouseOriginCell)
+    {
+        warehouseOriginCell = InvalidCellPosition;
+
+        if (warehouseTilemap == null)
+            return false;
+
+        for (int i = 0; i < GarageFootprintOffsets.Length; i++)
+        {
+            Vector3Int candidateOriginCell = clickedCellPos - GarageFootprintOffsets[i];
+
+            if (!warehouseTilemap.HasTile(candidateOriginCell))
+                continue;
+
+            warehouseOriginCell = candidateOriginCell;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool TryGetFacilityOriginCell(Vector3Int clickedCellPos, UnityTilemap tilemap, out Vector3Int facilityOriginCell)
+    {
+        facilityOriginCell = InvalidCellPosition;
+
+        if (tilemap == null)
+            return false;
+
+        for (int i = 0; i < GarageFootprintOffsets.Length; i++)
+        {
+            Vector3Int candidateOriginCell = clickedCellPos - GarageFootprintOffsets[i];
+
+            if (!tilemap.HasTile(candidateOriginCell))
+                continue;
+
+            facilityOriginCell = candidateOriginCell;
             return true;
         }
 
@@ -446,6 +689,14 @@ namespace MiniTransportTycoon
         if (occupiedGarageCells.Contains(cellPos))
             return false;
 
+        // Cannot build under warehouse footprint tiles.
+        if (occupiedWarehouseCells.Contains(cellPos))
+            return false;
+
+        // Cannot build under facility footprint tiles.
+        if (occupiedFacilityCells.Contains(cellPos))
+            return false;
+
         // Check all other tilemaps - none should have a tile at this location
         for (int i = 0; i < allTilemaps.Length; i++)
         {
@@ -477,6 +728,8 @@ namespace MiniTransportTycoon
             && !IsRoadCoordinate(cellPos)
             && busStopTilemap != null
             && !busStopTilemap.HasTile(cellPos)
+            && !occupiedWarehouseCells.Contains(cellPos)
+            && !occupiedFacilityCells.Contains(cellPos)
             && HasAdjacentRoad(cellPos);
     }
 
@@ -501,6 +754,12 @@ namespace MiniTransportTycoon
                 return false;
 
             if (occupiedGarageCells.Contains(cellPos))
+                return false;
+
+            if (occupiedWarehouseCells.Contains(cellPos))
+                return false;
+
+            if (occupiedFacilityCells.Contains(cellPos))
                 return false;
         }
 
@@ -541,6 +800,17 @@ namespace MiniTransportTycoon
         SelectCarStop(routePointCell);
     }
 
+    void PlaceTruckAtMousePosition()
+    {
+        if (!TryGetTruckRoutePointAtMousePosition(out Vector3Int routePointCell))
+        {
+            Debug.Log("Click a garage, warehouse, or facility to select a truck route point.");
+            return;
+        }
+
+        SelectTruckStop(routePointCell, truckPlacementMaterial);
+    }
+
     void PlaceCar(Vector3Int cellPos)
     {
         if (!CanPlaceCarAt(cellPos))
@@ -557,6 +827,7 @@ namespace MiniTransportTycoon
 
         Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
+        carInstance.SetGarageTilemap(garageTilemap);
         Debug.Log("Placed car at: " + cellPos);
     }
 
@@ -661,10 +932,181 @@ namespace MiniTransportTycoon
 
         Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
+        carInstance.SetGarageTilemap(garageTilemap);
         carInstance.SetRoadCoordinates(roadCoordinates);
         carInstance.SetStopRoute(normalizedRoutePoints);
         carInstance.SetLoopRoute(loopRouteLegs);
         Debug.Log("Placed car at: " + spawnRoadCell + " with loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        return true;
+    }
+
+    void SelectTruckStop(Vector3Int stopCellPos, Materials material)
+    {
+        Vector3Int normalizedRoutePoint = NormalizeTruckRoutePoint(stopCellPos);
+
+        if (normalizedRoutePoint == InvalidCellPosition)
+        {
+            Debug.Log("Click a garage, warehouse, or facility to select a truck route point.");
+            return;
+        }
+
+        if (pendingTruckStopSelections.Count >= 2 && normalizedRoutePoint == pendingTruckStopSelections[0])
+        {
+            bool placedTruck = TryPlaceTruckFromSelectedStops(new List<Vector3Int>(pendingTruckStopSelections), material);
+
+            if (!placedTruck)
+            {
+                Debug.LogWarning("Could not create a loop route from selected truck route points.");
+            }
+
+            ClearPendingTruckStopSelections();
+            return;
+        }
+
+        if (pendingTruckStopSelections.Contains(normalizedRoutePoint))
+        {
+            Debug.LogWarning("Truck route point already selected. Click the first point again to finalize the loop.");
+            return;
+        }
+
+        pendingTruckStopSelections.Add(normalizedRoutePoint);
+        Debug.Log("Selected truck route point " + pendingTruckStopSelections.Count + " at: " + normalizedRoutePoint
+            + ". Click the first selected point to finalize route.");
+    }
+
+    public bool TryPlaceTruckFromSelectedStops(List<Vector3Int> selectedRoutePoints, Materials material)
+    {
+        if (truckPrefab == null)
+        {
+            Debug.LogWarning("Cannot place truck because truckPrefab is not assigned.");
+            return false;
+        }
+
+        if (selectedRoutePoints == null || selectedRoutePoints.Count < 2)
+        {
+            Debug.LogWarning("Cannot place truck because at least two route points are required.");
+            return false;
+        }
+
+        List<Vector3Int> normalizedRoutePoints = new List<Vector3Int>(selectedRoutePoints.Count);
+        List<Vector3Int> routeRoadCells = new List<Vector3Int>(selectedRoutePoints.Count);
+
+        for (int i = 0; i < selectedRoutePoints.Count; i++)
+        {
+            Vector3Int normalizedRoutePoint = NormalizeTruckRoutePoint(selectedRoutePoints[i]);
+
+            if (normalizedRoutePoint == InvalidCellPosition)
+            {
+                Debug.LogWarning("Cannot place truck because one of the route points is not a garage, warehouse, or facility.");
+                return false;
+            }
+
+            if (!TryGetClosestRoadTile(normalizedRoutePoint, out Vector3Int closestRoadCell))
+            {
+                Debug.LogWarning("Cannot place truck because no road was found near route point: " + normalizedRoutePoint);
+                return false;
+            }
+
+            normalizedRoutePoints.Add(normalizedRoutePoint);
+            routeRoadCells.Add(closestRoadCell);
+        }
+
+        if (!HasValidFactoryForTruckMaterial(normalizedRoutePoints, material))
+        {
+            return false;
+        }
+
+        List<List<Vector3Int>> loopRouteLegs = new List<List<Vector3Int>>(routeRoadCells.Count);
+
+        for (int i = 0; i < routeRoadCells.Count; i++)
+        {
+            Vector3Int startRoadCell = routeRoadCells[i];
+            Vector3Int endRoadCell = routeRoadCells[(i + 1) % routeRoadCells.Count];
+            List<Vector3Int> legPath = FindRoadPath(startRoadCell, endRoadCell);
+
+            if (legPath == null)
+            {
+                Debug.LogWarning("Cannot place truck because route points are not connected by roads.");
+                return false;
+            }
+
+            loopRouteLegs.Add(legPath);
+        }
+
+        if (roadTilemap == null)
+        {
+            Debug.LogWarning("Cannot place truck because roadTilemap is not assigned.");
+            return false;
+        }
+
+        Vector3Int spawnRoadCell = routeRoadCells[0];
+        Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(spawnRoadCell);
+        spawnPosition.z = truckPrefab.transform.position.z;
+
+        Truck truckInstance = Instantiate(truckPrefab, spawnPosition, truckPrefab.transform.rotation);
+        truckInstance.SetRoadTilemap(roadTilemap);
+        truckInstance.SetGarageTilemap(garageTilemap);
+        truckInstance.SetRoadCoordinates(roadCoordinates);
+        truckInstance.SetStopRoute(normalizedRoutePoints);
+        truckInstance.SetMaterialType(material);
+        truckInstance.SetLoopRoute(loopRouteLegs);
+        Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        return true;
+    }
+
+    bool HasValidFactoryForTruckMaterial(List<Vector3Int> routePoints, Materials material)
+    {
+        List<Facility> facilitiesOnRoute = new List<Facility>();
+        HashSet<Facility> uniqueFacilities = new HashSet<Facility>();
+
+        for (int i = 0; i < routePoints.Count; i++)
+        {
+            if (!facilitiesByOrigin.TryGetValue(routePoints[i], out Facility facility) || facility == null)
+                continue;
+
+            if (!uniqueFacilities.Add(facility))
+                continue;
+
+            facilitiesOnRoute.Add(facility);
+        }
+
+        if (facilitiesOnRoute.Count == 0)
+        {
+            Debug.LogWarning("Cannot place truck because route must include at least one factory stop.");
+            return false;
+        }
+
+        if (facilitiesOnRoute.Count > 2)
+        {
+            Debug.LogWarning("Cannot place truck because route can include at most two factory stops.");
+            return false;
+        }
+
+        if (facilitiesOnRoute.Count == 1)
+        {
+            Facility onlyFactory = facilitiesOnRoute[0];
+
+            if (onlyFactory.ProducedMaterialType != material)
+            {
+                Debug.LogWarning("Cannot place truck because the selected factory does not produce " + material + ".");
+                return false;
+            }
+
+            return true;
+        }
+
+        Facility firstFactory = facilitiesOnRoute[0];
+        Facility secondFactory = facilitiesOnRoute[1];
+
+        bool firstToSecondCompatible = firstFactory.ProducedMaterialType == material && secondFactory.RequiresInputMaterial(material);
+        bool secondToFirstCompatible = secondFactory.ProducedMaterialType == material && firstFactory.RequiresInputMaterial(material);
+
+        if (!firstToSecondCompatible && !secondToFirstCompatible)
+        {
+            Debug.LogWarning("Cannot place truck because selected factories are not compatible for material " + material + ".");
+            return false;
+        }
+
         return true;
     }
 
@@ -697,6 +1139,41 @@ namespace MiniTransportTycoon
         return false;
     }
 
+    bool TryGetTruckRoutePointAtMousePosition(out Vector3Int routePointCell)
+    {
+        routePointCell = InvalidCellPosition;
+
+        if (garageTilemap != null)
+        {
+            Vector3Int garageCellPos = GetMouseCellPosition(garageTilemap);
+
+            if (TryGetGarageOriginCell(garageCellPos, out Vector3Int garageOriginCell))
+            {
+                routePointCell = garageOriginCell;
+                return true;
+            }
+        }
+
+        if (warehouseTilemap != null)
+        {
+            Vector3Int warehouseCellPos = GetMouseCellPosition(warehouseTilemap);
+
+            if (TryGetWarehouseOriginCell(warehouseCellPos, out Vector3Int warehouseOriginCell))
+            {
+                routePointCell = warehouseOriginCell;
+                return true;
+            }
+        }
+
+        if (TryGetFacilityAtMousePosition(out _, out Vector3Int facilityOriginCell, out _))
+        {
+            routePointCell = facilityOriginCell;
+            return true;
+        }
+
+        return false;
+    }
+
     Vector3Int NormalizeRoutePoint(Vector3Int selectedCellPos)
     {
         if (busStopTilemap != null && busStopTilemap.HasTile(selectedCellPos))
@@ -706,6 +1183,42 @@ namespace MiniTransportTycoon
             return garageOriginCell;
 
         return InvalidCellPosition;
+    }
+
+    Vector3Int NormalizeTruckRoutePoint(Vector3Int selectedCellPos)
+    {
+        if (garageTilemap != null && TryGetGarageOriginCell(selectedCellPos, out Vector3Int garageOriginCell))
+            return garageOriginCell;
+
+        if (warehouseTilemap != null && TryGetWarehouseOriginCell(selectedCellPos, out Vector3Int warehouseOriginCell))
+            return warehouseOriginCell;
+
+        if (TryGetFacilityOriginFromAnyTilemap(selectedCellPos, out Vector3Int facilityOriginCell))
+            return facilityOriginCell;
+
+        return InvalidCellPosition;
+    }
+
+    bool TryGetFacilityOriginFromAnyTilemap(Vector3Int selectedCellPos, out Vector3Int facilityOriginCell)
+    {
+        facilityOriginCell = InvalidCellPosition;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, ironFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, paperFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, steelFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, woodFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        if (TryGetFacilityOriginCell(selectedCellPos, coalFactoryTilemap, out facilityOriginCell))
+            return true;
+
+        return false;
     }
 
     void PlaceBusStop(Vector3Int cellPos)
@@ -917,14 +1430,29 @@ namespace MiniTransportTycoon
     void SyncCarPlacementSelectionState()
     {
         if (placeBus&& navigationMode == NavigationMode.Camera)
+        {
+            ClearPendingTruckStopSelections();
             return;
+        }
+
+        if (placeTruck && navigationMode == NavigationMode.Camera)
+        {
+            ClearPendingCarStopSelections();
+            return;
+        }
 
         ClearPendingCarStopSelections();
+        ClearPendingTruckStopSelections();
     }
 
     void ClearPendingCarStopSelections()
     {
         pendingCarStopSelections.Clear();
+    }
+
+    void ClearPendingTruckStopSelections()
+    {
+        pendingTruckStopSelections.Clear();
     }
 
     void RefreshRoadCoordinates()
@@ -944,6 +1472,193 @@ namespace MiniTransportTycoon
 
             RegisterRoadCoordinate(cellPos);
         }
+    }
+
+    void RefreshWarehouseFootprintOccupancy()
+    {
+        occupiedWarehouseCells.Clear();
+
+        if (warehouseTilemap == null)
+            return;
+
+        BoundsInt cellBounds = warehouseTilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!warehouseTilemap.HasTile(cellPos))
+                continue;
+
+            List<Vector3Int> warehouseFootprint = GetGarageFootprintCells(cellPos);
+
+            for (int i = 0; i < warehouseFootprint.Count; i++)
+            {
+                occupiedWarehouseCells.Add(warehouseFootprint[i]);
+            }
+        }
+    }
+
+    void RefreshFacilityFootprintOccupancy()
+    {
+        occupiedFacilityCells.Clear();
+        AddFacilityTilemapOccupancy(ironFactoryTilemap);
+        AddFacilityTilemapOccupancy(paperFactoryTilemap);
+        AddFacilityTilemapOccupancy(steelFactoryTilemap);
+        AddFacilityTilemapOccupancy(woodFactoryTilemap);
+        AddFacilityTilemapOccupancy(coalFactoryTilemap);
+    }
+
+    void AddFacilityTilemapOccupancy(UnityTilemap tilemap)
+    {
+        if (tilemap == null)
+            return;
+
+        BoundsInt cellBounds = tilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!tilemap.HasTile(cellPos))
+                continue;
+
+            List<Vector3Int> facilityFootprint = GetGarageFootprintCells(cellPos);
+
+            for (int i = 0; i < facilityFootprint.Count; i++)
+            {
+                occupiedFacilityCells.Add(facilityFootprint[i]);
+            }
+        }
+    }
+
+    void InitializeWarehousesFromTilemap()
+    {
+        warehousesByOrigin.Clear();
+        nextWarehouseId = 1;
+
+        if (warehouseTilemap == null)
+            return;
+
+        if (warehousePrefab == null)
+        {
+            Debug.LogWarning("Warehouse tilemap is assigned, but warehousePrefab is missing. Cannot spawn warehouse scripts.");
+            return;
+        }
+
+        HashSet<Vector3Int> warehouseOrigins = new HashSet<Vector3Int>();
+        BoundsInt cellBounds = warehouseTilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!warehouseTilemap.HasTile(cellPos))
+                continue;
+
+            if (TryGetWarehouseOriginCell(cellPos, out Vector3Int warehouseOriginCell))
+            {
+                warehouseOrigins.Add(warehouseOriginCell);
+            }
+        }
+
+        foreach (Vector3Int warehouseOriginCell in warehouseOrigins)
+        {
+            RegisterWarehouseInstance(warehouseOriginCell);
+        }
+    }
+
+    void InitializeFacilitiesFromTilemaps()
+    {
+        facilitiesByOrigin.Clear();
+        nextFacilityId = 1;
+
+        RegisterFacilitiesFromTilemap(ironFactoryTilemap, ironFoundryPrefab);
+        RegisterFacilitiesFromTilemap(paperFactoryTilemap, paperFactoryPrefab);
+        RegisterFacilitiesFromTilemap(steelFactoryTilemap, steelFoundryPrefab);
+        RegisterFacilitiesFromTilemap(woodFactoryTilemap, woodFactoryPrefab);
+        RegisterFacilitiesFromTilemap(coalFactoryTilemap, copperRefineryPrefab);
+    }
+
+    void RegisterFacilitiesFromTilemap(UnityTilemap facilityTilemap, Facility facilityPrefab)
+    {
+        if (facilityTilemap == null)
+            return;
+
+        if (facilityPrefab == null)
+        {
+            Debug.LogWarning("Facility tilemap is assigned, but its prefab is missing. Cannot spawn facility scripts.");
+            return;
+        }
+
+        HashSet<Vector3Int> facilityOrigins = new HashSet<Vector3Int>();
+        BoundsInt cellBounds = facilityTilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!facilityTilemap.HasTile(cellPos))
+                continue;
+
+            if (TryGetFacilityOriginCell(cellPos, facilityTilemap, out Vector3Int facilityOriginCell))
+            {
+                facilityOrigins.Add(facilityOriginCell);
+            }
+        }
+
+        foreach (Vector3Int facilityOriginCell in facilityOrigins)
+        {
+            RegisterFacilityInstance(facilityOriginCell, facilityTilemap, facilityPrefab);
+        }
+    }
+
+    public void RegisterPlacedWarehouse(Vector3Int warehouseOriginCell)
+    {
+        RefreshWarehouseFootprintOccupancy();
+        RegisterWarehouseInstance(warehouseOriginCell);
+    }
+
+    public void RegisterPlacedFacility(Vector3Int facilityOriginCell, UnityTilemap facilityTilemap, Facility facilityPrefab)
+    {
+        RefreshFacilityFootprintOccupancy();
+        RegisterFacilityInstance(facilityOriginCell, facilityTilemap, facilityPrefab);
+    }
+
+    Warehouse RegisterWarehouseInstance(Vector3Int warehouseOriginCell)
+    {
+        if (warehousesByOrigin.TryGetValue(warehouseOriginCell, out Warehouse existingWarehouse) && existingWarehouse != null)
+            return existingWarehouse;
+
+        if (warehousePrefab == null || warehouseTilemap == null)
+            return null;
+
+        Vector3 spawnPosition = warehouseTilemap.GetCellCenterWorld(warehouseOriginCell);
+        spawnPosition.z = warehousePrefab.transform.position.z;
+
+        Warehouse warehouseInstance = Instantiate(
+            warehousePrefab,
+            spawnPosition,
+            warehousePrefab.transform.rotation,
+            warehouseRuntimeRoot);
+
+        warehouseInstance.Initialize(nextWarehouseId++);
+        warehousesByOrigin[warehouseOriginCell] = warehouseInstance;
+        return warehouseInstance;
+    }
+
+    Facility RegisterFacilityInstance(Vector3Int facilityOriginCell, UnityTilemap facilityTilemap, Facility facilityPrefab)
+    {
+        if (facilitiesByOrigin.TryGetValue(facilityOriginCell, out Facility existingFacility) && existingFacility != null)
+            return existingFacility;
+
+        if (facilityTilemap == null || facilityPrefab == null)
+            return null;
+
+        Vector3 spawnPosition = facilityTilemap.GetCellCenterWorld(facilityOriginCell);
+        spawnPosition.z = facilityPrefab.transform.position.z;
+
+        Facility facilityInstance = Instantiate(
+            facilityPrefab,
+            spawnPosition,
+            facilityPrefab.transform.rotation,
+            facilityRuntimeRoot);
+
+        facilityInstance.Initialize(nextFacilityId++);
+        facilitiesByOrigin[facilityOriginCell] = facilityInstance;
+        return facilityInstance;
     }
 
     void RegisterRoadCoordinate(Vector3Int cellPos)

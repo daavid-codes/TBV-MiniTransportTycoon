@@ -19,7 +19,7 @@ namespace MiniTransportTycoon
         [SerializeField] private int steel = 0;
         [SerializeField] private int wood = 0;
         [SerializeField] private int paper = 0;
-        [SerializeField] private int copper = 0;
+        [SerializeField] private int coal = 0;
 
         private List<Facility> facilities = new List<Facility>();
 
@@ -82,14 +82,7 @@ namespace MiniTransportTycoon
         {
             currentDate = new DateTime(2026, 1, 1, 8, 0, 0);
             StartCoroutine(TimeRoutine());
-            OnDayChanged += ProduceAllFacilities;//this line
-
-            //Adding facilities
-            AddFacility(new IronFoundry(0, 0, Orientation.Horizontal));
-            AddFacility(new SteelFoundry(0, 0, Orientation.Horizontal));
-            AddFacility(new WoodMill(0, 0, Orientation.Horizontal));
-            AddFacility(new PaperFactory(0, 0, Orientation.Horizontal));
-            AddFacility(new CopperRefinery(0, 0, Orientation.Horizontal));
+            OnDayChanged += ProduceAllFacilities;
 
             OnDataChanged?.Invoke();
         }
@@ -109,6 +102,7 @@ namespace MiniTransportTycoon
                 }
             }
         }
+
         //----Resource Fields
         public int Iron
         {
@@ -150,16 +144,62 @@ namespace MiniTransportTycoon
             }
         }
 
-        public int Copper
+        public int Coal
         {
-            get { return copper; }
+            get { return coal; }
             set
             {
-                copper = value;
+                coal = value;
                 OnDataChanged?.Invoke();
             }
         }
         //----Resource Fields END
+
+        public void AddMaterial(Materials material, int amount)
+        {
+            if (amount == 0)
+                return;
+
+            switch (material)
+            {
+                case Materials.Wood:
+                    wood += amount;
+                    break;
+                case Materials.Steel:
+                    steel += amount;
+                    break;
+                case Materials.Paper:
+                    paper += amount;
+                    break;
+                case Materials.Iron:
+                    iron += amount;
+                    break;
+                case Materials.Coal:
+                    coal += amount;
+                    break;
+            }
+
+            OnDataChanged?.Invoke();
+        }
+
+        public int GetMaterialAmount(Materials material)
+        {
+            switch (material)
+            {
+                case Materials.Wood:
+                    return wood;
+                case Materials.Steel:
+                    return steel;
+                case Materials.Paper:
+                    return paper;
+                case Materials.Iron:
+                    return iron;
+                case Materials.Coal:
+                    return coal;
+                default:
+                    return 0;
+            }
+        }
 
         public void AddFacility(Facility f)
         {

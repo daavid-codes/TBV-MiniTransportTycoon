@@ -16,6 +16,7 @@ namespace MiniTransportTycoon
 
     [Header("Road")]
     [SerializeField] protected Tilemap roadTilemap;
+    [SerializeField] protected Tilemap garageTilemap;
 
     [Header("Directional Sprites")]
     [SerializeField] protected Sprite leftUpSprite;
@@ -107,6 +108,11 @@ namespace MiniTransportTycoon
     public void SetRoadTilemap(Tilemap newRoadTilemap)
     {
         roadTilemap = newRoadTilemap;
+    }
+
+    public void SetGarageTilemap(Tilemap newGarageTilemap)
+    {
+        garageTilemap = newGarageTilemap;
     }
 
     public void SetRoadCoordinates(List<Vector3Int> newRoadCoordinates)
