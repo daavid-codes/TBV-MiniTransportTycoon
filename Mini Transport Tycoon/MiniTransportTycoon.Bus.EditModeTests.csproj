@@ -19,7 +19,7 @@
     <RootNamespace></RootNamespace>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <AssemblyName>MiniTransportTycoon.EditModeTests</AssemblyName>
+    <AssemblyName>MiniTransportTycoon.Bus.EditModeTests</AssemblyName>
     <TargetFramework>netstandard2.1</TargetFramework>
     <BaseDirectory>.</BaseDirectory>
   </PropertyGroup>
@@ -64,18 +64,10 @@
     <Analyzer Include="/Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets/Tests/UIManagerTests.cs" />
-    <Compile Include="Assets/Tests/CarTypeTests.cs" />
-    <Compile Include="Assets/Tests/MenuControllerTests.cs" />
-    <Compile Include="Assets/Tests/GameDataTest.cs" />
-    <Compile Include="Assets/Tests/TopBarManagerTests.cs" />
-    <Compile Include="Assets/Tests/MainMenuTests.cs" />
-    <Compile Include="Assets/Tests/GameControllerTests.cs" />
-    <Compile Include="Assets/Tests/CarTests.cs" />
-    <Compile Include="Assets/Tests/BusTests.cs" />
+    <Compile Include="Assets/Tests/BusEditMode/BusTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets/Tests/MiniTransportTycoon.EditModeTests.asmdef" />
+    <None Include="Assets/Tests/BusEditMode/MiniTransportTycoon.Bus.EditModeTests.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
