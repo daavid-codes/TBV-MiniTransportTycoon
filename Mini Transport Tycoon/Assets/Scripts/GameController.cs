@@ -61,6 +61,9 @@ namespace MiniTransportTycoon
     [SerializeField] private UnityTilemap garageTilemap;
     [SerializeField] private TileBase garageTile;
 
+    [Header("Warehouse Tiles")]
+    [SerializeField] private UnityTilemap warehouseTilemap;
+
     [Header("Houses Tiles")]
     [SerializeField] private UnityTilemap housesTilemap;
 
@@ -85,6 +88,7 @@ namespace MiniTransportTycoon
     private readonly List<Vector3Int> previewedBuildCells = new List<Vector3Int>();
     private readonly List<TileFlags> previewedBuildCellFlags = new List<TileFlags>();
     private readonly HashSet<Vector3Int> occupiedGarageCells = new HashSet<Vector3Int>();
+    private readonly HashSet<Vector3Int> occupiedWarehouseCells = new HashSet<Vector3Int>();
     private readonly List<Vector3Int> pendingCarStopSelections = new List<Vector3Int>(2);
     private readonly List<Vector3Int> roadCoordinates = new List<Vector3Int>();
     private readonly HashSet<Vector3Int> roadCoordinateLookup = new HashSet<Vector3Int>();
@@ -92,7 +96,8 @@ namespace MiniTransportTycoon
 
     void Awake()
     {
-        allTilemaps = new Tilemap[] { groundTilemap, roadTilemap, busStopTilemap, garageTilemap, housesTilemap };
+        allTilemaps = new Tilemap[] { groundTilemap, roadTilemap, busStopTilemap, garageTilemap, warehouseTilemap, housesTilemap };
+        RefreshWarehouseFootprintOccupancy();
         RefreshRoadCoordinates();
     }
 
@@ -258,6 +263,10 @@ namespace MiniTransportTycoon
                 {
                     PlaceCarAtMousePosition();
                 }
+                else if (LogWarehouseClickAtMousePosition())
+                {
+                    return;
+                }
                 else if (LogGarageClickAtMousePosition())
                 {
                     return;
@@ -330,6 +339,20 @@ namespace MiniTransportTycoon
         return true;
     }
 
+    bool LogWarehouseClickAtMousePosition()
+    {
+        if (warehouseTilemap == null)
+            return false;
+
+        Vector3Int clickedCellPos = GetMouseCellPosition(warehouseTilemap);
+
+        if (!TryGetWarehouseOriginCell(clickedCellPos, out Vector3Int warehouseOriginCell))
+            return false;
+
+        Debug.Log("Clicked warehouse at: " + warehouseOriginCell + " (footprint cell: " + clickedCellPos + ")");
+        return true;
+    }
+
     bool TryGetGarageOriginCell(Vector3Int clickedCellPos, out Vector3Int garageOriginCell)
     {
         garageOriginCell = InvalidCellPosition;
@@ -345,6 +368,27 @@ namespace MiniTransportTycoon
                 continue;
 
             garageOriginCell = candidateOriginCell;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool TryGetWarehouseOriginCell(Vector3Int clickedCellPos, out Vector3Int warehouseOriginCell)
+    {
+        warehouseOriginCell = InvalidCellPosition;
+
+        if (warehouseTilemap == null)
+            return false;
+
+        for (int i = 0; i < GarageFootprintOffsets.Length; i++)
+        {
+            Vector3Int candidateOriginCell = clickedCellPos - GarageFootprintOffsets[i];
+
+            if (!warehouseTilemap.HasTile(candidateOriginCell))
+                continue;
+
+            warehouseOriginCell = candidateOriginCell;
             return true;
         }
 
@@ -446,6 +490,10 @@ namespace MiniTransportTycoon
         if (occupiedGarageCells.Contains(cellPos))
             return false;
 
+        // Cannot build under warehouse footprint tiles.
+        if (occupiedWarehouseCells.Contains(cellPos))
+            return false;
+
         // Check all other tilemaps - none should have a tile at this location
         for (int i = 0; i < allTilemaps.Length; i++)
         {
@@ -477,6 +525,7 @@ namespace MiniTransportTycoon
             && !IsRoadCoordinate(cellPos)
             && busStopTilemap != null
             && !busStopTilemap.HasTile(cellPos)
+            && !occupiedWarehouseCells.Contains(cellPos)
             && HasAdjacentRoad(cellPos);
     }
 
@@ -501,6 +550,9 @@ namespace MiniTransportTycoon
                 return false;
 
             if (occupiedGarageCells.Contains(cellPos))
+                return false;
+
+            if (occupiedWarehouseCells.Contains(cellPos))
                 return false;
         }
 
@@ -943,6 +995,29 @@ namespace MiniTransportTycoon
                 continue;
 
             RegisterRoadCoordinate(cellPos);
+        }
+    }
+
+    void RefreshWarehouseFootprintOccupancy()
+    {
+        occupiedWarehouseCells.Clear();
+
+        if (warehouseTilemap == null)
+            return;
+
+        BoundsInt cellBounds = warehouseTilemap.cellBounds;
+
+        foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
+        {
+            if (!warehouseTilemap.HasTile(cellPos))
+                continue;
+
+            List<Vector3Int> warehouseFootprint = GetGarageFootprintCells(cellPos);
+
+            for (int i = 0; i < warehouseFootprint.Count; i++)
+            {
+                occupiedWarehouseCells.Add(warehouseFootprint[i]);
+            }
         }
     }
 

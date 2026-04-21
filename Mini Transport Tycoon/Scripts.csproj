@@ -70,6 +70,7 @@
     <Compile Include="Assets/Scripts/CarType.cs" />
     <Compile Include="Assets/Scripts/Tiles/SmallBridge.cs" />
     <Compile Include="Assets/Scripts/Tiles/Orientation.cs" />
+    <Compile Include="Assets/Scripts/Warehouse.cs" />
     <Compile Include="Assets/Scripts/Tiles/RoadField.cs" />
     <Compile Include="Assets/Scripts/Tiles/LargeBridge.cs" />
     <Compile Include="Assets/Scripts/Tiles/CopperRefinery.cs" />
