@@ -220,6 +220,21 @@ namespace MiniTransportTycoon
         UpdateButtonColor();
     }
 
+    public void ButtonStartBusPlacementSmall()
+    {
+        StartBusPlacement(15, 2.5f);
+    }
+
+    public void ButtonStartBusPlacementMedium()
+    {
+        StartBusPlacement(30, 2f);
+    }
+
+    public void ButtonStartBusPlacementLarge()
+    {
+        StartBusPlacement(50, 1.5f);
+    }
+
     public void TogglePlaceTruckModeUI()
     {
         placeTruck = !placeTruck;
@@ -253,6 +268,81 @@ namespace MiniTransportTycoon
         ClearPendingCarStopSelections();
         SetNavigationMode(NavigationMode.Camera);
         UpdateButtonColor();
+    }
+
+    public void ButtonStartTruckPlacementWoodSmall()
+    {
+        StartTruckPlacement(Materials.Wood, 200, 2.5f);
+    }
+
+    public void ButtonStartTruckPlacementWoodMedium()
+    {
+        StartTruckPlacement(Materials.Wood, 350, 2f);
+    }
+
+    public void ButtonStartTruckPlacementWoodLarge()
+    {
+        StartTruckPlacement(Materials.Wood, 500, 1.5f);
+    }
+
+    public void ButtonStartTruckPlacementPaperSmall()
+    {
+        StartTruckPlacement(Materials.Paper, 200, 2.5f);
+    }
+
+    public void ButtonStartTruckPlacementPaperMedium()
+    {
+        StartTruckPlacement(Materials.Paper, 350, 2f);
+    }
+
+    public void ButtonStartTruckPlacementPaperLarge()
+    {
+        StartTruckPlacement(Materials.Paper, 500, 1.5f);
+    }
+
+    public void ButtonStartTruckPlacementIronSmall()
+    {
+        StartTruckPlacement(Materials.Iron, 200, 2.5f);
+    }
+
+    public void ButtonStartTruckPlacementIronMedium()
+    {
+        StartTruckPlacement(Materials.Iron, 350, 2f);
+    }
+
+    public void ButtonStartTruckPlacementIronLarge()
+    {
+        StartTruckPlacement(Materials.Iron, 500, 1.5f);
+    }
+
+    public void ButtonStartTruckPlacementCoalSmall()
+    {
+        StartTruckPlacement(Materials.Coal, 200, 2.5f);
+    }
+
+    public void ButtonStartTruckPlacementCoalMedium()
+    {
+        StartTruckPlacement(Materials.Coal, 350, 2f);
+    }
+
+    public void ButtonStartTruckPlacementCoalLarge()
+    {
+        StartTruckPlacement(Materials.Coal, 500, 1.5f);
+    }
+
+    public void ButtonStartTruckPlacementSteelSmall()
+    {
+        StartTruckPlacement(Materials.Steel, 200, 2.5f);
+    }
+
+    public void ButtonStartTruckPlacementSteelMedium()
+    {
+        StartTruckPlacement(Materials.Steel, 350, 2f);
+    }
+
+    public void ButtonStartTruckPlacementSteelLarge()
+    {
+        StartTruckPlacement(Materials.Steel, 500, 1.5f);
     }
 
     private void UpdateButtonColor()
