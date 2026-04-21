@@ -25,6 +25,7 @@ jobs:
           key: Library-${{ hashFiles('Mini Transport Tycoon/Assets/**', 'Mini Transport Tycoon/Packages/**', 'Mini Transport Tycoon/ProjectSettings/**') }}
 
       - name: Run Unity Tests
+        id: tests
         uses: game-ci/unity-test-runner@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -35,13 +36,17 @@ jobs:
           projectPath: Mini Transport Tycoon
           githubToken: ""
           testMode: editmode
-          coverageOptions: generateAdditionalReport
+          enableCodeCoverage: true
+          coverageOptions: generateAdditionalMetrics;generateHtmlReport
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
           name: code-coverage
-          path: artifacts/**/CoverageReport
+          path: |
+            artifacts/**/CoverageReport/**
+            artifacts/**/CodeCoverage/**
+            Mini Transport Tycoon/CodeCoverage/**
 
   build:
     name: Build Unity Project
