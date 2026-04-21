@@ -4,19 +4,26 @@ namespace MiniTransportTycoon
 {
     public class SteelFactory : Facility
     {
+        private void ConfigureFactory()
+        {
+            SetResourceType(Materials.Coal);
+            SetProducedMaterialType(Materials.Steel);
+            SetInputRequirements(Materials.Coal);
+        }
+
         private void Reset()
         {
-            SetResourceType(Materials.Steel);
+            ConfigureFactory();
         }
 
         private void OnValidate()
         {
-            SetResourceType(Materials.Steel);
+            ConfigureFactory();
         }
 
         private void Awake()
         {
-            SetResourceType(Materials.Steel);
+            ConfigureFactory();
         }
 
         public override void produce(GameData game)

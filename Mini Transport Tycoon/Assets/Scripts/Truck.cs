@@ -10,7 +10,10 @@ namespace MiniTransportTycoon
     private int nextLoopLegIndex;
     private bool hasStartedLoopLeg;
     private GameData gameData;
+    private GameController gameController;
     [SerializeField] private Materials materialType;
+    [SerializeField] private int carryingAmount;
+    [SerializeField] private int maxCarryingAmount = 500;
 
     private void Awake()
     {
@@ -21,6 +24,7 @@ namespace MiniTransportTycoon
     {
         base.Start();
         gameData = FindObjectOfType<GameData>();
+        gameController = FindObjectOfType<GameController>();
     }
 
     protected override void Update()
@@ -97,6 +101,27 @@ namespace MiniTransportTycoon
         materialType = material;
     }
 
+    public int LoadMaterial(int amount)
+    {
+        if (amount <= 0)
+            return 0;
+
+        int availableCapacity = Mathf.Max(0, maxCarryingAmount - carryingAmount);
+        int loadedAmount = Mathf.Min(amount, availableCapacity);
+        carryingAmount += loadedAmount;
+        return loadedAmount;
+    }
+
+    public int UnloadMaterial(int amount)
+    {
+        if (amount <= 0)
+            return 0;
+
+        int unloadedAmount = Mathf.Min(amount, carryingAmount);
+        carryingAmount -= unloadedAmount;
+        return unloadedAmount;
+    }
+
     public void Maintain()
     {
         gameData.Money -= maintenanceCost;
@@ -110,6 +135,8 @@ namespace MiniTransportTycoon
     private void OnValidate()
     {
         type = CarType.Truck;
+        maxCarryingAmount = Mathf.Max(0, maxCarryingAmount);
+        carryingAmount = Mathf.Clamp(carryingAmount, 0, maxCarryingAmount);
     }
 
     private void StartNextLoopLeg()
@@ -139,6 +166,58 @@ namespace MiniTransportTycoon
         {
             Maintain();
         }
+
+        HandleMaterialTransferAtStop(reachedStopCell);
+    }
+
+    private void HandleMaterialTransferAtStop(Vector3Int reachedStopCell)
+    {
+        if (gameController == null)
+            return;
+
+        if (gameController.TryGetWarehouseAtRoutePoint(reachedStopCell, out Warehouse warehouse) && warehouse != null)
+        {
+            int unloadedAmount = UnloadMaterial(carryingAmount);
+
+            if (unloadedAmount > 0)
+            {
+                int currentWarehouseAmount = warehouse.GetInventoryAmount(materialType);
+                warehouse.SetInventoryAmount(materialType, currentWarehouseAmount + unloadedAmount);
+                Debug.Log("Truck unloaded " + unloadedAmount + " of " + materialType + " to warehouse " + warehouse.Id + ".");
+            }
+
+            return;
+        }
+
+        if (!gameController.TryGetFacilityAtRoutePoint(reachedStopCell, out Facility facility) || facility == null)
+            return;
+
+        if (carryingAmount > 0 && facility.RequiresInputMaterial(materialType))
+        {
+            int unloadedAmount = UnloadMaterial(carryingAmount);
+
+            if (unloadedAmount > 0)
+            {
+                facility.AddInputMaterial(materialType, unloadedAmount);
+                Debug.Log("Truck unloaded " + unloadedAmount + " of " + materialType + " to factory " + facility.Id + ".");
+            }
+        }
+
+        if (facility.ProducedMaterialType != materialType)
+            return;
+
+        int availableCapacity = Mathf.Max(0, maxCarryingAmount - carryingAmount);
+
+        if (availableCapacity <= 0)
+            return;
+
+        int takenAmount = facility.TakeProducedMaterial(availableCapacity);
+        int loadedAmount = LoadMaterial(takenAmount);
+
+        if (loadedAmount > 0)
+        {
+            Debug.Log("Truck loaded " + loadedAmount + " of " + materialType + " from factory " + facility.Id + ".");
+        }
     }
 
     private List<Vector3Int> BuildLoopLeg(List<Vector3Int> fullRoadPath, bool reverse)
@@ -164,5 +243,7 @@ namespace MiniTransportTycoon
     }
 
     public Materials MaterialType => materialType;
+    public int CarryingAmount => carryingAmount;
+    public int MaxCarryingAmount => maxCarryingAmount;
     }
 }

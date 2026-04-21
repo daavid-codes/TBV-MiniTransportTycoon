@@ -509,6 +509,28 @@ namespace MiniTransportTycoon
         return true;
     }
 
+    public bool TryGetWarehouseAtRoutePoint(Vector3Int routePoint, out Warehouse warehouse)
+    {
+        warehouse = null;
+
+        if (!warehousesByOrigin.TryGetValue(routePoint, out Warehouse routeWarehouse) || routeWarehouse == null)
+            return false;
+
+        warehouse = routeWarehouse;
+        return true;
+    }
+
+    public bool TryGetFacilityAtRoutePoint(Vector3Int routePoint, out Facility facility)
+    {
+        facility = null;
+
+        if (!facilitiesByOrigin.TryGetValue(routePoint, out Facility routeFacility) || routeFacility == null)
+            return false;
+
+        facility = routeFacility;
+        return true;
+    }
+
     bool TryGetGarageOriginCell(Vector3Int clickedCellPos, out Vector3Int garageOriginCell)
     {
         garageOriginCell = InvalidCellPosition;
@@ -989,6 +1011,11 @@ namespace MiniTransportTycoon
             routeRoadCells.Add(closestRoadCell);
         }
 
+        if (!HasValidFactoryForTruckMaterial(normalizedRoutePoints, material))
+        {
+            return false;
+        }
+
         List<List<Vector3Int>> loopRouteLegs = new List<List<Vector3Int>>(routeRoadCells.Count);
 
         for (int i = 0; i < routeRoadCells.Count; i++)
@@ -1024,6 +1051,62 @@ namespace MiniTransportTycoon
         truckInstance.SetMaterialType(material);
         truckInstance.SetLoopRoute(loopRouteLegs);
         Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with loop route points: " + string.Join(" -> ", normalizedRoutePoints));
+        return true;
+    }
+
+    bool HasValidFactoryForTruckMaterial(List<Vector3Int> routePoints, Materials material)
+    {
+        List<Facility> facilitiesOnRoute = new List<Facility>();
+        HashSet<Facility> uniqueFacilities = new HashSet<Facility>();
+
+        for (int i = 0; i < routePoints.Count; i++)
+        {
+            if (!facilitiesByOrigin.TryGetValue(routePoints[i], out Facility facility) || facility == null)
+                continue;
+
+            if (!uniqueFacilities.Add(facility))
+                continue;
+
+            facilitiesOnRoute.Add(facility);
+        }
+
+        if (facilitiesOnRoute.Count == 0)
+        {
+            Debug.LogWarning("Cannot place truck because route must include at least one factory stop.");
+            return false;
+        }
+
+        if (facilitiesOnRoute.Count > 2)
+        {
+            Debug.LogWarning("Cannot place truck because route can include at most two factory stops.");
+            return false;
+        }
+
+        if (facilitiesOnRoute.Count == 1)
+        {
+            Facility onlyFactory = facilitiesOnRoute[0];
+
+            if (onlyFactory.ProducedMaterialType != material)
+            {
+                Debug.LogWarning("Cannot place truck because the selected factory does not produce " + material + ".");
+                return false;
+            }
+
+            return true;
+        }
+
+        Facility firstFactory = facilitiesOnRoute[0];
+        Facility secondFactory = facilitiesOnRoute[1];
+
+        bool firstToSecondCompatible = firstFactory.ProducedMaterialType == material && secondFactory.RequiresInputMaterial(material);
+        bool secondToFirstCompatible = secondFactory.ProducedMaterialType == material && firstFactory.RequiresInputMaterial(material);
+
+        if (!firstToSecondCompatible && !secondToFirstCompatible)
+        {
+            Debug.LogWarning("Cannot place truck because selected factories are not compatible for material " + material + ".");
+            return false;
+        }
+
         return true;
     }
 

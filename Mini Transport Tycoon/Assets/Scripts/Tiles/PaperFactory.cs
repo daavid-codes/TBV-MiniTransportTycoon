@@ -4,19 +4,26 @@ namespace MiniTransportTycoon
 {
     public class PaperFactory : Facility
     {
+        private void ConfigureFactory()
+        {
+            SetResourceType(Materials.Wood);
+            SetProducedMaterialType(Materials.Paper);
+            SetInputRequirements(Materials.Wood, Materials.Coal);
+        }
+
         private void Reset()
         {
-            SetResourceType(Materials.Paper);
+            ConfigureFactory();
         }
 
         private void OnValidate()
         {
-            SetResourceType(Materials.Paper);
+            ConfigureFactory();
         }
 
         private void Awake()
         {
-            SetResourceType(Materials.Paper);
+            ConfigureFactory();
         }
 
         public override void produce(GameData game)
