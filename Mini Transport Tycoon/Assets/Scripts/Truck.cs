@@ -10,6 +10,7 @@ namespace MiniTransportTycoon
     private bool useShuttleRoute;
     private bool nextShuttleLegIsForward;
     private GameData gameData;
+    private Materials materialType;
 
     private void Awake()
     {
