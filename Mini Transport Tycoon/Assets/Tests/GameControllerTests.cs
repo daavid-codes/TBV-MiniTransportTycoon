@@ -15,6 +15,13 @@ namespace MiniTransportTycoon
         private const BindingFlags InstanceFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         private readonly List<UnityEngine.Object> trackedObjects = new List<UnityEngine.Object>();
 
+        [OneTimeSetUp]
+        public void OneTimeSetUpGameData()
+        {
+            // Initialize GameData singleton once before all tests
+            EnsureGameDataMockExists();
+        }
+
         [TearDown]
         public void TearDownTrackedObjects()
         {
@@ -26,6 +33,12 @@ namespace MiniTransportTycoon
                 }
             }
             trackedObjects.Clear();
+            
+            // Reset GameData singleton
+            var gameDataField = typeof(GameData).GetField("instance", 
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            if (gameDataField != null)
+                gameDataField.SetValue(null, null);
         }
 
         [Test]
@@ -574,6 +587,7 @@ namespace MiniTransportTycoon
             SetField(controller, "normalColor", context.NormalColor);
             SetField(controller, "activeColor", context.ActiveColor);
 
+            CreateGameDataMock();
             Invoke(controller, "Awake");
             return context;
         }
@@ -596,6 +610,19 @@ namespace MiniTransportTycoon
             Tile tile = ScriptableObject.CreateInstance<Tile>();
             tile.name = name;
             return tile;
+        }
+
+        private void CreateGameDataMock()
+        {
+            GameObject mockGameDataObj = new GameObject("GameData");
+            GameData mockGameData = mockGameDataObj.AddComponent<GameData>();
+            // Don't track one-time setup objects; they persist for test suite
+            
+            // Set the GameData.instance singleton
+            var gameDataField = typeof(GameData).GetField("instance", 
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            if (gameDataField != null)
+                gameDataField.SetValue(null, mockGameData);
         }
 
         private T Track<T>(T obj) where T : UnityEngine.Object
@@ -621,7 +648,14 @@ namespace MiniTransportTycoon
 
         private static object Invoke(object target, string name, params object[] args)
         {
-            return FindMethod(target.GetType(), name, args).Invoke(target, args);
+            MethodInfo method = FindMethod(target.GetType(), name, args);
+            if (method == null)
+            {
+                string paramStr = args == null || args.Length == 0 ? "no parameters" : $"{args.Length} parameter(s)";
+                throw new System.InvalidOperationException(
+                    $"Method '{name}' with {paramStr} not found on type '{target.GetType().Name}'");
+            }
+            return method.Invoke(target, args);
         }
 
         private static void AddRoad(ControllerContext context, Vector3Int cellPos)
@@ -685,6 +719,16 @@ namespace MiniTransportTycoon
             }
 
             return null;
+        }
+
+        private void EnsureGameDataMockExists()
+        {
+            // Check if GameData.Instance already exists
+            if (GameData.Instance != null)
+                return;
+            
+            // Create mock if it doesn't exist
+            CreateGameDataMock();
         }
 
         private class ControllerContext
