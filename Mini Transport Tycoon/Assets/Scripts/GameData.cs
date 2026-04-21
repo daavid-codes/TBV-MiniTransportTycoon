@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.Win32.SafeHandles;
 
 namespace MiniTransportTycoon
 {
@@ -74,6 +75,30 @@ namespace MiniTransportTycoon
             {
                 isPaused = value;
                 Time.timeScale = isPaused ? 0f : 1f;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        public static GameData Instance { get; private set; }
+
+        public void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+        }
+
+        public void TrySpendMoney(int amount)
+        {
+            if (money >= amount)
+            {
+                money -= amount;
                 OnDataChanged?.Invoke();
             }
         }
