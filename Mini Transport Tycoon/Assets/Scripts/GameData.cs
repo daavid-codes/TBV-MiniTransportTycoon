@@ -14,6 +14,11 @@ namespace MiniTransportTycoon
     [SerializeField] private string cityName = "Kaposvar";
     [SerializeField] private float timeMultiplier = 0.2f;
     [SerializeField] private bool isPaused = false;
+    [SerializeField] private int wood;
+    [SerializeField] private int steel;
+    [SerializeField] private int paper;
+    [SerializeField] private int iron;
+    [SerializeField] private int coal;
     
     private DateTime currentDate;
 
@@ -65,6 +70,52 @@ namespace MiniTransportTycoon
             isPaused = value;
             Time.timeScale = isPaused ? 0f : 1f;
             OnDataChanged?.Invoke();
+        }
+    }
+
+    public void AddMaterial(Materials material, int amount)
+    {
+        if (amount == 0)
+            return;
+
+        switch (material)
+        {
+            case Materials.Wood:
+                wood += amount;
+                break;
+            case Materials.Steel:
+                steel += amount;
+                break;
+            case Materials.Paper:
+                paper += amount;
+                break;
+            case Materials.Iron:
+                iron += amount;
+                break;
+            case Materials.Coal:
+                coal += amount;
+                break;
+        }
+
+        OnDataChanged?.Invoke();
+    }
+
+    public int GetMaterialAmount(Materials material)
+    {
+        switch (material)
+        {
+            case Materials.Wood:
+                return wood;
+            case Materials.Steel:
+                return steel;
+            case Materials.Paper:
+                return paper;
+            case Materials.Iron:
+                return iron;
+            case Materials.Coal:
+                return coal;
+            default:
+                return 0;
         }
     }
 

@@ -21,8 +21,7 @@ namespace MiniTransportTycoon
 
         public override void produce(GameData game)
         {
-            int producedAmount = GetProducedAmount();
-            // TODO: Apply producedAmount to GameData steel storage.
+            ProduceOwnMaterial(game);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace MiniTransportTycoon
     private int nextLoopLegIndex;
     private bool hasStartedLoopLeg;
     private GameData gameData;
-    [SerializeField] private Materials materialType = Materials.Wood;
+    [SerializeField] private Materials materialType;
 
     private void Awake()
     {
