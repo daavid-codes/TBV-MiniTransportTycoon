@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   test:
@@ -79,6 +80,23 @@ jobs:
         with:
           name: code-coverage
           path: coverage-artifact/**
+
+      - name: Generate Coverage Summary
+        uses: danielpalme/ReportGenerator-GitHub-Action@ee3806a36b8b2eb9594cb3e5fae045af7e5ead10 # v5.5.6
+        with:
+          reports: artifacts/**/TestCoverageResults_*.xml
+          targetdir: coverage-summary
+          reporttypes: MarkdownSummaryGithub
+
+      - name: Write Coverage to Job Summary
+        run: cat coverage-summary/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Post Coverage Comment on PR
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: coverage-summary/SummaryGithub.md
 
   build:
     name: Build Unity Project
