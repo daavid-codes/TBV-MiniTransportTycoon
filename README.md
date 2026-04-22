@@ -62,6 +62,33 @@ A gazdasági rendszer bevételeket biztosít a sikeresen leszállított áruk é
 - Unity
 - C#
 
+### CI Coverage (GitHub Actions)
+
+Coverage is generated in CI by game-ci/unity-test-runner with:
+
+- enableCodeCoverage: true
+- coverageOptions: generateAdditionalMetrics;generateHtmlReport
+
+The workflow uploads a `code-coverage` artifact containing the `CodeCoverage` folder.
+
+### Run Coverage Locally (macOS)
+
+You can generate EditMode test coverage in batch mode with:
+
+```bash
+"/Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/MacOS/Unity" \
+    -batchmode -nographics -quit \
+    -projectPath "Mini Transport Tycoon" \
+    -runTests -testPlatform editmode \
+    -enableCodeCoverage \
+    -coverageOptions "generateAdditionalMetrics;generateHtmlReport" \
+    -testResults "TestResults/EditMode-results.xml" \
+    -logFile "TestResults/editmode-coverage.log"
+```
+
+After the run, open the generated HTML report from the `CodeCoverage` output directory.
+In CI this directory is uploaded as the `code-coverage` artifact.
+
 ## Hivatkozások
 
 - [Használati eset diagram]()
