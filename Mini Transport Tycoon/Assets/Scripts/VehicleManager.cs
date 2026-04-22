@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PlasticGui.WorkspaceWindow;
 using UnityEngine;
 
 namespace MiniTransportTycoon
@@ -73,5 +74,15 @@ namespace MiniTransportTycoon
         }
 
         public List<Vehicle> GetAllVehicles() => activeVehicles;
+
+        public void RemoveVehicleById(int id)
+        {
+            var vehicle = activeVehicles.Find(v => v.Id == id);
+            if (vehicle != null)
+            {
+                activeVehicles.Remove(vehicle);
+                OnVehiclesChanged?.Invoke();
+            }
+        }
     }
 }

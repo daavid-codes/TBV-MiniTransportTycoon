@@ -93,6 +93,11 @@ namespace MiniTransportTycoon
         }
     }
 
+    public void DestroyVehicle()
+    {
+        Destroy(gameObject);
+    }
+
     public virtual void SetRoute(List<Vector3Int> newRoute)
     {
         route = new List<Vector3Int>();
