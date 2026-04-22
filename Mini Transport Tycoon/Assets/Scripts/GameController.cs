@@ -126,8 +126,12 @@ namespace MiniTransportTycoon
     private int nextFacilityId = 1;
     private bool pointerStartedOverUI;
 
+    private GameData gameData;
+
     void Awake()
     {
+        gameData = GameData.Instance;
+
         allTilemaps = new Tilemap[]
         {
             groundTilemap,
@@ -369,13 +373,6 @@ namespace MiniTransportTycoon
 
     void TrySpendMoneyFromGameData(int amount)
     {
-        GameData gameData = GameData.Instance;
-        if (gameData == null)
-        {
-            Debug.LogWarning("Cannot spend money because GameData.Instance is null.");
-            return;
-        }
-
         gameData.TrySpendMoney(amount);
     }
 

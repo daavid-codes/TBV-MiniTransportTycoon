@@ -16,6 +16,8 @@ namespace MiniTransportTycoon
         [SerializeField] private float timeMultiplier = 0.2f;
         [SerializeField] private bool isPaused = false;
 
+        [SerializeField] private DateTime starterTime = new DateTime(2026, 1, 1, 8, 0, 0);
+
         [SerializeField] private int iron = 0;
         [SerializeField] private int steel = 0;
         [SerializeField] private int wood = 0;
@@ -25,6 +27,7 @@ namespace MiniTransportTycoon
         private List<Facility> facilities = new List<Facility>();
 
         public event Action OnDayChanged;
+        public event Action OnHourChanged;
 
         private DateTime currentDate;
 
@@ -105,7 +108,7 @@ namespace MiniTransportTycoon
 
         private void Start()
         {
-            currentDate = new DateTime(2026, 1, 1, 8, 0, 0);
+            currentDate = starterTime;
             StartCoroutine(TimeRoutine());
             OnDayChanged += ProduceAllFacilities;
 
@@ -120,6 +123,11 @@ namespace MiniTransportTycoon
                 yield return new WaitForSeconds(timeMultiplier);
                 previousDate = CurrentDate;
                 CurrentDate = CurrentDate.AddMinutes(1);
+
+                if (CurrentDate.Hour != previousDate.Hour)
+                {
+                    OnHourChanged?.Invoke();
+                }
 
                 if (CurrentDate.Day != previousDate.Day)
                 {
@@ -178,7 +186,7 @@ namespace MiniTransportTycoon
                 OnDataChanged?.Invoke();
             }
         }
-        //----Resource Fields END
+        
 
         public void AddMaterial(Materials material, int amount)
         {

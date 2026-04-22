@@ -11,6 +11,7 @@ namespace MiniTransportTycoon
     [SerializeField] protected TileBase carSprite;
     [SerializeField] protected float speed;
     [SerializeField] protected int age;
+    [SerializeField] protected int durability ;
     [SerializeField] protected int maintenanceCost;
     [SerializeField] protected CarType type;
 
@@ -45,6 +46,7 @@ namespace MiniTransportTycoon
         stopRoute ??= new List<Vector3Int>();
         roadCoordinates ??= new List<Vector3Int>();
         roadCoordinateLookup ??= new HashSet<Vector3Int>();
+        durability = 100;
 
         if (VehicleManager.Instance != null)
         {
@@ -70,6 +72,24 @@ namespace MiniTransportTycoon
         {
             MoveAlongRoute();
             UpdateDirectionSprite();
+        }
+    }
+
+    public int GetDurability()
+    {
+        return durability;
+    }
+
+    public void DecreaseDurability()
+    {
+        if (durability > 0)
+        {
+            durability--;
+        }
+
+        if (durability <= 0)
+        {
+            Destroy(gameObject);
         }
     }
 
@@ -230,6 +250,7 @@ namespace MiniTransportTycoon
 
     public int Id => id;
     public int Age => age;
+    public int Durability => durability;
     public TileBase CarSprite => carSprite;
     public float Speed => speed;
     public int MaintenanceCost => maintenanceCost;

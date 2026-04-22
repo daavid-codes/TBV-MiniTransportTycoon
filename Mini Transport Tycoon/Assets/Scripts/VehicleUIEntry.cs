@@ -11,7 +11,7 @@ namespace MiniTransportTycoon
         public void Setup(Vehicle vehicle)
         {
             
-            infoText.text = "ID: " + vehicle.Id.ToString() + "\n" + "Type: " + vehicle.Type.ToString() + "\n" + "Age: " + vehicle.Age.ToString() + "\n" + "Speed: " + vehicle.Speed.ToString("F1");
+            infoText.text = "ID: " + vehicle.Id.ToString() + "\n" + "Type: " + vehicle.Type.ToString() + "\n" + "100/" + vehicle.GetDurability().ToString() + "\n" + "Speed: " + vehicle.Speed.ToString("F1");
         }
     }
 }
