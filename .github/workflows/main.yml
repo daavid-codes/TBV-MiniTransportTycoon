@@ -35,6 +35,8 @@ jobs:
           enableCodeCoverage: true
           enableTestReporting: false     # Avoid GitHub API calls for test reports
           coverageOptions: 'generateAdditionalMetrics;generateHtmlReport'
+          customParameters: >-
+            -pathFilters:+Assets/Scripts/Bus.cs,+Assets/Scripts/Car.cs,+Assets/Scripts/CarType.cs,+Assets/Scripts/GameController.cs,+Assets/Scripts/GameData.cs,+Assets/Scripts/MenuController.cs,+Assets/Scripts/TopBarManager.cs,+Assets/Scripts/MainMenu.cs,+Assets/Scripts/Vehicle.cs
 
       - name: Debug Coverage Paths
         if: always()
