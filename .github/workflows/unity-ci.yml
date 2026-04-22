@@ -84,7 +84,7 @@ jobs:
       - name: Generate Coverage Summary
         uses: danielpalme/ReportGenerator-GitHub-Action@ee3806a36b8b2eb9594cb3e5fae045af7e5ead10 # v5.5.6
         with:
-          reports: artifacts/**/TestCoverageResults_*.xml
+          reports: ${{ steps.tests.outputs.coveragePath }}/**/TestCoverageResults_*.xml
           targetdir: coverage-summary
           reporttypes: MarkdownSummaryGithub
 
