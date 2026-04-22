@@ -18,8 +18,14 @@ namespace MiniTransportTycoon
 
         public void OnSellButtonClicked()
         {
-            VehicleManager.Instance.UnregisterVehicle(vehicle);
+        GameData gameData = GameData.Instance;
+        if (gameData != null)
+        {
+            gameData.Money += vehicle.Cost;
             vehicle.DestroyVehicle();
+            VehicleManager.Instance.UnregisterVehicle(vehicle);
+            
+        }
         }
 
 

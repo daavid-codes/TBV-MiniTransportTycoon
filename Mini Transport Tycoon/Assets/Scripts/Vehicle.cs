@@ -13,6 +13,7 @@ namespace MiniTransportTycoon
     [SerializeField] protected int age;
     [SerializeField] protected int durability ;
     [SerializeField] protected int maintenanceCost;
+    [SerializeField] protected int cost;
     [SerializeField] protected CarType type;
 
     [Header("Road")]
@@ -259,6 +260,7 @@ namespace MiniTransportTycoon
     public TileBase CarSprite => carSprite;
     public float Speed => speed;
     public int MaintenanceCost => maintenanceCost;
+    public int Cost => cost;
     public CarType Type => type;
     public List<Vector3Int> Route => route;
     public List<Vector3Int> StopRoute => stopRoute;
