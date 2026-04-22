@@ -81,7 +81,9 @@ namespace MiniTransportTycoon
     [SerializeField] private Bus busPrefab;
     [SerializeField] private int busPlacementCapacity = 50;
     [SerializeField] private float busPlacementSpeed = 1f;
+    [SerializeField] private int busPlacementPrice = 100;
     [SerializeField] private bool placeTruck = false;
+    [SerializeField] private int truckPlacementPrice = 100;
     [SerializeField] private Truck truckPrefab;
     [SerializeField] private Materials truckPlacementMaterial = Materials.Wood;
     [SerializeField] private int truckPlacementCapacity = 500;
@@ -126,8 +128,12 @@ namespace MiniTransportTycoon
     private int nextFacilityId = 1;
     private bool pointerStartedOverUI;
 
+    private GameData gameData;
+
     void Awake()
     {
+        gameData = GameData.Instance;
+
         allTilemaps = new Tilemap[]
         {
             groundTilemap,
@@ -207,15 +213,16 @@ namespace MiniTransportTycoon
 
     public void StartBusPlacement(int capacity)
     {
-        StartBusPlacement(capacity, busPlacementSpeed);
+        StartBusPlacement(capacity, busPlacementSpeed, busPlacementPrice);
     }
 
-    public void StartBusPlacement(int capacity, float speed)
+    public void StartBusPlacement(int capacity, float speed, int price)
     {
         busPlacementCapacity = Mathf.Max(0, capacity);
         busPlacementSpeed = Mathf.Max(0f, speed);
         placeBus = true;
         placeTruck = false;
+        busPlacementPrice = Mathf.Max(0, price);
         ClearPendingTruckStopSelections();
         SetNavigationMode(NavigationMode.Camera);
         
@@ -226,20 +233,17 @@ namespace MiniTransportTycoon
 
     public void ButtonStartBusPlacementSmall()
     {
-        StartBusPlacement(15, 2.5f);
-        TrySpendMoneyFromGameData(300);
+        StartBusPlacement(15, 2.5f,300);
     }
 
     public void ButtonStartBusPlacementMedium()
     {
-        StartBusPlacement(30, 2f);
-        TrySpendMoneyFromGameData(500);
+        StartBusPlacement(30, 2f, 500);
     }
 
     public void ButtonStartBusPlacementLarge()
     {
-        StartBusPlacement(50, 1.5f);
-        TrySpendMoneyFromGameData(700);
+        StartBusPlacement(50, 1.5f, 700);
     }
 
     public void TogglePlaceTruckModeUI()
@@ -255,21 +259,14 @@ namespace MiniTransportTycoon
         UpdateButtonColor();
     }
 
-    public void StartTruckPlacement(Materials material)
-    {
-        StartTruckPlacement(material, truckPlacementCapacity, truckPlacementSpeed);
-    }
+    
 
-    public void StartTruckPlacement(Materials material, int capacity)
-    {
-        StartTruckPlacement(material, capacity, truckPlacementSpeed);
-    }
-
-    public void StartTruckPlacement(Materials material, int capacity, float speed)
+    public void StartTruckPlacement(Materials material, int capacity, float speed ,int price)
     {
         truckPlacementMaterial = material;
         truckPlacementCapacity = Mathf.Max(0, capacity);
         truckPlacementSpeed = Mathf.Max(0f, speed);
+        truckPlacementPrice = Mathf.Max(0, price);
         placeTruck = true;
         placeBus = false;
         ClearPendingCarStopSelections();
@@ -279,103 +276,83 @@ namespace MiniTransportTycoon
 
     public void ButtonStartTruckPlacementWoodSmall()
     {
-        StartTruckPlacement(Materials.Wood, 200, 2.5f);
-        TrySpendMoneyFromGameData(300);
+        StartTruckPlacement(Materials.Wood, 200, 2.5f, 300);
     }
 
     public void ButtonStartTruckPlacementWoodMedium()
     {
-        StartTruckPlacement(Materials.Wood, 350, 2f);
-        TrySpendMoneyFromGameData(500);
+        StartTruckPlacement(Materials.Wood, 350, 2f, 500);
     }
 
     public void ButtonStartTruckPlacementWoodLarge()
     {
-        StartTruckPlacement(Materials.Wood, 500, 1.5f);
-        TrySpendMoneyFromGameData(700);
+        StartTruckPlacement(Materials.Wood, 500, 1.5f, 700);
     }
 
     public void ButtonStartTruckPlacementPaperSmall()
     {
-        StartTruckPlacement(Materials.Paper, 200, 2.5f);
-        TrySpendMoneyFromGameData(300);
+        StartTruckPlacement(Materials.Paper, 200, 2.5f, 300);
+        
     }
 
     public void ButtonStartTruckPlacementPaperMedium()
     {
-        StartTruckPlacement(Materials.Paper, 350, 2f);
-        TrySpendMoneyFromGameData(500);
+        StartTruckPlacement(Materials.Paper, 350, 2f, 500);
     }
 
     public void ButtonStartTruckPlacementPaperLarge()
     {
-        StartTruckPlacement(Materials.Paper, 500, 1.5f);
-        TrySpendMoneyFromGameData(700);
+        StartTruckPlacement(Materials.Paper, 500, 1.5f, 700);
     }
 
     public void ButtonStartTruckPlacementIronSmall()
     {
-        StartTruckPlacement(Materials.Iron, 200, 2.5f);
-        TrySpendMoneyFromGameData(300);
+        StartTruckPlacement(Materials.Iron, 200, 2.5f, 300);
     }
 
     public void ButtonStartTruckPlacementIronMedium()
     {
-        StartTruckPlacement(Materials.Iron, 350, 2f);
-        TrySpendMoneyFromGameData(500);
+        StartTruckPlacement(Materials.Iron, 350, 2f, 500);
     }
 
     public void ButtonStartTruckPlacementIronLarge()
     {
-        StartTruckPlacement(Materials.Iron, 500, 1.5f);
-        TrySpendMoneyFromGameData(700);
+        StartTruckPlacement(Materials.Iron, 500, 1.5f, 700);
     }
 
     public void ButtonStartTruckPlacementCoalSmall()
     {
-        StartTruckPlacement(Materials.Coal, 200, 2.5f);
-        TrySpendMoneyFromGameData(300);
+        StartTruckPlacement(Materials.Coal, 200, 2.5f, 300);
     }
 
     public void ButtonStartTruckPlacementCoalMedium()
     {
-        StartTruckPlacement(Materials.Coal, 350, 2f);
-        TrySpendMoneyFromGameData(500);
+        StartTruckPlacement(Materials.Coal, 350, 2f, 500);
     }
 
     public void ButtonStartTruckPlacementCoalLarge()
     {
-        StartTruckPlacement(Materials.Coal, 500, 1.5f);
-        TrySpendMoneyFromGameData(700);
+        StartTruckPlacement(Materials.Coal, 500, 1.5f, 700);
     }
 
     public void ButtonStartTruckPlacementSteelSmall()
     {
-        StartTruckPlacement(Materials.Steel, 200, 2.5f);
-        TrySpendMoneyFromGameData(300);
+        StartTruckPlacement(Materials.Steel, 200, 2.5f, 300);
     }
 
     public void ButtonStartTruckPlacementSteelMedium()
     {
-        StartTruckPlacement(Materials.Steel, 350, 2f);
-        TrySpendMoneyFromGameData(500);
+        StartTruckPlacement(Materials.Steel, 350, 2f, 500);
     }
 
     public void ButtonStartTruckPlacementSteelLarge()
     {
-        StartTruckPlacement(Materials.Steel, 500, 1.5f);
-        TrySpendMoneyFromGameData(700);
+        StartTruckPlacement(Materials.Steel, 500, 1.5f, 700);
     }
+    
 
     void TrySpendMoneyFromGameData(int amount)
     {
-        GameData gameData = GameData.Instance;
-        if (gameData == null)
-        {
-            Debug.LogWarning("Cannot spend money because GameData.Instance is null.");
-            return;
-        }
-
         gameData.TrySpendMoney(amount);
     }
 
@@ -987,6 +964,13 @@ namespace MiniTransportTycoon
         Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
         carInstance.SetGarageTilemap(garageTilemap);
+        
+        GameData gameData = GameData.Instance;
+        if (gameData != null)
+        {
+            gameData.TrySpendMoney(carInstance.Cost);
+        }
+        
         Debug.Log("Placed car at: " + cellPos);
     }
 
@@ -1107,8 +1091,12 @@ namespace MiniTransportTycoon
         carInstance.SetMaxCarryingAmount(capacity);
         carInstance.SetSpeed(speed);
         carInstance.SetLoopRoute(loopRouteLegs);
+        carInstance.SetCost(busPlacementPrice);
+        
+        
         Debug.Log("Placed car at: " + spawnRoadCell + " with capacity " + Mathf.Max(0, capacity) + ", speed " + Mathf.Max(0f, speed) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         placeBus = false;
+        TrySpendMoneyFromGameData(busPlacementPrice);
         return true;
     }
 
@@ -1239,8 +1227,11 @@ namespace MiniTransportTycoon
         truckInstance.SetMaxCarryingAmount(capacity);
         truckInstance.SetSpeed(speed);
         truckInstance.SetLoopRoute(loopRouteLegs);
+        truckInstance.SetCost(truckPlacementPrice);
+        
         Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with capacity " + Mathf.Max(0, capacity) + ", speed " + Mathf.Max(0f, speed) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         placeTruck = false;
+        TrySpendMoneyFromGameData(truckPlacementPrice);
         return true;
     }
 

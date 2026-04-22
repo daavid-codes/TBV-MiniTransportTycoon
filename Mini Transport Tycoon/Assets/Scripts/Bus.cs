@@ -112,6 +112,11 @@ namespace MiniTransportTycoon
         carryingAmount = Mathf.Clamp(carryingAmount, 0, maxCarryingAmount);
     }
 
+    public void SetCost(int cost)
+    {
+        this.cost = Mathf.Max(0, cost);
+    }
+
     private void Reset()
     {
         type = CarType.Bus;
