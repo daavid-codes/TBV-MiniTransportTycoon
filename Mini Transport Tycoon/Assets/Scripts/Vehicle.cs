@@ -254,6 +254,17 @@ namespace MiniTransportTycoon
         return roadTilemap != null && roadTilemap.HasTile(cell);
     }
 
+    public void SetMaintenanceCost(int newMaintenanceCost)
+    {
+        maintenanceCost = Mathf.Max(0, newMaintenanceCost);
+    }
+
+    public void SetDurability(int newDurability)
+    {
+        durability = Mathf.Clamp(newDurability, 0, 100);
+        
+    }
+
     public int Id => id;
     public int Age => age;
     public int Durability => durability;

@@ -52,10 +52,15 @@ namespace MiniTransportTycoon
                 if (activeVehicles[i] != null)
                 {
                     activeVehicles[i].DecreaseDurability();
+                    activeVehicles[i].SetMaintenanceCost((100 - activeVehicles[i].GetDurability()) * 10);
                     OnVehiclesChanged?.Invoke();
                 }
             }
         }
+
+
+        
+
 
         public int RegisterVehicle(Vehicle vehicle)
         {
@@ -83,6 +88,13 @@ namespace MiniTransportTycoon
                 activeVehicles.Remove(vehicle);
                 OnVehiclesChanged?.Invoke();
             }
+        }
+
+        public void RepairVehicle(Vehicle vehicle)
+        {
+            vehicle.SetDurability(100);
+            vehicle.SetMaintenanceCost(0);
+            OnVehiclesChanged?.Invoke();
         }
     }
 }
