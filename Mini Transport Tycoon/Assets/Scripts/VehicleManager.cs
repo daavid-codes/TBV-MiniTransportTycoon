@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PlasticGui.WorkspaceWindow;
 using UnityEngine;
 
 namespace MiniTransportTycoon
@@ -7,6 +8,8 @@ namespace MiniTransportTycoon
     public class VehicleManager : MonoBehaviour
     {
         public static VehicleManager Instance { get; private set; }
+
+        private GameData gameData;
 
         public event Action OnVehiclesChanged;
 
@@ -18,12 +21,46 @@ namespace MiniTransportTycoon
             if (Instance == null)
             {
                 Instance = this;
+                gameData = GameData.Instance;
             }
             else
             {
                 Destroy(gameObject);
             }
         }
+
+        private void Start()
+        {
+            if (gameData != null)
+            {
+                gameData.OnHourChanged += DecraseVehicleDurability;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (gameData != null)
+            {
+                gameData.OnHourChanged -= DecraseVehicleDurability;
+            }
+        }
+
+        private void DecraseVehicleDurability()
+        {
+            for (int i = activeVehicles.Count - 1; i >= 0; i--)
+            {
+                if (activeVehicles[i] != null)
+                {
+                    activeVehicles[i].DecreaseDurability();
+                    activeVehicles[i].SetMaintenanceCost((100 - activeVehicles[i].GetDurability()) * 10);
+                    OnVehiclesChanged?.Invoke();
+                }
+            }
+        }
+
+
+        
+
 
         public int RegisterVehicle(Vehicle vehicle)
         {
@@ -42,5 +79,22 @@ namespace MiniTransportTycoon
         }
 
         public List<Vehicle> GetAllVehicles() => activeVehicles;
+
+        public void RemoveVehicleById(int id)
+        {
+            var vehicle = activeVehicles.Find(v => v.Id == id);
+            if (vehicle != null)
+            {
+                activeVehicles.Remove(vehicle);
+                OnVehiclesChanged?.Invoke();
+            }
+        }
+
+        public void RepairVehicle(Vehicle vehicle)
+        {
+            vehicle.SetDurability(100);
+            vehicle.SetMaintenanceCost(0);
+            OnVehiclesChanged?.Invoke();
+        }
     }
 }

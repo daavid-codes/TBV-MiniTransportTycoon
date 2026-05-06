@@ -175,6 +175,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 2108585194}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &12031713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1052,6 +1056,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 731927937}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &94074475
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1871,6 +1879,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1320475754}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &211174126
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2925,6 +2937,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1826576545}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &260870089
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3182,6 +3198,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 672501635}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &280004064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3274,6 +3294,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1467938532}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &286077582
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3827,6 +3851,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 590927515}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &333586759
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4225,6 +4253,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 388228507}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &384879416
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5836,6 +5868,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1006703082}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &497347187
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6083,6 +6119,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1525316891}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &507960565
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7578,6 +7618,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1602374383}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &590534152
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8497,6 +8541,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 509447346}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &659074438
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8589,6 +8637,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 524767909}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &671719590
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12639,6 +12691,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 102455332}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &1001498311
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14490,6 +14546,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 2123749038}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &1310435712
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15687,7 +15747,9 @@ MonoBehaviour:
     type: 3}
   busPlacementCapacity: 50
   busPlacementSpeed: 1
+  busPlacementPrice: 100
   placeTruck: 0
+  truckPlacementPrice: 100
   truckPrefab: {fileID: 2326899049741260738, guid: 4242a94c9986844edb444939f4ad8292,
     type: 3}
   truckPlacementMaterial: 0
@@ -21604,6 +21666,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1892957522}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &1590202924
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22187,6 +22253,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1514798792}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &1631398759
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -303827,6 +303897,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   infoText: {fileID: 1381062599}
+  sellButton: {fileID: 0}
+  maintenanceButtonText: {fileID: 0}
+  sellButtonText: {fileID: 0}
+  maintenanceButton: {fileID: 0}
 --- !u!114 &1700206621
 MonoBehaviour:
   m_ObjectHideFlags: 0

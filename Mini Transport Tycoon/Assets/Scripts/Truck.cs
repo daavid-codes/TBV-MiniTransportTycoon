@@ -248,6 +248,11 @@ namespace MiniTransportTycoon
         return trimmedLeg;
     }
 
+    public void SetCost(int cost)
+    {
+        this.cost= cost;
+    }
+
     public Materials MaterialType => materialType;
     public int CarryingAmount => carryingAmount;
     public int MaxCarryingAmount => maxCarryingAmount;

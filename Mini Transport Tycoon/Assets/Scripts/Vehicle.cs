@@ -11,7 +11,9 @@ namespace MiniTransportTycoon
     [SerializeField] protected TileBase carSprite;
     [SerializeField] protected float speed;
     [SerializeField] protected int age;
+    [SerializeField] protected int durability ;
     [SerializeField] protected int maintenanceCost;
+    [SerializeField] protected int cost;
     [SerializeField] protected CarType type;
 
     [Header("Road")]
@@ -45,6 +47,7 @@ namespace MiniTransportTycoon
         stopRoute ??= new List<Vector3Int>();
         roadCoordinates ??= new List<Vector3Int>();
         roadCoordinateLookup ??= new HashSet<Vector3Int>();
+        durability = 100;
 
         if (VehicleManager.Instance != null)
         {
@@ -71,6 +74,29 @@ namespace MiniTransportTycoon
             MoveAlongRoute();
             UpdateDirectionSprite();
         }
+    }
+
+    public int GetDurability()
+    {
+        return durability;
+    }
+
+    public void DecreaseDurability()
+    {
+        if (durability > 0)
+        {
+            durability--;
+        }
+
+        if (durability <= 0)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void DestroyVehicle()
+    {
+        Destroy(gameObject);
     }
 
     public virtual void SetRoute(List<Vector3Int> newRoute)
@@ -228,11 +254,24 @@ namespace MiniTransportTycoon
         return roadTilemap != null && roadTilemap.HasTile(cell);
     }
 
+    public void SetMaintenanceCost(int newMaintenanceCost)
+    {
+        maintenanceCost = Mathf.Max(0, newMaintenanceCost);
+    }
+
+    public void SetDurability(int newDurability)
+    {
+        durability = Mathf.Clamp(newDurability, 0, 100);
+        
+    }
+
     public int Id => id;
     public int Age => age;
+    public int Durability => durability;
     public TileBase CarSprite => carSprite;
     public float Speed => speed;
     public int MaintenanceCost => maintenanceCost;
+    public int Cost => cost;
     public CarType Type => type;
     public List<Vector3Int> Route => route;
     public List<Vector3Int> StopRoute => stopRoute;
