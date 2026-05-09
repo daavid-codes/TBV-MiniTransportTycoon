@@ -147,6 +147,7 @@ namespace MiniTransportTycoon
         InitializeWarehousesFromTilemap();
         InitializeFacilitiesFromTilemaps();
         RefreshRoadCoordinates();
+        RefreshRoadVisuals();
     }
 
     void Update()
@@ -765,8 +766,8 @@ namespace MiniTransportTycoon
         roadTilemap.SetTile(cellPos, defaultRoadTile);
         RegisterRoadCoordinate(cellPos);
         UpdateRoadTiles(cellPos);
+        TrySpendMoneyFromGameData(100);
         Debug.Log("Placed road at: " + cellPos);
-        // Pénz levonása és az erőforrások kezelése itt történik majd
     }
 
     void ToggleNavigationMode(NavigationMode mode)
@@ -1664,6 +1665,17 @@ namespace MiniTransportTycoon
         }
     }
 
+    void RefreshRoadVisuals()
+    {
+        if (groundTilemap == null)
+            return;
+
+        for (int i = 0; i < roadCoordinates.Count; i++)
+        {
+            UpdateRoadTile(roadCoordinates[i]);
+        }
+    }
+
     void RefreshWarehouseFootprintOccupancy()
     {
         occupiedWarehouseCells.Clear();
@@ -1982,6 +1994,8 @@ namespace MiniTransportTycoon
 
         roadTilemap.SetTile(cellPos, roadTile);
         roadTilemap.SetTransformMatrix(cellPos, Matrix4x4.identity);
+        groundTilemap.SetTile(cellPos, roadTile);
+        groundTilemap.SetTransformMatrix(cellPos, Matrix4x4.identity);
     }
 
     int GetRoadNeighborMask(Vector3Int cellPos)
