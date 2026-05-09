@@ -112,6 +112,11 @@ namespace MiniTransportTycoon
     [SerializeField] private Color normalColor = new Color32(250, 233, 215, 255); 
     [SerializeField] private Color activeColor = new Color32(183, 181, 179, 255);
 
+    [Header("Build Costs")]
+    [SerializeField] private int roadPlacementCost = 50;
+    [SerializeField] private int busStopPlacementCost = 100;
+    [SerializeField] private int garagePlacementCost = 300;
+
     private Vector3Int lastDraggedRoadCell = InvalidCellPosition;
     private readonly List<Vector3Int> previewedBuildCells = new List<Vector3Int>();
     private readonly List<TileFlags> previewedBuildCellFlags = new List<TileFlags>();
@@ -177,7 +182,6 @@ namespace MiniTransportTycoon
     public void ToggleBusStopBuildModeUI()
     {
         ToggleNavigationMode(NavigationMode.StopBuild);
-        TrySpendMoneyFromGameData(100);
     }
 
     public void ToggleGarageBuildModeUI()
@@ -351,9 +355,29 @@ namespace MiniTransportTycoon
     }
     
 
-    void TrySpendMoneyFromGameData(int amount)
+    bool TrySpendMoneyFromGameData(int amount, string purchaseContext)
     {
-        gameData.TrySpendMoney(amount);
+        if (gameData == null)
+        {
+            Debug.LogError("Cannot spend money because GameData instance is missing.");
+            return false;
+        }
+
+        return gameData.TrySpendMoney(amount, purchaseContext);
+    }
+
+    void ReportUserError(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return;
+
+        if (gameData != null)
+        {
+            gameData.ReportError(message);
+            return;
+        }
+
+        Debug.LogError(message);
     }
 
     private void UpdateButtonColor()
@@ -731,13 +755,22 @@ namespace MiniTransportTycoon
 
     void PlaceRoad(Vector3Int cellPos)
     {
-        if (!CanBuildRoadAt(cellPos))
+        if (!TryValidateRoadPlacement(cellPos, out string validationError))
+        {
+            ReportUserError(validationError);
+            return;
+        }
+
+        if (!TrySpendMoneyFromGameData(roadPlacementCost, "build a road"))
             return;
 
         // Place the road tile
         TileBase defaultRoadTile = GetDefaultRoadTile();
         if (defaultRoadTile == null)
+        {
+            ReportUserError("Cannot build road because no road tile is configured.");
             return;
+        }
 
         roadTilemap.SetTile(cellPos, defaultRoadTile);
         RegisterRoadCoordinate(cellPos);
@@ -813,25 +846,47 @@ namespace MiniTransportTycoon
 
     bool CanBuildRoadAt(Vector3Int cellPos)
     {
+        return TryValidateRoadPlacement(cellPos, out _);
+    }
+
+    bool TryValidateRoadPlacement(Vector3Int cellPos, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
         // Must be a valid ground (grass) tile
         if (!groundTilemap.HasTile(cellPos))
+        {
+            errorMessage = "You can only build roads on valid ground tiles.";
             return false;
+        }
 
         // Cannot already have a road
         if (IsRoadCoordinate(cellPos))
+        {
+            errorMessage = "A road already exists at this location.";
             return false;
+        }
 
         // Cannot build under any of the 4 garage tiles
         if (occupiedGarageCells.Contains(cellPos))
+        {
+            errorMessage = "You cannot build a road on a garage tile.";
             return false;
+        }
 
         // Cannot build under warehouse footprint tiles.
         if (occupiedWarehouseCells.Contains(cellPos))
+        {
+            errorMessage = "You cannot build a road on a warehouse tile.";
             return false;
+        }
 
         // Cannot build under facility footprint tiles.
         if (occupiedFacilityCells.Contains(cellPos))
+        {
+            errorMessage = "You cannot build a road on a factory tile.";
             return false;
+        }
 
         // Check all other tilemaps - none should have a tile at this location
         for (int i = 0; i < allTilemaps.Length; i++)
@@ -848,31 +903,84 @@ namespace MiniTransportTycoon
 
             // If ANY other tilemap has a tile here → block
             if (tilemap.HasTile(cellPos))
+            {
+                errorMessage = "This tile is already occupied.";
                 return false;
+            }
         }
 
         // Road must be adjacent to an existing road
         if (!HasAdjacentRoad(cellPos))
+        {
+            errorMessage = "New roads must connect to an existing road.";
             return false;
+        }
 
         return true;
     }
 
     bool CanBuildBusStopAt(Vector3Int cellPos)
     {
-        return groundTilemap.HasTile(cellPos)
-            && !IsRoadCoordinate(cellPos)
-            && busStopTilemap != null
-            && !busStopTilemap.HasTile(cellPos)
-            && !occupiedWarehouseCells.Contains(cellPos)
-            && !occupiedFacilityCells.Contains(cellPos)
-            && HasAdjacentRoad(cellPos);
+        return TryValidateBusStopPlacement(cellPos, out _);
+    }
+
+    bool TryValidateBusStopPlacement(Vector3Int cellPos, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
+        if (!groundTilemap.HasTile(cellPos))
+        {
+            errorMessage = "You can only place bus stops on valid ground tiles.";
+            return false;
+        }
+
+        if (IsRoadCoordinate(cellPos))
+        {
+            errorMessage = "You cannot place a bus stop on top of a road.";
+            return false;
+        }
+
+        if (busStopTilemap == null)
+        {
+            errorMessage = "Bus stop tilemap is not configured.";
+            return false;
+        }
+
+        if (busStopTilemap.HasTile(cellPos))
+        {
+            errorMessage = "A bus stop already exists here.";
+            return false;
+        }
+
+        if (occupiedWarehouseCells.Contains(cellPos) || occupiedFacilityCells.Contains(cellPos))
+        {
+            errorMessage = "You cannot place a bus stop on an occupied building tile.";
+            return false;
+        }
+
+        if (!HasAdjacentRoad(cellPos))
+        {
+            errorMessage = "Bus stops must be placed next to a road.";
+            return false;
+        }
+
+        return true;
     }
 
     bool CanBuildGarageAt(Vector3Int originCell)
     {
+        return TryValidateGaragePlacement(originCell, out _);
+    }
+
+    bool TryValidateGaragePlacement(Vector3Int originCell, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
         if (garageTilemap == null)
+        {
+            errorMessage = "Garage tilemap is not configured.";
             return false;
+        }
 
         List<Vector3Int> garageFootprint = GetGarageFootprintCells(originCell);
 
@@ -881,25 +989,49 @@ namespace MiniTransportTycoon
             Vector3Int cellPos = garageFootprint[i];
 
             if (!groundTilemap.HasTile(cellPos))
+            {
+                errorMessage = "You can only place garages on valid ground tiles.";
                 return false;
+            }
 
             if (IsRoadCoordinate(cellPos))
+            {
+                errorMessage = "You cannot place a garage on a road tile.";
                 return false;
+            }
 
             if (busStopTilemap != null && busStopTilemap.HasTile(cellPos))
+            {
+                errorMessage = "You cannot place a garage on a bus stop.";
                 return false;
+            }
 
             if (occupiedGarageCells.Contains(cellPos))
+            {
+                errorMessage = "Another garage already occupies this area.";
                 return false;
+            }
 
             if (occupiedWarehouseCells.Contains(cellPos))
+            {
+                errorMessage = "You cannot place a garage on a warehouse tile.";
                 return false;
+            }
 
             if (occupiedFacilityCells.Contains(cellPos))
+            {
+                errorMessage = "You cannot place a garage on a factory tile.";
                 return false;
+            }
         }
 
-        return HasAdjacentRoad(garageFootprint);
+        if (!HasAdjacentRoad(garageFootprint))
+        {
+            errorMessage = "Garages must connect to an adjacent road.";
+            return false;
+        }
+
+        return true;
     }
 
     bool CanPlaceCarAt(Vector3Int cellPos)
@@ -929,7 +1061,7 @@ namespace MiniTransportTycoon
     {
         if (!TryGetRoutePointAtMousePosition(out Vector3Int routePointCell))
         {
-            Debug.Log("Click a bus stop or garage to select a car route point.");
+            ReportUserError("Click a bus stop or garage to select a bus route point.");
             return;
         }
 
@@ -940,7 +1072,7 @@ namespace MiniTransportTycoon
     {
         if (!TryGetTruckRoutePointAtMousePosition(out Vector3Int routePointCell))
         {
-            Debug.Log("Click a garage, warehouse, or facility to select a truck route point.");
+            ReportUserError("Click a garage, warehouse, or factory to select a truck route point.");
             return;
         }
 
@@ -950,13 +1082,20 @@ namespace MiniTransportTycoon
     void PlaceCar(Vector3Int cellPos)
     {
         if (!CanPlaceCarAt(cellPos))
+        {
+            ReportUserError("You can only place a bus on a road tile.");
             return;
+        }
 
         if (busPrefab == null)
         {
-            Debug.LogWarning("Cannot place car because busPrefab is not assigned.");
+            ReportUserError("Cannot place bus because the bus prefab is missing.");
             return;
         }
+
+        int carCost = Mathf.Max(0, busPrefab.Cost);
+        if (!TrySpendMoneyFromGameData(carCost, "buy this bus"))
+            return;
 
         Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(cellPos);
         spawnPosition.z = busPrefab.transform.position.z;
@@ -964,12 +1103,6 @@ namespace MiniTransportTycoon
         Bus carInstance = Instantiate(busPrefab, spawnPosition, busPrefab.transform.rotation);
         carInstance.SetRoadTilemap(roadTilemap);
         carInstance.SetGarageTilemap(garageTilemap);
-        
-        GameData gameData = GameData.Instance;
-        if (gameData != null)
-        {
-            gameData.TrySpendMoney(carInstance.Cost);
-        }
         
         Debug.Log("Placed car at: " + cellPos);
     }
@@ -985,7 +1118,7 @@ namespace MiniTransportTycoon
 
         if (normalizedRoutePoint == InvalidCellPosition)
         {
-            Debug.Log("Click a bus stop or garage to select a car route point.");
+            ReportUserError("Click a bus stop or garage to select a bus route point.");
             return;
         }
 
@@ -995,7 +1128,7 @@ namespace MiniTransportTycoon
 
             if (!placedBus)
             {
-                Debug.LogWarning("Could not create a loop route from selected route points.");
+                ReportUserError("Could not create a bus loop route from the selected points.");
             }
 
             ClearPendingCarStopSelections();
@@ -1004,7 +1137,7 @@ namespace MiniTransportTycoon
 
         if (pendingCarStopSelections.Contains(normalizedRoutePoint))
         {
-            Debug.LogWarning("Route point already selected. Click the first point again to finalize the loop.");
+            ReportUserError("Route point already selected. Click the first point again to finalize the loop.");
             return;
         }
 
@@ -1022,13 +1155,13 @@ namespace MiniTransportTycoon
     {
         if (busPrefab == null)
         {
-            Debug.LogWarning("Cannot place car because busPrefab is not assigned.");
+            ReportUserError("Cannot place bus because the bus prefab is missing.");
             return false;
         }
 
         if (selectedRoutePoints == null || selectedRoutePoints.Count < 2)
         {
-            Debug.LogWarning("Cannot place car because at least two route points are required.");
+            ReportUserError("Cannot create a bus route with fewer than two route points.");
             return false;
         }
 
@@ -1041,13 +1174,13 @@ namespace MiniTransportTycoon
 
             if (normalizedRoutePoint == InvalidCellPosition)
             {
-                Debug.LogWarning("Cannot place car because one of the route points is not a bus stop or garage.");
+                ReportUserError("Cannot place bus because one route point is not a bus stop or garage.");
                 return false;
             }
 
             if (!TryGetClosestRoadTile(normalizedRoutePoint, out Vector3Int closestRoadCell))
             {
-                Debug.LogWarning("Cannot place car because no road was found near route point: " + normalizedRoutePoint);
+                ReportUserError("Cannot place bus because no road was found near route point: " + normalizedRoutePoint);
                 return false;
             }
 
@@ -1065,7 +1198,7 @@ namespace MiniTransportTycoon
 
             if (legPath == null)
             {
-                Debug.LogWarning("Cannot place car because route points are not connected by roads.");
+                ReportUserError("Cannot place bus because route points are not connected by roads.");
                 return false;
             }
 
@@ -1076,9 +1209,12 @@ namespace MiniTransportTycoon
 
         if (roadTilemap == null)
         {
-            Debug.LogWarning("Cannot place car because roadTilemap is not assigned.");
+            ReportUserError("Cannot place bus because road tilemap is missing.");
             return false;
         }
+
+        if (!TrySpendMoneyFromGameData(busPlacementPrice, "buy this bus"))
+            return false;
 
         Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(spawnRoadCell);
         spawnPosition.z = busPrefab.transform.position.z;
@@ -1096,7 +1232,6 @@ namespace MiniTransportTycoon
         
         Debug.Log("Placed car at: " + spawnRoadCell + " with capacity " + Mathf.Max(0, capacity) + ", speed " + Mathf.Max(0f, speed) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         placeBus = false;
-        TrySpendMoneyFromGameData(busPlacementPrice);
         return true;
     }
 
@@ -1111,7 +1246,7 @@ namespace MiniTransportTycoon
 
         if (normalizedRoutePoint == InvalidCellPosition)
         {
-            Debug.Log("Click a garage, warehouse, or facility to select a truck route point.");
+            ReportUserError("Click a garage, warehouse, or factory to select a truck route point.");
             return;
         }
 
@@ -1121,7 +1256,7 @@ namespace MiniTransportTycoon
 
             if (!placedTruck)
             {
-                Debug.LogWarning("Could not create a loop route from selected truck route points.");
+                ReportUserError("Could not create a truck loop route from the selected points.");
             }
 
             ClearPendingTruckStopSelections();
@@ -1130,7 +1265,7 @@ namespace MiniTransportTycoon
 
         if (pendingTruckStopSelections.Contains(normalizedRoutePoint))
         {
-            Debug.LogWarning("Truck route point already selected. Click the first point again to finalize the loop.");
+            ReportUserError("Truck route point already selected. Click the first point again to finalize the loop.");
             return;
         }
 
@@ -1153,13 +1288,13 @@ namespace MiniTransportTycoon
     {
         if (truckPrefab == null)
         {
-            Debug.LogWarning("Cannot place truck because truckPrefab is not assigned.");
+            ReportUserError("Cannot place truck because the truck prefab is missing.");
             return false;
         }
 
         if (selectedRoutePoints == null || selectedRoutePoints.Count < 2)
         {
-            Debug.LogWarning("Cannot place truck because at least two route points are required.");
+            ReportUserError("Cannot create a truck route with fewer than two route points.");
             return false;
         }
 
@@ -1172,13 +1307,13 @@ namespace MiniTransportTycoon
 
             if (normalizedRoutePoint == InvalidCellPosition)
             {
-                Debug.LogWarning("Cannot place truck because one of the route points is not a garage, warehouse, or facility.");
+                ReportUserError("Cannot place truck because one route point is not a garage, warehouse, or factory.");
                 return false;
             }
 
             if (!TryGetClosestRoadTile(normalizedRoutePoint, out Vector3Int closestRoadCell))
             {
-                Debug.LogWarning("Cannot place truck because no road was found near route point: " + normalizedRoutePoint);
+                ReportUserError("Cannot place truck because no road was found near route point: " + normalizedRoutePoint);
                 return false;
             }
 
@@ -1201,7 +1336,7 @@ namespace MiniTransportTycoon
 
             if (legPath == null)
             {
-                Debug.LogWarning("Cannot place truck because route points are not connected by roads.");
+                ReportUserError("Cannot place truck because route points are not connected by roads.");
                 return false;
             }
 
@@ -1210,9 +1345,12 @@ namespace MiniTransportTycoon
 
         if (roadTilemap == null)
         {
-            Debug.LogWarning("Cannot place truck because roadTilemap is not assigned.");
+            ReportUserError("Cannot place truck because road tilemap is missing.");
             return false;
         }
+
+        if (!TrySpendMoneyFromGameData(truckPlacementPrice, "buy this truck"))
+            return false;
 
         Vector3Int spawnRoadCell = routeRoadCells[0];
         Vector3 spawnPosition = roadTilemap.GetCellCenterWorld(spawnRoadCell);
@@ -1231,7 +1369,6 @@ namespace MiniTransportTycoon
         
         Debug.Log("Placed truck at: " + spawnRoadCell + " for material " + material + " with capacity " + Mathf.Max(0, capacity) + ", speed " + Mathf.Max(0f, speed) + " and loop route points: " + string.Join(" -> ", normalizedRoutePoints));
         placeTruck = false;
-        TrySpendMoneyFromGameData(truckPlacementPrice);
         return true;
     }
 
@@ -1253,13 +1390,13 @@ namespace MiniTransportTycoon
 
         if (facilitiesOnRoute.Count == 0)
         {
-            Debug.LogWarning("Cannot place truck because route must include at least one factory stop.");
+            ReportUserError("Cannot place truck because the route must include at least one factory stop.");
             return false;
         }
 
         if (facilitiesOnRoute.Count > 2)
         {
-            Debug.LogWarning("Cannot place truck because route can include at most two factory stops.");
+            ReportUserError("Cannot place truck because the route can include at most two factory stops.");
             return false;
         }
 
@@ -1269,7 +1406,7 @@ namespace MiniTransportTycoon
 
             if (onlyFactory.ProducedMaterialType != material)
             {
-                Debug.LogWarning("Cannot place truck because the selected factory does not produce " + material + ".");
+                ReportUserError("Cannot place truck because the selected factory does not produce " + material + ".");
                 return false;
             }
 
@@ -1284,7 +1421,7 @@ namespace MiniTransportTycoon
 
         if (!firstToSecondCompatible && !secondToFirstCompatible)
         {
-            Debug.LogWarning("Cannot place truck because selected factories are not compatible for material " + material + ".");
+            ReportUserError("Cannot place truck because selected factories are not compatible for material " + material + ".");
             return false;
         }
 
@@ -1404,12 +1541,21 @@ namespace MiniTransportTycoon
 
     void PlaceBusStop(Vector3Int cellPos)
     {
-        if (!CanBuildBusStopAt(cellPos))
+        if (!TryValidateBusStopPlacement(cellPos, out string validationError))
+        {
+            ReportUserError(validationError);
+            return;
+        }
+
+        if (!TrySpendMoneyFromGameData(busStopPlacementCost, "build a bus stop"))
             return;
 
         TileBase busStopTile = GetBusStopTileForNearestRoad(cellPos);
         if (busStopTile == null)
+        {
+            ReportUserError("Cannot place bus stop because no bus stop tiles are configured.");
             return;
+        }
 
         busStopTilemap.SetTile(cellPos, busStopTile);
         Debug.Log("Placed bus stop at: " + cellPos + " (" + navigationMode + ")");
@@ -1418,14 +1564,20 @@ namespace MiniTransportTycoon
 
     void PlaceGarage(Vector3Int originCell)
     {
-        if (!CanBuildGarageAt(originCell))
+        if (!TryValidateGaragePlacement(originCell, out string validationError))
+        {
+            ReportUserError(validationError);
             return;
+        }
 
         if (garageTilemap == null || garageTile == null)
         {
-            Debug.LogWarning("Cannot place garage because garageTilemap or garageTile is not assigned.");
+            ReportUserError("Cannot place garage because garage tiles are not configured.");
             return;
         }
+
+        if (!TrySpendMoneyFromGameData(garagePlacementCost, "build a garage"))
+            return;
 
         List<Vector3Int> garageFootprint = GetGarageFootprintCells(originCell);
 
