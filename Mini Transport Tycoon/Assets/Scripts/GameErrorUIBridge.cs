@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using TMPro;
 
 namespace MiniTransportTycoon
 {
@@ -9,11 +10,42 @@ namespace MiniTransportTycoon
         [SerializeField] private GameData gameData;
         [SerializeField] private bool tryFindGameDataWhenMissing = true;
         [SerializeField] private bool replayLastErrorOnEnable = true;
+        [SerializeField] private GameObject errorPanelParent;
+        [SerializeField] private CanvasGroup errorPanelCanvasGroup;
+        [SerializeField] private TMP_Text errorText;
+        [SerializeField] private float clearAfterSeconds = 2.5f;
+        [SerializeField] private bool hidePanelOnAwake = true;
         [SerializeField] private UnityEvent<string> onErrorMessageReceived;
+        private float hideAtTime = -1f;
 
         private void Awake()
         {
             EnsureGameDataReference();
+
+            if (errorPanelParent == null)
+                errorPanelParent = gameObject;
+
+            if (errorText == null)
+                errorText = GetComponentInChildren<TMP_Text>(true);
+
+            if (errorPanelCanvasGroup == null && errorPanelParent != null)
+                errorPanelCanvasGroup = errorPanelParent.GetComponent<CanvasGroup>();
+
+            if (hidePanelOnAwake)
+                SetPanelVisible(false);
+        }
+
+        private void Update()
+        {
+            if (hideAtTime > 0f && Time.unscaledTime >= hideAtTime)
+            {
+                if (errorText != null)
+                    errorText.text = string.Empty;
+
+                SetPanelVisible(false);
+
+                hideAtTime = -1f;
+            }
         }
 
         private void OnEnable()
@@ -67,7 +99,35 @@ namespace MiniTransportTycoon
             if (string.IsNullOrWhiteSpace(errorMessage))
                 return;
 
+            SetPanelVisible(true);
+
+            if (errorText != null)
+                errorText.text = errorMessage;
+
+            hideAtTime = Time.unscaledTime + Mathf.Max(0.5f, clearAfterSeconds);
+
             onErrorMessageReceived?.Invoke(errorMessage);
+        }
+
+        private void SetPanelVisible(bool isVisible)
+        {
+            if (errorPanelParent == null)
+                return;
+
+            // Never deactivate the object that contains this bridge; otherwise it unsubscribes from events.
+            if (errorPanelParent == gameObject)
+            {
+                if (errorPanelCanvasGroup != null)
+                {
+                    errorPanelCanvasGroup.alpha = isVisible ? 1f : 0f;
+                    errorPanelCanvasGroup.interactable = isVisible;
+                    errorPanelCanvasGroup.blocksRaycasts = isVisible;
+                }
+
+                return;
+            }
+
+            errorPanelParent.SetActive(isVisible);
         }
 
         private void EnsureGameDataReference()

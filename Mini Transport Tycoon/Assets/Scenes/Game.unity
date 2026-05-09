@@ -12746,6 +12746,8 @@ GameObject:
   - component: {fileID: 1002384136}
   - component: {fileID: 1002384135}
   - component: {fileID: 1002384134}
+  - component: {fileID: 1002384138}
+  - component: {fileID: 1002384139}
   m_Layer: 5
   m_Name: Error
   m_TagString: Untagged
@@ -12795,10 +12797,10 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_DisabledColor: {r: 1, g: 1, b: 1, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -12855,6 +12857,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1002384132}
   m_CullTransparentMesh: 1
+--- !u!114 &1002384138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1002384132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2db8f323f7faf4d4eb3ad3969603136c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameData: {fileID: 968814745}
+  tryFindGameDataWhenMissing: 1
+  replayLastErrorOnEnable: 1
+  errorPanelParent: {fileID: 1002384132}
+  errorPanelCanvasGroup: {fileID: 1002384139}
+  errorText: {fileID: 1311708480}
+  clearAfterSeconds: 2.5
+  hidePanelOnAwake: 1
+  onErrorMessageReceived:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!225 &1002384139
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1002384132}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1006703080
 GameObject:
   m_ObjectHideFlags: 0
@@ -13302,6 +13339,7 @@ GameObject:
   - component: {fileID: 1036247336}
   - component: {fileID: 1036247335}
   - component: {fileID: 1036247334}
+  - component: {fileID: 1036247337}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -13401,6 +13439,18 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!225 &1036247337
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1036247332}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1053030624
 GameObject:
   m_ObjectHideFlags: 0
@@ -16033,6 +16083,9 @@ MonoBehaviour:
   placeBusButtonImage: {fileID: 1698789692}
   normalColor: {r: 0.98039216, g: 0.9137255, b: 0.84313726, a: 1}
   activeColor: {r: 0.7176471, g: 0.70980394, b: 0.7019608, a: 1}
+  roadPlacementCost: 50
+  busStopPlacementCost: 100
+  garagePlacementCost: 300
 --- !u!114 &1419960540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16049,6 +16102,8 @@ MonoBehaviour:
   moneyText: {fileID: 74277991}
   cityText: {fileID: 429633358}
   dateText: {fileID: 2081498922}
+  errorText: {fileID: 0}
+  errorMessageDuration: 2.5
   escapeMenu: {fileID: 2035287128}
 --- !u!114 &1419960541
 MonoBehaviour:
