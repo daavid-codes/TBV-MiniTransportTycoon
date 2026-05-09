@@ -10,6 +10,9 @@ namespace MiniTransportTycoon
     {
 
         public event Action OnDataChanged;
+        public event Action<string> OnErrorMessage;
+
+        public string LastErrorMessage { get; private set; } = string.Empty;
 
         [SerializeField] private int money = 4242;
         [SerializeField] private string cityName = "Kaposvar";
@@ -97,13 +100,44 @@ namespace MiniTransportTycoon
             }
         }
 
-        public void TrySpendMoney(int amount)
+        public bool TrySpendMoney(int amount, string purchaseContext = null)
         {
-            if (money >= amount)
+            if (amount < 0)
             {
-                money -= amount;
-                OnDataChanged?.Invoke();
+                ReportError("Cannot spend a negative amount of money.");
+                return false;
             }
+
+            if (amount == 0)
+                return true;
+
+            if (money < amount)
+            {
+                string message = string.IsNullOrWhiteSpace(purchaseContext)
+                    ? "Not enough money. Need " + amount + "$, available " + money + "$"
+                    : "Not enough money to " + purchaseContext + ". Need " + amount + "$, available " + money + "$";
+                ReportError(message);
+                return false;
+            }
+
+            money -= amount;
+            OnDataChanged?.Invoke();
+            return true;
+        }
+
+        public void ReportError(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+
+            LastErrorMessage = message;
+            Debug.LogError(message);
+            OnErrorMessage?.Invoke(message);
+        }
+
+        public void ClearLastError()
+        {
+            LastErrorMessage = string.Empty;
         }
 
         private void Start()

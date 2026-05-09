@@ -9,14 +9,23 @@ namespace MiniTransportTycoon
     [SerializeField] private TextMeshProUGUI moneyText;
     [SerializeField] private TextMeshProUGUI cityText;
     [SerializeField] private TextMeshProUGUI dateText;
+    [SerializeField] private TextMeshProUGUI errorText;
+    [SerializeField] private float errorMessageDuration = 2.5f;
 
     public GameObject escapeMenu;
+    private float hideErrorAtTime = -1f;
 
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 ToggleEscapeMenu();
+            }
+
+            if (errorText != null && hideErrorAtTime >= 0f && Time.unscaledTime >= hideErrorAtTime)
+            {
+                errorText.text = string.Empty;
+                hideErrorAtTime = -1f;
             }
         }
 
@@ -35,6 +44,7 @@ namespace MiniTransportTycoon
         if (gameData != null)
         {
             gameData.OnDataChanged += UpdateUI;
+            gameData.OnErrorMessage += ShowErrorMessage;
         }
     }
 
@@ -43,6 +53,7 @@ namespace MiniTransportTycoon
         if (gameData != null)
         {
             gameData.OnDataChanged -= UpdateUI;
+            gameData.OnErrorMessage -= ShowErrorMessage;
         }
     }
 
@@ -56,6 +67,15 @@ namespace MiniTransportTycoon
 
         if (dateText != null)
             dateText.text = gameData.CurrentDate.ToString("yyyy. MM. dd. HH:mm");
+    }
+
+    private void ShowErrorMessage(string message)
+    {
+        if (errorText == null)
+            return;
+
+        errorText.text = message;
+        hideErrorAtTime = Time.unscaledTime + Mathf.Max(0.5f, errorMessageDuration);
     }
 
     public void IncreaseTimeMultiplier()
