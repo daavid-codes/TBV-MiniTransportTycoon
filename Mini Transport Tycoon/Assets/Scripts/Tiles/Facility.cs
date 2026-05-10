@@ -44,6 +44,10 @@ namespace MiniTransportTycoon
         public int RemainingResourceAmount => resourceAmount;
         public IReadOnlyList<FacilityInputRequirement> InputRequirements => inputRequirements;
 
+        public int CallCount => callCount;
+        public float ProductivityMultiplier => productivityMultiplier;
+        public List<MaterialAmount> InputInventory => inputInventory;
+
         public void Initialize(int facilityId)
         {
             id = facilityId;
@@ -340,6 +344,12 @@ namespace MiniTransportTycoon
 
             Debug.Log("Factory production stopped for " + producedMaterialType + " because no resources are available.");
             productionStoppedLogged = true;
+        }
+
+        public void RestoreProductivityState(int savedCallCount, float savedProdMul)
+        {
+            callCount = savedCallCount;
+            productivityMultiplier = savedProdMul;
         }
 
         public abstract void produce(GameData game);
