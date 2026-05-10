@@ -69,7 +69,7 @@ namespace MiniTransportTycoon
 
             if (Input.GetKeyDown(KeyCode.F9))
             {
-                Load(0);
+                Load(activeSlot);
             }
         }
 
