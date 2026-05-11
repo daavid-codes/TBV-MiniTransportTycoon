@@ -112,6 +112,7 @@ namespace MiniTransportTycoon
     [SerializeField] private Image buildButtonImage;
     [SerializeField] private Image busStopButtonImage;
     [SerializeField] private Image garageButtonImage;
+    [SerializeField] private Image destroyButtonImage;
     [SerializeField] private Image placeBusButtonImage; 
     [SerializeField] private Color normalColor = new Color32(250, 233, 215, 255); 
     [SerializeField] private Color activeColor = new Color32(183, 181, 179, 255);
@@ -418,6 +419,17 @@ namespace MiniTransportTycoon
             else
             {
                 garageButtonImage.color = normalColor;
+            }
+        }
+        if (destroyButtonImage != null)
+        {
+            if (navigationMode == NavigationMode.Destroy)
+            {
+                destroyButtonImage.color = activeColor;
+            }
+            else
+            {
+                destroyButtonImage.color = normalColor;
             }
         }
         if (placeBusButtonImage != null)
