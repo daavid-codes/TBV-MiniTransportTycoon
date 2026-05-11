@@ -74,6 +74,9 @@ namespace MiniTransportTycoon
     [Header("Houses Tiles")]
     [SerializeField] private UnityTilemap housesTilemap;
 
+    [Header("Tree Tiles")]
+    [SerializeField] private UnityTilemap treeTilemap;
+
     private UnityTilemap[] allTilemaps;
 
     [Header("Vehicle Placement")]
@@ -114,6 +117,7 @@ namespace MiniTransportTycoon
 
     [Header("Build Costs")]
     [SerializeField] private int roadPlacementCost = 50;
+    [SerializeField] private int roadCostOnTreeMultiplier = 2;
     [SerializeField] private int busStopPlacementCost = 100;
     [SerializeField] private int garagePlacementCost = 300;
 
@@ -761,7 +765,8 @@ namespace MiniTransportTycoon
             return;
         }
 
-        if (!TrySpendMoneyFromGameData(roadPlacementCost, "build a road"))
+        int roadCost = GetRoadPlacementCost(cellPos);
+        if (!TrySpendMoneyFromGameData(roadCost, "build a road"))
             return;
 
         // Place the road tile
@@ -770,6 +775,11 @@ namespace MiniTransportTycoon
         {
             ReportUserError("Cannot build road because no road tile is configured.");
             return;
+        }
+
+        if (HasTreeAt(cellPos))
+        {
+            treeTilemap.SetTile(cellPos, null);
         }
 
         roadTilemap.SetTile(cellPos, defaultRoadTile);
@@ -847,6 +857,22 @@ namespace MiniTransportTycoon
     bool CanBuildRoadAt(Vector3Int cellPos)
     {
         return TryValidateRoadPlacement(cellPos, out _);
+    }
+
+    int GetRoadPlacementCost(Vector3Int cellPos)
+    {
+        int normalizedBaseCost = Mathf.Max(0, roadPlacementCost);
+
+        if (!HasTreeAt(cellPos))
+            return normalizedBaseCost;
+
+        int normalizedMultiplier = Mathf.Max(1, roadCostOnTreeMultiplier);
+        return normalizedBaseCost * normalizedMultiplier;
+    }
+
+    bool HasTreeAt(Vector3Int cellPos)
+    {
+        return treeTilemap != null && treeTilemap.HasTile(cellPos);
     }
 
     bool TryValidateRoadPlacement(Vector3Int cellPos, out string errorMessage)

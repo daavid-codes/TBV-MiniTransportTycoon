@@ -74,6 +74,7 @@
     <Compile Include="Assets/Scripts/Tiles/RoadField.cs" />
     <Compile Include="Assets/Scripts/Tiles/LargeBridge.cs" />
     <Compile Include="Assets/Scripts/Truck.cs" />
+    <Compile Include="Assets/Scripts/Tree.cs" />
     <Compile Include="Assets/Scripts/GameData.cs" />
     <Compile Include="Assets/Scripts/GameUIManager.cs" />
     <Compile Include="Assets/Scripts/Tiles/Road.cs" />
