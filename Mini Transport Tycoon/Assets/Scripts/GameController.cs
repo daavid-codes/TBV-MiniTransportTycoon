@@ -494,6 +494,12 @@ namespace MiniTransportTycoon
                 PlaceRoadAtMousePosition();
                 lastDraggedRoadCell = GetMouseCellPosition();
             }
+
+            else if (navigationMode == NavigationMode.Destroy)
+            {
+                DestroyRoadAtMousePosition();
+                lastDraggedRoadCell = GetMouseCellPosition();
+            }
             else
             {
                 if (canPlaceCarInCurrentMode)
@@ -531,16 +537,30 @@ namespace MiniTransportTycoon
             return;
         }
 
-        if (Input.GetMouseButton(0) && navigationMode == NavigationMode.RoadBuild)
+        if (Input.GetMouseButton(0))
         {
-            Vector3Int cellPos = GetMouseCellPosition();
-
-            if (cellPos != lastDraggedRoadCell)
+            if (navigationMode == NavigationMode.RoadBuild)
             {
-                PlaceRoad(cellPos);
-                lastDraggedRoadCell = cellPos;
+                Vector3Int cellPos = GetMouseCellPosition();
+
+                if (cellPos != lastDraggedRoadCell)
+                {
+                    PlaceRoad(cellPos);
+                    lastDraggedRoadCell = cellPos;
+                }
+                return;
             }
-            return;
+            else if (navigationMode == NavigationMode.Destroy)
+            {
+                Vector3Int cellPos = GetMouseCellPosition();
+
+                if (cellPos != lastDraggedRoadCell)
+                {
+                    DestroyRoad(cellPos);
+                    lastDraggedRoadCell = cellPos;
+                }
+                return;
+            }
         }
 
         if (Input.GetMouseButtonUp(0))
@@ -2028,6 +2048,30 @@ namespace MiniTransportTycoon
         roadCoordinates.Add(cellPos);
     }
 
+        void DestroyRoadAtMousePosition()
+        {
+            DestroyRoad(GetMouseCellPosition());
+        }
+
+        void DestroyRoad(Vector3Int cellPos)
+        {
+            if (!IsRoadCoordinate(cellPos))
+                return;
+
+            roadTilemap.SetTile(cellPos, null);
+            UnregisterRoadCoordinate(cellPos);
+            UpdateRoadTiles(cellPos);
+            Debug.Log("Destroyed road at: " + cellPos);
+        }
+
+        void UnregisterRoadCoordinate(Vector3Int cellPos)
+        {
+            if (roadCoordinateLookup.Remove(cellPos))
+            {
+                roadCoordinates.Remove(cellPos);
+            }
+        }
+
     bool IsRoadCoordinate(Vector3Int cellPos)
     {
         return roadCoordinateLookup.Contains(cellPos);
@@ -2060,7 +2104,8 @@ namespace MiniTransportTycoon
     {
         return navigationMode == NavigationMode.RoadBuild
             || navigationMode == NavigationMode.StopBuild
-            || navigationMode == NavigationMode.GarageBuild;
+                || navigationMode == NavigationMode.GarageBuild
+                || navigationMode == NavigationMode.Destroy;
     }
 
     List<Vector3Int> GetGarageFootprintCells(Vector3Int originCell)
