@@ -498,7 +498,7 @@ namespace MiniTransportTycoon
 
             else if (navigationMode == NavigationMode.Destroy)
             {
-                DestroyRoadAtMousePosition();
+                DestroyTileAtMousePosition();
                 lastDraggedRoadCell = GetMouseCellPosition();
             }
             else
@@ -557,7 +557,7 @@ namespace MiniTransportTycoon
 
                 if (cellPos != lastDraggedRoadCell)
                 {
-                    DestroyRoad(cellPos);
+                    DestroyTile(cellPos);
                     lastDraggedRoadCell = cellPos;
                 }
                 return;
@@ -854,7 +854,9 @@ namespace MiniTransportTycoon
         }
         else if (navigationMode == NavigationMode.Destroy)
         {
-            canBuild = IsRoadCoordinate(cellPos);
+            canBuild = IsRoadCoordinate(cellPos) 
+                    || (busStopTilemap != null && busStopTilemap.HasTile(cellPos)) 
+                    || (garageTilemap != null && TryGetGarageOriginCell(cellPos, out _));
             previewColor = DestroyPreviewColor;
         }
 
@@ -2073,20 +2075,41 @@ namespace MiniTransportTycoon
         roadCoordinates.Add(cellPos);
     }
 
-        void DestroyRoadAtMousePosition()
+        void DestroyTileAtMousePosition()
         {
-            DestroyRoad(GetMouseCellPosition());
+            DestroyTile(GetMouseCellPosition());
         }
 
-        void DestroyRoad(Vector3Int cellPos)
+        void DestroyTile(Vector3Int cellPos)
         {
-            if (!IsRoadCoordinate(cellPos))
+            if (busStopTilemap != null && busStopTilemap.HasTile(cellPos))
+            {
+                busStopTilemap.SetTile(cellPos, null);
+                Debug.Log("Destroyed bus stop at: " + cellPos);
                 return;
+            }
 
-            roadTilemap.SetTile(cellPos, null);
-            UnregisterRoadCoordinate(cellPos);
-            UpdateRoadTiles(cellPos);
-            Debug.Log("Destroyed road at: " + cellPos);
+            if (garageTilemap != null && TryGetGarageOriginCell(cellPos, out Vector3Int garageOriginCell))
+            {
+                garageTilemap.SetTile(garageOriginCell, null);
+                
+                List<Vector3Int> garageFootprint = GetGarageFootprintCells(garageOriginCell);
+                for (int i = 0; i < garageFootprint.Count; i++)
+                {
+                    occupiedGarageCells.Remove(garageFootprint[i]);
+                }
+                Debug.Log("Destroyed garage at: " + garageOriginCell);
+                return;
+            }
+
+            if (IsRoadCoordinate(cellPos))
+            {
+                roadTilemap.SetTile(cellPos, null);
+                UnregisterRoadCoordinate(cellPos);
+                UpdateRoadTiles(cellPos);
+                Debug.Log("Destroyed road at: " + cellPos);
+                return;
+            }
         }
 
         void UnregisterRoadCoordinate(Vector3Int cellPos)
@@ -2122,7 +2145,13 @@ namespace MiniTransportTycoon
 
     List<Vector3Int> GetPreviewCells(Vector3Int originCell)
     {
-        return navigationMode == NavigationMode.GarageBuild ? GetGarageFootprintCells(originCell) : new List<Vector3Int> { originCell };
+        if (navigationMode == NavigationMode.GarageBuild)
+            return GetGarageFootprintCells(originCell);
+            
+        if (navigationMode == NavigationMode.Destroy && garageTilemap != null && TryGetGarageOriginCell(originCell, out Vector3Int garageOriginCell))
+            return GetGarageFootprintCells(garageOriginCell);
+            
+        return new List<Vector3Int> { originCell };
     }
 
     bool IsBuildPlacementMode()
