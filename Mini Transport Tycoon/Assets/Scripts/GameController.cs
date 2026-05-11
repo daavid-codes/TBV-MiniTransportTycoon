@@ -24,7 +24,8 @@ namespace MiniTransportTycoon
         Vector3Int.up,
         Vector3Int.up + Vector3Int.right
     };
-    private static readonly Color BuildPreviewColor = new Color(1f, 0.96f, 0.8f, 1f);
+    private static readonly Color BuildPreviewColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+    private static readonly Color DestroyPreviewColor = new Color(0.8f, 0.3f, 0.3f, 1f);
     private static readonly List<RaycastResult> UIRaycastResults = new List<RaycastResult>();
 
     [Header("Tilemaps")]
@@ -74,6 +75,9 @@ namespace MiniTransportTycoon
     [Header("Houses Tiles")]
     [SerializeField] private UnityTilemap housesTilemap;
 
+    [Header("Tree Tiles")]
+    [SerializeField] private UnityTilemap treeTilemap;
+
     private UnityTilemap[] allTilemaps;
 
     [Header("Vehicle Placement")]
@@ -108,18 +112,19 @@ namespace MiniTransportTycoon
     [SerializeField] private Image buildButtonImage;
     [SerializeField] private Image busStopButtonImage;
     [SerializeField] private Image garageButtonImage;
+    [SerializeField] private Image destroyButtonImage;
     [SerializeField] private Image placeBusButtonImage; 
     [SerializeField] private Color normalColor = new Color32(250, 233, 215, 255); 
     [SerializeField] private Color activeColor = new Color32(183, 181, 179, 255);
 
     [Header("Build Costs")]
     [SerializeField] private int roadPlacementCost = 50;
+    [SerializeField] private int roadCostOnTreeMultiplier = 2;
     [SerializeField] private int busStopPlacementCost = 100;
     [SerializeField] private int garagePlacementCost = 300;
 
     private Vector3Int lastDraggedRoadCell = InvalidCellPosition;
     private readonly List<Vector3Int> previewedBuildCells = new List<Vector3Int>();
-    private readonly List<TileFlags> previewedBuildCellFlags = new List<TileFlags>();
     private readonly HashSet<Vector3Int> occupiedGarageCells = new HashSet<Vector3Int>();
     private readonly HashSet<Vector3Int> occupiedWarehouseCells = new HashSet<Vector3Int>();
     private readonly HashSet<Vector3Int> occupiedFacilityCells = new HashSet<Vector3Int>();
@@ -132,6 +137,7 @@ namespace MiniTransportTycoon
     private int nextWarehouseId = 1;
     private int nextFacilityId = 1;
     private bool pointerStartedOverUI;
+    private Color lastPreviewColor = Color.white;
 
     private GameData gameData;
 
@@ -415,6 +421,17 @@ namespace MiniTransportTycoon
                 garageButtonImage.color = normalColor;
             }
         }
+        if (destroyButtonImage != null)
+        {
+            if (navigationMode == NavigationMode.Destroy)
+            {
+                destroyButtonImage.color = activeColor;
+            }
+            else
+            {
+                destroyButtonImage.color = normalColor;
+            }
+        }
         if (placeBusButtonImage != null)
         {
             if (navigationMode == NavigationMode.Camera && placeBus)
@@ -490,6 +507,12 @@ namespace MiniTransportTycoon
                 PlaceRoadAtMousePosition();
                 lastDraggedRoadCell = GetMouseCellPosition();
             }
+
+            else if (navigationMode == NavigationMode.Destroy)
+            {
+                DestroyTileAtMousePosition();
+                lastDraggedRoadCell = GetMouseCellPosition();
+            }
             else
             {
                 if (canPlaceCarInCurrentMode)
@@ -527,16 +550,30 @@ namespace MiniTransportTycoon
             return;
         }
 
-        if (Input.GetMouseButton(0) && navigationMode == NavigationMode.RoadBuild)
+        if (Input.GetMouseButton(0))
         {
-            Vector3Int cellPos = GetMouseCellPosition();
-
-            if (cellPos != lastDraggedRoadCell)
+            if (navigationMode == NavigationMode.RoadBuild)
             {
-                PlaceRoad(cellPos);
-                lastDraggedRoadCell = cellPos;
+                Vector3Int cellPos = GetMouseCellPosition();
+
+                if (cellPos != lastDraggedRoadCell)
+                {
+                    PlaceRoad(cellPos);
+                    lastDraggedRoadCell = cellPos;
+                }
+                return;
             }
-            return;
+            else if (navigationMode == NavigationMode.Destroy)
+            {
+                Vector3Int cellPos = GetMouseCellPosition();
+
+                if (cellPos != lastDraggedRoadCell)
+                {
+                    DestroyTile(cellPos);
+                    lastDraggedRoadCell = cellPos;
+                }
+                return;
+            }
         }
 
         if (Input.GetMouseButtonUp(0))
@@ -761,7 +798,8 @@ namespace MiniTransportTycoon
             return;
         }
 
-        if (!TrySpendMoneyFromGameData(roadPlacementCost, "build a road"))
+        int roadCost = GetRoadPlacementCost(cellPos);
+        if (!TrySpendMoneyFromGameData(roadCost, "build a road"))
             return;
 
         // Place the road tile
@@ -770,6 +808,11 @@ namespace MiniTransportTycoon
         {
             ReportUserError("Cannot build road because no road tile is configured.");
             return;
+        }
+
+        if (HasTreeAt(cellPos))
+        {
+            treeTilemap.SetTile(cellPos, null);
         }
 
         roadTilemap.SetTile(cellPos, defaultRoadTile);
@@ -806,11 +849,28 @@ namespace MiniTransportTycoon
 
         Vector3Int cellPos = GetMouseCellPosition();
         List<Vector3Int> previewCells = GetPreviewCells(cellPos);
-        bool canBuild = navigationMode == NavigationMode.RoadBuild
-            ? CanBuildRoadAt(cellPos)
-            : navigationMode == NavigationMode.GarageBuild
-                ? CanBuildGarageAt(cellPos)
-                : navigationMode == NavigationMode.StopBuild && CanBuildBusStopAt(cellPos);
+        bool canBuild = false;
+        Color previewColor = BuildPreviewColor;
+
+        if (navigationMode == NavigationMode.RoadBuild)
+        {
+            canBuild = CanBuildRoadAt(cellPos);
+        }
+        else if (navigationMode == NavigationMode.GarageBuild)
+        {
+            canBuild = CanBuildGarageAt(cellPos);
+        }
+        else if (navigationMode == NavigationMode.StopBuild)
+        {
+            canBuild = CanBuildBusStopAt(cellPos);
+        }
+        else if (navigationMode == NavigationMode.Destroy)
+        {
+            canBuild = IsRoadCoordinate(cellPos) 
+                    || (busStopTilemap != null && busStopTilemap.HasTile(cellPos)) 
+                    || (garageTilemap != null && TryGetGarageOriginCell(cellPos, out _));
+            previewColor = DestroyPreviewColor;
+        }
 
         if (!canBuild)
         {
@@ -818,11 +878,12 @@ namespace MiniTransportTycoon
             return;
         }
 
-        if (HasSamePreviewCells(previewCells))
+        if (HasSamePreviewCells(previewCells) && lastPreviewColor == previewColor)
             return;
 
         ClearBuildPreview();
-        ApplyBuildPreview(previewCells);
+        ApplyBuildPreview(previewCells, previewColor);
+        lastPreviewColor = previewColor;
     }
 
     void ClearBuildPreview()
@@ -833,20 +894,44 @@ namespace MiniTransportTycoon
         for (int i = 0; i < previewedBuildCells.Count; i++)
         {
             Vector3Int cellPos = previewedBuildCells[i];
-            TileFlags tileFlags = previewedBuildCellFlags[i];
 
-            groundTilemap.RemoveTileFlags(cellPos, TileFlags.LockColor);
-            groundTilemap.SetColor(cellPos, Color.white);
-            groundTilemap.SetTileFlags(cellPos, tileFlags);
+            RestoreCellColor(groundTilemap, cellPos);
+            RestoreCellColor(roadTilemap, cellPos);
+            RestoreCellColor(busStopTilemap, cellPos);
+            RestoreCellColor(garageTilemap, cellPos);
         }
 
         previewedBuildCells.Clear();
-        previewedBuildCellFlags.Clear();
+    }
+
+    void RestoreCellColor(UnityTilemap tilemap, Vector3Int cellPos)
+    {
+        if (tilemap != null && tilemap.HasTile(cellPos))
+        {
+            tilemap.SetColor(cellPos, Color.white);
+            tilemap.SetTileFlags(cellPos, tilemap.GetTileFlags(cellPos) | TileFlags.LockColor);
+        }
     }
 
     bool CanBuildRoadAt(Vector3Int cellPos)
     {
         return TryValidateRoadPlacement(cellPos, out _);
+    }
+
+    int GetRoadPlacementCost(Vector3Int cellPos)
+    {
+        int normalizedBaseCost = Mathf.Max(0, roadPlacementCost);
+
+        if (!HasTreeAt(cellPos))
+            return normalizedBaseCost;
+
+        int normalizedMultiplier = Mathf.Max(1, roadCostOnTreeMultiplier);
+        return normalizedBaseCost * normalizedMultiplier;
+    }
+
+    bool HasTreeAt(Vector3Int cellPos)
+    {
+        return treeTilemap != null && treeTilemap.HasTile(cellPos);
     }
 
     bool TryValidateRoadPlacement(Vector3Int cellPos, out string errorMessage)
@@ -2002,6 +2087,187 @@ namespace MiniTransportTycoon
         roadCoordinates.Add(cellPos);
     }
 
+        void DestroyTileAtMousePosition()
+        {
+            DestroyTile(GetMouseCellPosition());
+        }
+
+        void DestroyTile(Vector3Int cellPos)
+        {
+            if (busStopTilemap != null && busStopTilemap.HasTile(cellPos))
+            {
+                busStopTilemap.SetTile(cellPos, null);
+                HandleStopDestroyed(cellPos);
+                Debug.Log("Destroyed bus stop at: " + cellPos);
+                return;
+            }
+
+            if (garageTilemap != null && TryGetGarageOriginCell(cellPos, out Vector3Int garageOriginCell))
+            {
+                garageTilemap.SetTile(garageOriginCell, null);
+                
+                List<Vector3Int> garageFootprint = GetGarageFootprintCells(garageOriginCell);
+                for (int i = 0; i < garageFootprint.Count; i++)
+                {
+                    occupiedGarageCells.Remove(garageFootprint[i]);
+                }
+                HandleStopDestroyed(garageOriginCell);
+                Debug.Log("Destroyed garage at: " + garageOriginCell);
+                return;
+            }
+
+            if (IsRoadCoordinate(cellPos))
+            {
+                roadTilemap.SetTile(cellPos, null);
+                UnregisterRoadCoordinate(cellPos);
+                UpdateRoadTiles(cellPos);
+                Debug.Log("Destroyed road at: " + cellPos);
+                RecalculateAllVehicleRoutes();
+                return;
+            }
+        }
+
+        void HandleStopDestroyed(Vector3Int stopCell)
+        {
+            if (VehicleManager.Instance == null) return;
+            
+            List<Vehicle> allVehicles = new List<Vehicle>(VehicleManager.Instance.GetAllVehicles());
+            for (int i = 0; i < allVehicles.Count; i++)
+            {
+                Vehicle v = allVehicles[i];
+                if (v.StopRoute != null && v.StopRoute.Contains(stopCell))
+                {
+                    v.StopRoute.Remove(stopCell);
+                }
+            }
+            RecalculateAllVehicleRoutes();
+        }
+
+        void RecalculateAllVehicleRoutes()
+        {
+            if (VehicleManager.Instance == null) return;
+
+            List<Vehicle> allVehicles = new List<Vehicle>(VehicleManager.Instance.GetAllVehicles());
+            for (int i = 0; i < allVehicles.Count; i++)
+            {
+                Vehicle v = allVehicles[i];
+                
+                v.SetRoadCoordinates(roadCoordinates);
+
+                if (v.StopRoute == null || v.StopRoute.Count < 2)
+                {
+                    SellVehicle(v);
+                    continue;
+                }
+
+                List<Vector3Int> routeRoadCells = new List<Vector3Int>();
+                bool routeValid = true;
+
+                for (int j = 0; j < v.StopRoute.Count; j++)
+                {
+                    if (!TryGetClosestRoadTile(v.StopRoute[j], out Vector3Int closestRoadCell))
+                    {
+                        routeValid = false;
+                        break;
+                    }
+                    routeRoadCells.Add(closestRoadCell);
+                }
+
+                if (!routeValid)
+                {
+                    SellVehicle(v);
+                    continue;
+                }
+
+                List<List<Vector3Int>> loopRouteLegs = new List<List<Vector3Int>>();
+                for (int j = 0; j < routeRoadCells.Count; j++)
+                {
+                    Vector3Int start = routeRoadCells[j];
+                    Vector3Int end = routeRoadCells[(j + 1) % routeRoadCells.Count];
+                    List<Vector3Int> leg = FindRoadPath(start, end);
+
+                    if (leg == null)
+                    {
+                        routeValid = false;
+                        break;
+                    }
+                    loopRouteLegs.Add(leg);
+                }
+
+                if (!routeValid)
+                {
+                    SellVehicle(v);
+                    continue;
+                }
+
+                if (v is Bus bus)
+                {
+                    bus.SetLoopRoute(loopRouteLegs);
+                }
+                else if (v is Truck truck)
+                {
+                    truck.SetLoopRoute(loopRouteLegs);
+                }
+                else
+                {
+                    continue;
+                }
+
+                Vector3Int currentCell = roadTilemap.WorldToCell(v.transform.position);
+                List<Vector3Int> recoveryPath = FindRoadPath(currentCell, routeRoadCells[0]);
+                
+                if (recoveryPath != null && recoveryPath.Count > 0)
+                {
+                    List<Vector3Int> mergedRoute = new List<Vector3Int>(recoveryPath);
+                    
+                    if (loopRouteLegs.Count > 0 && loopRouteLegs[0].Count > 0)
+                    {
+                        int startIndex = 0;
+                        if (mergedRoute.Count > 0 && mergedRoute[mergedRoute.Count - 1] == loopRouteLegs[0][0])
+                        {
+                            startIndex = 1;
+                        }
+                        
+                        for (int j = startIndex; j < loopRouteLegs[0].Count; j++)
+                        {
+                            mergedRoute.Add(loopRouteLegs[0][j]);
+                        }
+                    }
+                    
+                    if (mergedRoute.Count > 0)
+                    {
+                        mergedRoute.RemoveAt(0);
+                    }
+                    
+                    v.ApplyBaseRoute(mergedRoute);
+                }
+                else
+                {
+                    Vector3 newPos = roadTilemap.GetCellCenterWorld(routeRoadCells[0]);
+                    newPos.z = v.transform.position.z;
+                    v.transform.position = newPos;
+                }
+            }
+        }
+        void SellVehicle(Vehicle vehicle)
+        {
+            if (gameData != null)
+            {
+                gameData.Money += (int)(vehicle.Cost * 0.01f * vehicle.GetDurability());
+            }
+            vehicle.DestroyVehicle();
+            VehicleManager.Instance.UnregisterVehicle(vehicle);
+            Debug.Log("Vehicle " + vehicle.Id + " was automatically sold because its route became invalid.");
+        }
+
+        void UnregisterRoadCoordinate(Vector3Int cellPos)
+        {
+            if (roadCoordinateLookup.Remove(cellPos))
+            {
+                roadCoordinates.Remove(cellPos);
+            }
+        }
+
     bool IsRoadCoordinate(Vector3Int cellPos)
     {
         return roadCoordinateLookup.Contains(cellPos);
@@ -2027,14 +2293,21 @@ namespace MiniTransportTycoon
 
     List<Vector3Int> GetPreviewCells(Vector3Int originCell)
     {
-        return navigationMode == NavigationMode.GarageBuild ? GetGarageFootprintCells(originCell) : new List<Vector3Int> { originCell };
+        if (navigationMode == NavigationMode.GarageBuild)
+            return GetGarageFootprintCells(originCell);
+            
+        if (navigationMode == NavigationMode.Destroy && garageTilemap != null && TryGetGarageOriginCell(originCell, out Vector3Int garageOriginCell))
+            return GetGarageFootprintCells(garageOriginCell);
+            
+        return new List<Vector3Int> { originCell };
     }
 
     bool IsBuildPlacementMode()
     {
         return navigationMode == NavigationMode.RoadBuild
             || navigationMode == NavigationMode.StopBuild
-            || navigationMode == NavigationMode.GarageBuild;
+                || navigationMode == NavigationMode.GarageBuild
+                || navigationMode == NavigationMode.Destroy;
     }
 
     List<Vector3Int> GetGarageFootprintCells(Vector3Int originCell)
@@ -2063,16 +2336,27 @@ namespace MiniTransportTycoon
         return true;
     }
 
-    void ApplyBuildPreview(List<Vector3Int> previewCells)
+    void ApplyBuildPreview(List<Vector3Int> previewCells, Color color)
     {
         for (int i = 0; i < previewCells.Count; i++)
         {
             Vector3Int cellPos = previewCells[i];
 
             previewedBuildCells.Add(cellPos);
-            previewedBuildCellFlags.Add(groundTilemap.GetTileFlags(cellPos));
-            groundTilemap.RemoveTileFlags(cellPos, TileFlags.LockColor);
-            groundTilemap.SetColor(cellPos, BuildPreviewColor);
+            
+            TintCellColor(groundTilemap, cellPos, color);
+            TintCellColor(roadTilemap, cellPos, color);
+            TintCellColor(busStopTilemap, cellPos, color);
+            TintCellColor(garageTilemap, cellPos, color);
+        }
+    }
+
+    void TintCellColor(UnityTilemap tilemap, Vector3Int cellPos, Color color)
+    {
+        if (tilemap != null && tilemap.HasTile(cellPos))
+        {
+            tilemap.SetTileFlags(cellPos, tilemap.GetTileFlags(cellPos) & ~TileFlags.LockColor);
+            tilemap.SetColor(cellPos, color);
         }
     }
 
