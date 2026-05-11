@@ -24,7 +24,8 @@ namespace MiniTransportTycoon
         Vector3Int.up,
         Vector3Int.up + Vector3Int.right
     };
-    private static readonly Color BuildPreviewColor = new Color(1f, 0.96f, 0.8f, 1f);
+    private static readonly Color BuildPreviewColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+    private static readonly Color DestroyPreviewColor = new Color(0.8f, 0.3f, 0.3f, 1f);
     private static readonly List<RaycastResult> UIRaycastResults = new List<RaycastResult>();
 
     [Header("Tilemaps")]
@@ -123,7 +124,6 @@ namespace MiniTransportTycoon
 
     private Vector3Int lastDraggedRoadCell = InvalidCellPosition;
     private readonly List<Vector3Int> previewedBuildCells = new List<Vector3Int>();
-    private readonly List<TileFlags> previewedBuildCellFlags = new List<TileFlags>();
     private readonly HashSet<Vector3Int> occupiedGarageCells = new HashSet<Vector3Int>();
     private readonly HashSet<Vector3Int> occupiedWarehouseCells = new HashSet<Vector3Int>();
     private readonly HashSet<Vector3Int> occupiedFacilityCells = new HashSet<Vector3Int>();
@@ -136,6 +136,7 @@ namespace MiniTransportTycoon
     private int nextWarehouseId = 1;
     private int nextFacilityId = 1;
     private bool pointerStartedOverUI;
+    private Color lastPreviewColor = Color.white;
 
     private GameData gameData;
 
@@ -836,11 +837,26 @@ namespace MiniTransportTycoon
 
         Vector3Int cellPos = GetMouseCellPosition();
         List<Vector3Int> previewCells = GetPreviewCells(cellPos);
-        bool canBuild = navigationMode == NavigationMode.RoadBuild
-            ? CanBuildRoadAt(cellPos)
-            : navigationMode == NavigationMode.GarageBuild
-                ? CanBuildGarageAt(cellPos)
-                : navigationMode == NavigationMode.StopBuild && CanBuildBusStopAt(cellPos);
+        bool canBuild = false;
+        Color previewColor = BuildPreviewColor;
+
+        if (navigationMode == NavigationMode.RoadBuild)
+        {
+            canBuild = CanBuildRoadAt(cellPos);
+        }
+        else if (navigationMode == NavigationMode.GarageBuild)
+        {
+            canBuild = CanBuildGarageAt(cellPos);
+        }
+        else if (navigationMode == NavigationMode.StopBuild)
+        {
+            canBuild = CanBuildBusStopAt(cellPos);
+        }
+        else if (navigationMode == NavigationMode.Destroy)
+        {
+            canBuild = IsRoadCoordinate(cellPos);
+            previewColor = DestroyPreviewColor;
+        }
 
         if (!canBuild)
         {
@@ -848,11 +864,12 @@ namespace MiniTransportTycoon
             return;
         }
 
-        if (HasSamePreviewCells(previewCells))
+        if (HasSamePreviewCells(previewCells) && lastPreviewColor == previewColor)
             return;
 
         ClearBuildPreview();
-        ApplyBuildPreview(previewCells);
+        ApplyBuildPreview(previewCells, previewColor);
+        lastPreviewColor = previewColor;
     }
 
     void ClearBuildPreview()
@@ -863,15 +880,23 @@ namespace MiniTransportTycoon
         for (int i = 0; i < previewedBuildCells.Count; i++)
         {
             Vector3Int cellPos = previewedBuildCells[i];
-            TileFlags tileFlags = previewedBuildCellFlags[i];
 
-            groundTilemap.RemoveTileFlags(cellPos, TileFlags.LockColor);
-            groundTilemap.SetColor(cellPos, Color.white);
-            groundTilemap.SetTileFlags(cellPos, tileFlags);
+            RestoreCellColor(groundTilemap, cellPos);
+            RestoreCellColor(roadTilemap, cellPos);
+            RestoreCellColor(busStopTilemap, cellPos);
+            RestoreCellColor(garageTilemap, cellPos);
         }
 
         previewedBuildCells.Clear();
-        previewedBuildCellFlags.Clear();
+    }
+
+    void RestoreCellColor(UnityTilemap tilemap, Vector3Int cellPos)
+    {
+        if (tilemap != null && tilemap.HasTile(cellPos))
+        {
+            tilemap.SetColor(cellPos, Color.white);
+            tilemap.SetTileFlags(cellPos, tilemap.GetTileFlags(cellPos) | TileFlags.LockColor);
+        }
     }
 
     bool CanBuildRoadAt(Vector3Int cellPos)
@@ -2134,16 +2159,27 @@ namespace MiniTransportTycoon
         return true;
     }
 
-    void ApplyBuildPreview(List<Vector3Int> previewCells)
+    void ApplyBuildPreview(List<Vector3Int> previewCells, Color color)
     {
         for (int i = 0; i < previewCells.Count; i++)
         {
             Vector3Int cellPos = previewCells[i];
 
             previewedBuildCells.Add(cellPos);
-            previewedBuildCellFlags.Add(groundTilemap.GetTileFlags(cellPos));
-            groundTilemap.RemoveTileFlags(cellPos, TileFlags.LockColor);
-            groundTilemap.SetColor(cellPos, BuildPreviewColor);
+            
+            TintCellColor(groundTilemap, cellPos, color);
+            TintCellColor(roadTilemap, cellPos, color);
+            TintCellColor(busStopTilemap, cellPos, color);
+            TintCellColor(garageTilemap, cellPos, color);
+        }
+    }
+
+    void TintCellColor(UnityTilemap tilemap, Vector3Int cellPos, Color color)
+    {
+        if (tilemap != null && tilemap.HasTile(cellPos))
+        {
+            tilemap.SetTileFlags(cellPos, tilemap.GetTileFlags(cellPos) & ~TileFlags.LockColor);
+            tilemap.SetColor(cellPos, color);
         }
     }
 
