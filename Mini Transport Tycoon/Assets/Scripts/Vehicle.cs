@@ -101,6 +101,11 @@ namespace MiniTransportTycoon
 
     public virtual void SetRoute(List<Vector3Int> newRoute)
     {
+        ApplyBaseRoute(newRoute);
+    }
+
+    public void ApplyBaseRoute(List<Vector3Int> newRoute)
+    {
         route = new List<Vector3Int>();
         currentRouteIndex = 0;
         movementProgress = 0f;

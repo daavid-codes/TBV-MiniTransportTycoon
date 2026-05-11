@@ -12916,12 +12916,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2db8f323f7faf4d4eb3ad3969603136c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameData: {fileID: 968814745}
+  gameData: {fileID: 0}
   tryFindGameDataWhenMissing: 1
   replayLastErrorOnEnable: 1
-  errorPanelParent: {fileID: 1002384132}
-  errorPanelCanvasGroup: {fileID: 1002384139}
-  errorText: {fileID: 1311708480}
+  errorPanelParent: {fileID: 0}
+  errorPanelCanvasGroup: {fileID: 0}
+  errorText: {fileID: 0}
   clearAfterSeconds: 2.5
   hidePanelOnAwake: 1
   onErrorMessageReceived:
@@ -15731,7 +15731,7 @@ MonoBehaviour:
   woodFactoryTilemap: {fileID: 60301212}
   coalFactoryTilemap: {fileID: 568628818}
   housesTilemap: {fileID: 1537390872}
-  treeTilemap: {fileID: 627441082}
+  treeTilemap: {fileID: 0}
   placeBus: 0
   busPrefab: {fileID: 7384858662980590483, guid: a3453bc2c0d6f43899f1e941c29a5bcd,
     type: 3}
@@ -15763,6 +15763,7 @@ MonoBehaviour:
   buildButtonImage: {fileID: 2063772207}
   busStopButtonImage: {fileID: 503878883}
   garageButtonImage: {fileID: 1372284972}
+  destroyButtonImage: {fileID: 1537090765}
   placeBusButtonImage: {fileID: 1698789692}
   normalColor: {r: 0.98039216, g: 0.9137255, b: 0.84313726, a: 1}
   activeColor: {r: 0.7176471, g: 0.70980394, b: 0.7019608, a: 1}
@@ -15813,9 +15814,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cee4b7bdfbce47bd922863f0bd5e87e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundTilemap: {fileID: 1686296014}
-  treeTilemap: {fileID: 627441082}
-  treeTile: {fileID: 11400000, guid: 0ff9dc5c21f6c474490995ab03b1ab25, type: 2}
+  groundTilemap: {fileID: 0}
+  treeTilemap: {fileID: 0}
+  treeTile: {fileID: 0}
   spreadIntervalSeconds: 6
   spreadChancePerTree: 0.2
   maxNewTreesPerTick: 3
@@ -17130,7 +17131,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1537090765}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1419960539}
+        m_TargetAssemblyTypeName: MiniTransportTycoon.GameController, Scripts
+        m_MethodName: ToggleDestroyModeUI
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1537090765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -304222,7 +304235,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 100$
+  m_text: Stop
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
