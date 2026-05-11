@@ -2085,6 +2085,7 @@ namespace MiniTransportTycoon
             if (busStopTilemap != null && busStopTilemap.HasTile(cellPos))
             {
                 busStopTilemap.SetTile(cellPos, null);
+                HandleStopDestroyed(cellPos);
                 Debug.Log("Destroyed bus stop at: " + cellPos);
                 return;
             }
@@ -2098,6 +2099,7 @@ namespace MiniTransportTycoon
                 {
                     occupiedGarageCells.Remove(garageFootprint[i]);
                 }
+                HandleStopDestroyed(garageOriginCell);
                 Debug.Log("Destroyed garage at: " + garageOriginCell);
                 return;
             }
@@ -2108,8 +2110,142 @@ namespace MiniTransportTycoon
                 UnregisterRoadCoordinate(cellPos);
                 UpdateRoadTiles(cellPos);
                 Debug.Log("Destroyed road at: " + cellPos);
+                RecalculateAllVehicleRoutes();
                 return;
             }
+        }
+
+        void HandleStopDestroyed(Vector3Int stopCell)
+        {
+            if (VehicleManager.Instance == null) return;
+            
+            List<Vehicle> allVehicles = new List<Vehicle>(VehicleManager.Instance.GetAllVehicles());
+            for (int i = 0; i < allVehicles.Count; i++)
+            {
+                Vehicle v = allVehicles[i];
+                if (v.StopRoute != null && v.StopRoute.Contains(stopCell))
+                {
+                    v.StopRoute.Remove(stopCell);
+                }
+            }
+            RecalculateAllVehicleRoutes();
+        }
+
+        void RecalculateAllVehicleRoutes()
+        {
+            if (VehicleManager.Instance == null) return;
+
+            List<Vehicle> allVehicles = new List<Vehicle>(VehicleManager.Instance.GetAllVehicles());
+            for (int i = 0; i < allVehicles.Count; i++)
+            {
+                Vehicle v = allVehicles[i];
+                
+                v.SetRoadCoordinates(roadCoordinates);
+
+                if (v.StopRoute == null || v.StopRoute.Count < 2)
+                {
+                    SellVehicle(v);
+                    continue;
+                }
+
+                List<Vector3Int> routeRoadCells = new List<Vector3Int>();
+                bool routeValid = true;
+
+                for (int j = 0; j < v.StopRoute.Count; j++)
+                {
+                    if (!TryGetClosestRoadTile(v.StopRoute[j], out Vector3Int closestRoadCell))
+                    {
+                        routeValid = false;
+                        break;
+                    }
+                    routeRoadCells.Add(closestRoadCell);
+                }
+
+                if (!routeValid)
+                {
+                    SellVehicle(v);
+                    continue;
+                }
+
+                List<List<Vector3Int>> loopRouteLegs = new List<List<Vector3Int>>();
+                for (int j = 0; j < routeRoadCells.Count; j++)
+                {
+                    Vector3Int start = routeRoadCells[j];
+                    Vector3Int end = routeRoadCells[(j + 1) % routeRoadCells.Count];
+                    List<Vector3Int> leg = FindRoadPath(start, end);
+
+                    if (leg == null)
+                    {
+                        routeValid = false;
+                        break;
+                    }
+                    loopRouteLegs.Add(leg);
+                }
+
+                if (!routeValid)
+                {
+                    SellVehicle(v);
+                    continue;
+                }
+
+                if (v is Bus bus)
+                {
+                    bus.SetLoopRoute(loopRouteLegs);
+                }
+                else if (v is Truck truck)
+                {
+                    truck.SetLoopRoute(loopRouteLegs);
+                }
+                else
+                {
+                    continue;
+                }
+
+                Vector3Int currentCell = roadTilemap.WorldToCell(v.transform.position);
+                List<Vector3Int> recoveryPath = FindRoadPath(currentCell, routeRoadCells[0]);
+                
+                if (recoveryPath != null && recoveryPath.Count > 0)
+                {
+                    List<Vector3Int> mergedRoute = new List<Vector3Int>(recoveryPath);
+                    
+                    if (loopRouteLegs.Count > 0 && loopRouteLegs[0].Count > 0)
+                    {
+                        int startIndex = 0;
+                        if (mergedRoute.Count > 0 && mergedRoute[mergedRoute.Count - 1] == loopRouteLegs[0][0])
+                        {
+                            startIndex = 1;
+                        }
+                        
+                        for (int j = startIndex; j < loopRouteLegs[0].Count; j++)
+                        {
+                            mergedRoute.Add(loopRouteLegs[0][j]);
+                        }
+                    }
+                    
+                    if (mergedRoute.Count > 0)
+                    {
+                        mergedRoute.RemoveAt(0);
+                    }
+                    
+                    v.ApplyBaseRoute(mergedRoute);
+                }
+                else
+                {
+                    Vector3 newPos = roadTilemap.GetCellCenterWorld(routeRoadCells[0]);
+                    newPos.z = v.transform.position.z;
+                    v.transform.position = newPos;
+                }
+            }
+        }
+        void SellVehicle(Vehicle vehicle)
+        {
+            if (gameData != null)
+            {
+                gameData.Money += (int)(vehicle.Cost * 0.01f * vehicle.GetDurability());
+            }
+            vehicle.DestroyVehicle();
+            VehicleManager.Instance.UnregisterVehicle(vehicle);
+            Debug.Log("Vehicle " + vehicle.Id + " was automatically sold because its route became invalid.");
         }
 
         void UnregisterRoadCoordinate(Vector3Int cellPos)
