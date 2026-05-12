@@ -140,7 +140,7 @@ namespace MiniTransportTycoon
     [SerializeField] private int roadPlacementCost = 50;
     [SerializeField] private int roadCostOnTreeMultiplier = 2;
     [SerializeField] private int busStopPlacementCost = 100;
-    [SerializeField] private int garagePlacementCost = 300;
+    [SerializeField] private int garagePlacementCost = 1000;
 
     private Vector3Int lastDraggedRoadCell = InvalidCellPosition;
     private readonly List<Vector3Int> previewedBuildCells = new List<Vector3Int>();
