@@ -7,6 +7,14 @@ using UnityEngine.EventSystems;
 
 namespace MiniTransportTycoon
 {
+    [System.Serializable]
+    public struct MaterialPrice
+    {
+        public Materials material;
+        [Tooltip("Price per unit when sold to a warehouse.")]
+        public float price;
+    }
+
     public class GameController : MonoBehaviour
     {
     private static readonly Vector3Int InvalidCellPosition = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
@@ -93,6 +101,17 @@ namespace MiniTransportTycoon
     [SerializeField] private int truckPlacementCapacity = 500;
     [SerializeField] private float truckPlacementSpeed = 1f;
 
+    [Header("Material Prices")]
+    [SerializeField] private List<MaterialPrice> materialPrices = new List<MaterialPrice>
+    {
+        new MaterialPrice { material = Materials.Wood, price = 0.2f },
+        new MaterialPrice { material = Materials.Paper, price = 0.4f },
+        new MaterialPrice { material = Materials.Iron, price = 0.5f },
+        new MaterialPrice { material = Materials.Coal, price = 0.3f },
+        new MaterialPrice { material = Materials.Steel, price = 0.8f }
+    };
+    private Dictionary<Materials, float> _materialPriceDict;
+
     [Header("Warehouse Runtime")]
     [SerializeField] private Warehouse warehousePrefab;
     [SerializeField] private Transform warehouseRuntimeRoot;
@@ -145,6 +164,16 @@ namespace MiniTransportTycoon
     {
         gameData = GameData.Instance;
 
+        // Populate price dictionary
+        _materialPriceDict = new Dictionary<Materials, float>();
+        if (materialPrices != null)
+        {
+            foreach (var mp in materialPrices)
+            {
+                _materialPriceDict[mp.material] = mp.price;
+            }
+        }
+
         allTilemaps = new Tilemap[]
         {
             groundTilemap,
@@ -179,6 +208,18 @@ namespace MiniTransportTycoon
         ClearBuildPreview();
         ClearPendingCarStopSelections();
     }
+
+    public float GetMaterialPrice(Materials material)
+    {
+        if (_materialPriceDict != null && _materialPriceDict.TryGetValue(material, out float price))
+        {
+            return price;
+        }
+
+        Debug.LogWarning($"Price for material '{material}' not found. Returning 0.");
+        return 0f;
+    }
+
 
     public void ToggleBuildModeUI()
     {
