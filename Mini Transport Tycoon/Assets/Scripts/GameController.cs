@@ -4,7 +4,6 @@ using UnityEngine.Tilemaps;
 using UnityTilemap = UnityEngine.Tilemaps.Tilemap;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 
 namespace MiniTransportTycoon
 {
@@ -1948,7 +1947,7 @@ namespace MiniTransportTycoon
         pendingTruckStopSelections.Clear();
     }
 
-    public void RefreshRoadCoordinates()
+    void RefreshRoadCoordinates()
     {
         roadCoordinates.Clear();
         roadCoordinateLookup.Clear();
@@ -2566,18 +2565,5 @@ namespace MiniTransportTycoon
             ?? roadTJunctionLeftUpRightTile
             ?? roadIntersectionTile;
     }
-        public List<Vector3Int> RoadCoordinates => roadCoordinates;
-
-        public void ReturnToMainMenu()
-        {
-            Time.timeScale = 1f;
-            if (gameData != null)
-                gameData.IsPaused = false;
-
-            if (EventSystem.current != null)
-                EventSystem.current.enabled = false;
-
-            SceneManager.LoadScene(0);
-        }
     }
 }
