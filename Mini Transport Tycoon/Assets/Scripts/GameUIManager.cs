@@ -43,6 +43,11 @@ namespace MiniTransportTycoon
                     }
                 }
             }
+
+            if (gameData == null || gameData.Equals(null))
+            {
+                gameData = GameData.Instance;
+            }
         }
         private void Start()
         {
@@ -65,14 +70,6 @@ namespace MiniTransportTycoon
             {
                 errorText.text = string.Empty;
                 hideErrorAtTime = -1f;
-            }
-        }
-
-        public void Awake()
-        {
-            if(gameData == null || gameData.Equals(null))
-            {
-                gameData = GameData.Instance;
             }
         }
 

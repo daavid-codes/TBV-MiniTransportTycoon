@@ -116,6 +116,8 @@ private void OnValidate()
         {
             SaveData data = new SaveData();
 
+            gameData.IsLoading = true;
+
             data.money = gameData.Money;
             data.iron = gameData.Iron;
             data.steel = gameData.Steel;
@@ -150,6 +152,7 @@ private void OnValidate()
             string json = JsonUtility.ToJson(data, prettyPrint: true);
             File.WriteAllText(GetSavePath(slot), json);
             UnityEngine.Debug.Log("Game saved to: " + GetSavePath(slot));
+            gameData.IsLoading = false;
         }
 
         private void SaveTilemap(Tilemap tilemap, List<TileSaveData> tileList)
@@ -172,6 +175,7 @@ private void OnValidate()
 
         public void PurgeAll()
         {
+            gameData.IsLoading = true;
             Tree tree = FindObjectOfType<Tree>();
             if (tree != null) tree.enabled = false;
 
@@ -214,6 +218,7 @@ private void OnValidate()
             warehouseTilemap.ClearAllTiles();
 
             UnityEngine.Debug.Log("Purge complete!");
+            gameData.IsLoading = false;
         }
 
         public void Load(int slot)
@@ -228,6 +233,9 @@ private void OnValidate()
 
             string json = File.ReadAllText(path);
             SaveData data = JsonUtility.FromJson<SaveData>(json);
+
+            //isloading true
+            GameData.Instance.IsLoading = true;
 
             UnityEngine.Debug.Log("TimeScale after load: " + Time.timeScale);
             UnityEngine.Debug.Log("IsPaused: " + gameData.IsPaused);
@@ -287,6 +295,9 @@ private void OnValidate()
             Time.timeScale = 1f;
 
             UnityEngine.Debug.Log("Game loaded from slot " + slot);
+            
+            //isloading false
+            GameData.Instance.IsLoading = false;
         }
 
         private IEnumerator LoadAfterStart(int slot)

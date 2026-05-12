@@ -39,6 +39,8 @@ namespace MiniTransportTycoon
 
         private bool dateLoadedFromSave = false;
 
+        public bool IsLoading = false;
+
         public int Money
         {
             get { return money; }
@@ -46,6 +48,9 @@ namespace MiniTransportTycoon
             {
                 money = value;
                 OnDataChanged?.Invoke();
+
+                if (IsLoading) return;
+
                 if (money <= 0 && !IsGameOver)
                 {
                     TriggerGameOver();
