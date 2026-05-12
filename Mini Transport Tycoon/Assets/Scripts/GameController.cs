@@ -7,6 +7,14 @@ using UnityEngine.EventSystems;
 
 namespace MiniTransportTycoon
 {
+    [System.Serializable]
+    public struct MaterialPrice
+    {
+        public Materials material;
+        [Tooltip("Price per unit when sold to a warehouse.")]
+        public float price;
+    }
+
     public class GameController : MonoBehaviour
     {
     private static readonly Vector3Int InvalidCellPosition = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
@@ -93,6 +101,17 @@ namespace MiniTransportTycoon
     [SerializeField] private int truckPlacementCapacity = 500;
     [SerializeField] private float truckPlacementSpeed = 1f;
 
+    [Header("Material Prices")]
+    [SerializeField] private List<MaterialPrice> materialPrices = new List<MaterialPrice>
+    {
+        new MaterialPrice { material = Materials.Wood, price = 0.2f },
+        new MaterialPrice { material = Materials.Paper, price = 0.4f },
+        new MaterialPrice { material = Materials.Iron, price = 0.5f },
+        new MaterialPrice { material = Materials.Coal, price = 0.3f },
+        new MaterialPrice { material = Materials.Steel, price = 0.8f }
+    };
+    private Dictionary<Materials, float> _materialPriceDict;
+
     [Header("Warehouse Runtime")]
     [SerializeField] private Warehouse warehousePrefab;
     [SerializeField] private Transform warehouseRuntimeRoot;
@@ -121,7 +140,7 @@ namespace MiniTransportTycoon
     [SerializeField] private int roadPlacementCost = 50;
     [SerializeField] private int roadCostOnTreeMultiplier = 2;
     [SerializeField] private int busStopPlacementCost = 100;
-    [SerializeField] private int garagePlacementCost = 300;
+    [SerializeField] private int garagePlacementCost = 1000;
 
     private Vector3Int lastDraggedRoadCell = InvalidCellPosition;
     private readonly List<Vector3Int> previewedBuildCells = new List<Vector3Int>();
@@ -145,6 +164,16 @@ namespace MiniTransportTycoon
     {
         gameData = GameData.Instance;
 
+        // Populate price dictionary
+        _materialPriceDict = new Dictionary<Materials, float>();
+        if (materialPrices != null)
+        {
+            foreach (var mp in materialPrices)
+            {
+                _materialPriceDict[mp.material] = mp.price;
+            }
+        }
+
         allTilemaps = new Tilemap[]
         {
             groundTilemap,
@@ -166,6 +195,14 @@ namespace MiniTransportTycoon
         RefreshRoadCoordinates();
     }
 
+    void Start()
+    {
+        if (gameData != null)
+        {
+            gameData.OnHourChanged += UpdateMarketPrices;
+        }
+    }
+
     void Update()
     {
         HandleNavigationModeHotkeys();
@@ -179,6 +216,43 @@ namespace MiniTransportTycoon
         ClearBuildPreview();
         ClearPendingCarStopSelections();
     }
+
+    void OnDestroy()
+    {
+        if (gameData != null)
+        {
+            gameData.OnHourChanged -= UpdateMarketPrices;
+        }
+    }
+
+    private void UpdateMarketPrices()
+    {
+        if (_materialPriceDict == null) return;
+
+        List<Materials> keys = new List<Materials>(_materialPriceDict.Keys);
+        foreach (Materials mat in keys)
+        {
+            float currentPrice = _materialPriceDict[mat];
+            // Véletlenszerű elmozdulás -0.1 és +0.1 között (tőzsdeszerű ingadozás)
+            float priceChange = UnityEngine.Random.Range(-0.1f, 0.1f);
+            float newPrice = Mathf.Clamp(currentPrice + priceChange, 0.1f, 2.0f);
+            
+            // Kerekítés 2 tizedesjegyre a pontosság kedvéért
+            _materialPriceDict[mat] = Mathf.Round(newPrice * 100f) / 100f;
+        }
+    }
+
+    public float GetMaterialPrice(Materials material)
+    {
+        if (_materialPriceDict != null && _materialPriceDict.TryGetValue(material, out float price))
+        {
+            return price;
+        }
+
+        Debug.LogWarning($"Price for material '{material}' not found. Returning 0.");
+        return 0f;
+    }
+
 
     public void ToggleBuildModeUI()
     {

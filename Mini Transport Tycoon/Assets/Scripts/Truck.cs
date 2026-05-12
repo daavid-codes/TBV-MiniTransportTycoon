@@ -128,11 +128,6 @@ namespace MiniTransportTycoon
         return unloadedAmount;
     }
 
-    public void Maintain()
-    {
-        gameData.Money -= maintenanceCost;
-    }
-
     private void Reset()
     {
         type = CarType.Truck;
@@ -168,11 +163,6 @@ namespace MiniTransportTycoon
         int reachedStopIndex = nextLoopLegIndex % stopRoute.Count;
         Vector3Int reachedStopCell = stopRoute[reachedStopIndex];
 
-        if (garageTilemap.HasTile(reachedStopCell))
-        {
-            Maintain();
-        }
-
         HandleMaterialTransferAtStop(reachedStopCell);
     }
 
@@ -183,14 +173,18 @@ namespace MiniTransportTycoon
 
         if (gameController.TryGetWarehouseAtRoutePoint(reachedStopCell, out Warehouse warehouse) && warehouse != null)
         {
-            int unloadedAmount = UnloadMaterial(carryingAmount);
-
-            if (unloadedAmount > 0)
+            // Bevétel hozzáadása a kapacitás és az árfolyam alapján, a buszokhoz hasonlóan.
+            // A teherautó pénzt termel a raktárba érkezéskor, függetlenül a rakományától.
+            if (gameData != null)
             {
-                int currentWarehouseAmount = warehouse.GetInventoryAmount(materialType);
-                warehouse.SetInventoryAmount(materialType, currentWarehouseAmount + unloadedAmount);
-                Debug.Log("Truck unloaded " + unloadedAmount + " of " + materialType + " to warehouse " + warehouse.Id + ".");
+                float price = gameController.GetMaterialPrice(materialType);
+                int income = (int)(maxCarryingAmount * price);
+                gameData.Money += income;
             }
+
+            // A teherautó rakományát kiürítjük, hogy a következő gyárban újra tudjon felpakolni.
+            // A raktár készletét (Warehouse.inventory) már nem módosítjuk, a gazdaság így egyszerűsödik.
+            UnloadMaterial(carryingAmount);
 
             return;
         }
