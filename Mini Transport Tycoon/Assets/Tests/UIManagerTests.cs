@@ -8,7 +8,7 @@ using MiniTransportTycoon;
 
 namespace MiniTransportTycoon
 {
-    public class UIManagerTests
+    public class GameUIManagerTests
     {
         private const BindingFlags InstanceFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         private readonly List<UnityEngine.Object> trackedObjects = new List<UnityEngine.Object>();
@@ -150,8 +150,8 @@ namespace MiniTransportTycoon
 
         private UIContext CreateContext()
         {
-            GameObject managerObj = Track(new GameObject("UIManager"));
-            UIManager manager = managerObj.AddComponent<UIManager>();
+            GameObject managerObj = Track(new GameObject("GameUIManager"));
+            GameUIManager manager = managerObj.AddComponent<GameUIManager>();
 
             GameObject dataObj = Track(new GameObject("GameData"));
             GameData data = dataObj.AddComponent<GameData>();
@@ -209,7 +209,7 @@ namespace MiniTransportTycoon
 
         private class UIContext
         {
-            public UIManager Manager;
+            public GameUIManager Manager;
             public GameData Data;
             public GameObject EscapeMenu;
             public TextMeshProUGUI MoneyText;

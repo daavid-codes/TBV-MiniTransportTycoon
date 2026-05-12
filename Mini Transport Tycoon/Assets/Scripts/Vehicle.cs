@@ -273,6 +273,20 @@ namespace MiniTransportTycoon
         
     }
 
+    public bool HasGarageInRoute()
+    {
+        if (stopRoute == null || garageTilemap == null)
+            return false;
+
+        for (int i = 0; i < stopRoute.Count; i++)
+        {
+            if (garageTilemap.HasTile(stopRoute[i]))
+                return true;
+        }
+
+        return false;
+    }
+
     public int Id => id;
     public int Age => age;
     public int Durability => durability;
