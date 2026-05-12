@@ -29,6 +29,14 @@ namespace MiniTransportTycoon
             }
         }
 
+        public void Awake()
+        {
+            if(gameData == null || gameData.Equals(null))
+            {
+                gameData = GameData.Instance;
+            }
+        }
+
         public void ToggleEscapeMenu()
         {
             if (escapeMenu != null)

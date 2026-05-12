@@ -72,12 +72,6 @@ namespace MiniTransportTycoon
             {
                 Load(activeSlot);
             }
-
-            if (gameData != null && Time.timeScale == 0 && !gameData.IsPaused)
-            {
-                UnityEngine.Debug.LogError("TimeScale is 0 but IsPaused is false! Something set it externally!");
-                UnityEngine.Debug.LogError(StackTraceUtility.ExtractStackTrace());
-            }
         }
 
         private void Start()
@@ -239,6 +233,7 @@ private void OnValidate()
             UnityEngine.Debug.Log("IsPaused: " + gameData.IsPaused);
 
             gameData.SetCurrentDate(DateTime.Parse(data.currentDate));
+            gameData.CityName = data.cityName;
 
             Tree tree = FindObjectOfType<Tree>();
             if (tree != null) tree.enabled = true;
@@ -296,17 +291,13 @@ private void OnValidate()
 
         private IEnumerator LoadAfterStart(int slot)
         {
-            gameData.IsPaused = false;
-            Time.timeScale = 1f;
             yield return null;
             PurgeAll();
             Load(slot);
-            yield return null;
+            yield return new WaitForEndOfFrame();
             gameData.IsPaused = false;
             Time.timeScale = 1f;
-            yield return new WaitForSeconds(0.1f);
-            gameData.IsPaused = false;
-            Time.timeScale = 1f;
+            gameData.ForceUIRefresh();
             UnityEngine.Debug.Log("TimeScale forced to 1, IsPaused forced to false");
         }
 

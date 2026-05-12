@@ -293,5 +293,10 @@ namespace MiniTransportTycoon
             dateLoadedFromSave = true;
             OnDataChanged?.Invoke();
         }
+
+        public void ForceUIRefresh()
+        {
+            OnDataChanged?.Invoke();
+        }
     }
 }
