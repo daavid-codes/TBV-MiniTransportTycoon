@@ -16,6 +16,7 @@ namespace MiniTransportTycoon
         public List<List<Vector3Int>> LoopRouteLegs => loopRouteLegs;
         public bool UseLoopRoute => useLoopRoute;
         public int NextLoopLegIndex => nextLoopLegIndex;
+        public bool HasStartedLoopLeg => hasStartedLoopLeg;
 
     private void Awake()
     {

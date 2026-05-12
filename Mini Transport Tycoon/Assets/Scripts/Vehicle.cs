@@ -40,7 +40,10 @@ namespace MiniTransportTycoon
     protected bool hasAssignedRoute;
     protected virtual float DeltaTime => Time.deltaTime;
 
-    protected virtual void Start()
+        public int CurrentRouteIndex => currentRouteIndex;
+        public float MovementProgress => movementProgress;
+
+        protected virtual void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         route ??= new List<Vector3Int>();
@@ -291,6 +294,20 @@ namespace MiniTransportTycoon
         public void SetId(int id)
         {
             this.id = id;
+        }
+
+        public void RestoreRouteProgress(int routeIndex, float progress)
+        {
+            if(route == null || route.Count == 0)
+                return;
+
+            currentRouteIndex = Mathf.Clamp(routeIndex, 0, route.Count - 1);
+            movementProgress = Mathf.Clamp01(progress);
+
+            currentPosition = currentRouteIndex > 0 ? GetWorldPosition(route[currentRouteIndex - 1]) : transform.position;
+
+            targetPosition = GetWorldPosition(route[currentRouteIndex]);
+            isMoving = true;
         }
     }
     }

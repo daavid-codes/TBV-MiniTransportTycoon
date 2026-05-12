@@ -388,7 +388,9 @@ private void OnValidate()
                     speed = v.Speed,
                     age = v.Age,
                     route = SerializeRoute(v.Route),
-                    stopRoute = SerializeRoute(v.StopRoute)
+                    stopRoute = SerializeRoute(v.StopRoute),
+                    currentRouteIndex = v.CurrentRouteIndex,
+                    movementProgress = v.MovementProgress
                 };
 
                 if (v is Truck truck)
@@ -400,7 +402,7 @@ private void OnValidate()
                     vd.useLoopRoute = truck.UseLoopRoute;
                     vd.nextLoopLegIndex = truck.NextLoopLegIndex;
 
-                    foreach(List<Vector3Int> leg in busPrefab.LoopRouteLegs)
+                    foreach(List<Vector3Int> leg in truck.LoopRouteLegs)
                     {
                         RouteLeg routeLeg = new RouteLeg();
                         routeLeg.cells = SerializeRoute(leg);
@@ -418,8 +420,9 @@ private void OnValidate()
                 {
                     vd.useLoopRoute = bus.UseLoopRoute;
                     vd.nextLoopLegIndex = bus.NextLoopLegIndex;
+                    vd.hasStartedLooping = bus.HasStartedLoopLeg;
 
-                    foreach (List<Vector3Int> leg in busPrefab.LoopRouteLegs)
+                    foreach (List<Vector3Int> leg in bus.LoopRouteLegs)
                     {
                         RouteLeg routeLeg = new RouteLeg();
                         routeLeg.cells = SerializeRoute(leg);
@@ -591,6 +594,8 @@ private void OnValidate()
                         bus.RestoreLoopState(legs, vd.useLoopRoute, vd.nextLoopLegIndex, vd.hasStartedLooping);
                     }
                 }
+
+                instance.RestoreRouteProgress(vd.currentRouteIndex, vd.movementProgress);
             }
 
             if (VehicleManager.Instance != null)

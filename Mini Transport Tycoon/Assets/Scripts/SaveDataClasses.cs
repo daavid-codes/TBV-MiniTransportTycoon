@@ -98,6 +98,9 @@ namespace MiniTransportTycoon
         public bool useLoopRoute;
         public int nextLoopLegIndex;
         public bool hasStartedLooping;
+
+        public int currentRouteIndex;
+        public float movementProgress;
     }
 
     [Serializable]
