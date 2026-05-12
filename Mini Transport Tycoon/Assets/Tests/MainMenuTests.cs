@@ -58,7 +58,7 @@ namespace MiniTransportTycoon
                 // Itt csak azt teszteljük, hogy a logika lefut-e összeomlás nélkül.
                 LogAssert.ignoreFailingMessages = true;
                 
-                menu.PlayGame();
+                menu.ResumeGame();
                 
                 executedSuccessfully = true;
             }
