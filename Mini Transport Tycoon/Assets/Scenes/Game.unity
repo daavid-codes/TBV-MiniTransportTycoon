@@ -15745,6 +15745,17 @@ MonoBehaviour:
   truckPlacementMaterial: 0
   truckPlacementCapacity: 500
   truckPlacementSpeed: 1
+  materialPrices:
+  - material: 0
+    price: 0.2
+  - material: 2
+    price: 0.4
+  - material: 3
+    price: 0.5
+  - material: 4
+    price: 0.3
+  - material: 1
+    price: 0.8
   warehousePrefab: {fileID: 5473674416080505206, guid: ec8a5c5becb554325b7fd6420a341a1f,
     type: 3}
   warehouseRuntimeRoot: {fileID: 0}
@@ -15784,10 +15795,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameData: {fileID: 968814745}
+  gameController: {fileID: 0}
   moneyText: {fileID: 74277991}
   cityText: {fileID: 429633358}
   dateText: {fileID: 2081498922}
   errorText: {fileID: 0}
+  materialPriceUIEntries:
+  - material: 0
+    priceText: {fileID: 823882918}
+  - material: 2
+    priceText: {fileID: 1215824146}
+  - material: 3
+    priceText: {fileID: 1899686039}
+  - material: 4
+    priceText: {fileID: 1518721208}
+  - material: 1
+    priceText: {fileID: 1179444939}
   errorMessageDuration: 2.5
   escapeMenu: {fileID: 2035287128}
 --- !u!114 &1419960541
