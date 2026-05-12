@@ -37,6 +37,10 @@ namespace MiniTransportTycoon
         
         public bool IsGameOver { get; private set; } = false;
 
+        private bool dateLoadedFromSave = false;
+
+        public bool IsLoading = false;
+
         public int Money
         {
             get { return money; }
@@ -44,6 +48,9 @@ namespace MiniTransportTycoon
             {
                 money = value;
                 OnDataChanged?.Invoke();
+
+                if (IsLoading) return;
+
                 if (money <= 0 && !IsGameOver)
                 {
                     TriggerGameOver();
@@ -86,6 +93,7 @@ namespace MiniTransportTycoon
             get { return isPaused; }
             set
             {
+                UnityEngine.Debug.Log("IsPaused set to: " + value + "\n" + StackTraceUtility.ExtractStackTrace());
                 isPaused = value;
                 if (!IsGameOver)
                 {
@@ -162,7 +170,10 @@ namespace MiniTransportTycoon
 
         private void Start()
         {
-            currentDate = starterTime;
+            if (!dateLoadedFromSave)
+            {
+                currentDate = starterTime;
+            }
             StartCoroutine(TimeRoutine());
             OnDayChanged += ProduceAllFacilities;
 
@@ -299,6 +310,18 @@ namespace MiniTransportTycoon
             {
                 facility.produce(this);
             }
+        }
+
+        public void SetCurrentDate(DateTime date)
+        {
+            currentDate = date;
+            dateLoadedFromSave = true;
+            OnDataChanged?.Invoke();
+        }
+
+        public void ForceUIRefresh()
+        {
+            OnDataChanged?.Invoke();
         }
     }
 }

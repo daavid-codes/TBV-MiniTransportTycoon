@@ -43,6 +43,11 @@ namespace MiniTransportTycoon
                     }
                 }
             }
+
+            if (gameData == null || gameData.Equals(null))
+            {
+                gameData = GameData.Instance;
+            }
         }
         private void Start()
         {
