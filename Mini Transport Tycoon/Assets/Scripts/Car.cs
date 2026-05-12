@@ -10,11 +10,6 @@ namespace MiniTransportTycoon
     private bool useShuttleRoute;
     private bool nextShuttleLegIsForward;
 
-    public List<Vector3Int> ShuttleRouteForward => shuttleRouteForward;
-    public List<Vector3Int> ShuttleRouteBackward => shuttleRouteBackward;
-    public bool UseShuttleRoute => useShuttleRoute;
-    public bool NextShuttleLegIsForward => nextShuttleLegIsForward;
-
     private void Awake()
     {
         type = CarType.Car;
@@ -107,21 +102,5 @@ namespace MiniTransportTycoon
 
         return leg;
     }
-        public void RestoreShuttleState(List<Vector3Int> forward, List<Vector3Int> backward, bool nextIsForward)
-        {
-            shuttleRouteForward = forward;
-            shuttleRouteBackward = backward;
-            nextShuttleLegIsForward = nextIsForward;
-
-            List<Vector3Int> currentRoute = backward;
-
-            if (nextIsForward)
-            {
-                currentRoute = forward;
-            }
-
-            base.ApplyBaseRoute(currentRoute);
-        }
     }
-
 }

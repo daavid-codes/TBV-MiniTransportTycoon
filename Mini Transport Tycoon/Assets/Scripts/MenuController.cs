@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.EventSystems;
 
 namespace MiniTransportTycoon
 {
@@ -43,7 +42,7 @@ namespace MiniTransportTycoon
             else
             {
                 Debug.LogWarning($"Scene index {sceneIndex} is out of range!");
-            }           
+            }
         }
     }
 }

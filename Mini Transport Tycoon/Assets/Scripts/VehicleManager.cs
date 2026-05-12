@@ -16,8 +16,6 @@ namespace MiniTransportTycoon
         private int nextId = 1;
         private List<Vehicle> activeVehicles = new List<Vehicle>();
 
-        public int NextId => nextId;
-
         private void Awake()
         {
             if (Instance == null)
@@ -122,11 +120,6 @@ namespace MiniTransportTycoon
             vehicle.SetDurability(100);
             vehicle.SetMaintenanceCost(0);
             OnVehiclesChanged?.Invoke();
-        }
-
-        public void SetNextId(int id)
-        {
-            nextId = id;
         }
     }
 }
