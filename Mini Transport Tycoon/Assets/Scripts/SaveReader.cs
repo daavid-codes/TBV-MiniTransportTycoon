@@ -62,7 +62,7 @@ public class SaveReader : MonoBehaviour
         for (int i = 0;i < 100; i++)
         {
             string path = Path.Combine(Application.persistentDataPath, $"save_{i}.json");
-            Debug.Log("Checking path: " + path + " exists: " + File.Exists(path));
+            //Debug.Log("Checking path: " + path + " exists: " + File.Exists(path));
             if (File.Exists(path))
             {
                 maxslot = i;

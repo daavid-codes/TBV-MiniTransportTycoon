@@ -15,7 +15,11 @@ namespace MiniTransportTycoon
     [SerializeField] private int carryingAmount;
     [SerializeField] private int maxCarryingAmount = 500;
 
-    private void Awake()
+        public List<List<Vector3Int>> LoopRouteLegs => loopRouteLegs;
+        public bool UseLoopRoute => useLoopRoute;
+        public int NextLoopLegIndex => nextLoopLegIndex;
+
+        private void Awake()
     {
         type = CarType.Truck;
     }
@@ -256,5 +260,18 @@ namespace MiniTransportTycoon
     public Materials MaterialType => materialType;
     public int CarryingAmount => carryingAmount;
     public int MaxCarryingAmount => maxCarryingAmount;
+
+        public void RestoreLoopState(List<List<Vector3Int>> legs, bool looping, int legIndex, bool startedLoopLeg)
+        {
+            loopRouteLegs.Clear();
+            foreach (List<Vector3Int> leg in legs)
+            {
+                loopRouteLegs.Add(leg);
+            }
+
+            useLoopRoute = looping;
+            nextLoopLegIndex = legIndex;
+            hasStartedLoopLeg = startedLoopLeg;
+        }
     }
 }

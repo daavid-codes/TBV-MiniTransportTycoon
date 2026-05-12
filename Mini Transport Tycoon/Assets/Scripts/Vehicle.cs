@@ -282,5 +282,15 @@ namespace MiniTransportTycoon
     public List<Vector3Int> StopRoute => stopRoute;
     public bool IsMoving => isMoving;
     public bool HasAssignedRoute => hasAssignedRoute;
+
+        public void SetAge(int age)
+        {
+            this.age = age;
+        }
+
+        public void SetId(int id)
+        {
+            this.id = id;
+        }
     }
-}
+    }

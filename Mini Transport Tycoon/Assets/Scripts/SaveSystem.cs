@@ -14,6 +14,7 @@ namespace MiniTransportTycoon
     public class SaveSystem : MonoBehaviour
     {
         [SerializeField] private GameData gameData;
+        [SerializeField] private GameController gameController;
 
         [SerializeField] private Tilemap roadTilemap;
         [SerializeField] private Tilemap groundTilemap;
@@ -71,16 +72,21 @@ namespace MiniTransportTycoon
             {
                 Load(activeSlot);
             }
+
+            if (gameData != null && Time.timeScale == 0 && !gameData.IsPaused)
+            {
+                UnityEngine.Debug.LogError("TimeScale is 0 but IsPaused is false! Something set it externally!");
+                UnityEngine.Debug.LogError(StackTraceUtility.ExtractStackTrace());
+            }
         }
 
         private void Start()
         {
             if(GameSession.SlotToLoad != -1)
             {
-                PurgeAll();
-                Load(GameSession.SlotToLoad);
                 activeSlot = GameSession.SlotToLoad;
                 GameSession.SlotToLoad = -1;
+                StartCoroutine(LoadAfterStart(activeSlot));
             }else if (GameSession.CityName != "")
             {
                 UnityEngine.Debug.Log("Start new game with city " + GameSession.CityName);
@@ -91,22 +97,6 @@ namespace MiniTransportTycoon
                 Save(activeSlot);
             }
         }
-
-        /*
-         private void Start()
-        {
-            if(GameSession.SlotToLoad != -1)
-            {
-                PurgeAll();
-                Load(GameSession.SlotToLoad);
-                GameSession.SlotToLoad = -1;
-            }else if (GameSession.CityName != "")
-            {
-                gameData.CityName = GameSession.CityName;
-                GameSession.CityName = "";
-            }
-        }
-         */
 
 #if UNITY_EDITOR
 
@@ -188,6 +178,9 @@ private void OnValidate()
 
         public void PurgeAll()
         {
+            Tree tree = FindObjectOfType<Tree>();
+            if (tree != null) tree.enabled = false;
+
             // Clear all tilemaps
             roadTilemap.ClearAllTiles();
             groundTilemap.ClearAllTiles();
@@ -242,6 +235,14 @@ private void OnValidate()
             string json = File.ReadAllText(path);
             SaveData data = JsonUtility.FromJson<SaveData>(json);
 
+            UnityEngine.Debug.Log("TimeScale after load: " + Time.timeScale);
+            UnityEngine.Debug.Log("IsPaused: " + gameData.IsPaused);
+
+            gameData.SetCurrentDate(DateTime.Parse(data.currentDate));
+
+            Tree tree = FindObjectOfType<Tree>();
+            if (tree != null) tree.enabled = true;
+
             ironFactoryTilemap.ClearAllTiles();
             steelFactoryTilemap.ClearAllTiles();
             woodFactoryTilemap.ClearAllTiles();
@@ -279,12 +280,34 @@ private void OnValidate()
             LoadTilemap(coalFactoryTilemap, data.coalFactoryTiles);
             LoadTilemap(warehouseTilemap, data.warehouseTiles);
 
+            gameController.RefreshRoadCoordinates();
+
             //other objects
             LoadFacilities(ref data);
             LoadWarehouses(ref data);
             LoadVehicles(ref data);
 
+            //force resume
+            gameData.IsPaused = false;
+            Time.timeScale = 1f;
+
             UnityEngine.Debug.Log("Game loaded from slot " + slot);
+        }
+
+        private IEnumerator LoadAfterStart(int slot)
+        {
+            gameData.IsPaused = false;
+            Time.timeScale = 1f;
+            yield return null;
+            PurgeAll();
+            Load(slot);
+            yield return null;
+            gameData.IsPaused = false;
+            Time.timeScale = 1f;
+            yield return new WaitForSeconds(0.1f);
+            gameData.IsPaused = false;
+            Time.timeScale = 1f;
+            UnityEngine.Debug.Log("TimeScale forced to 1, IsPaused forced to false");
         }
 
         private void LoadTilemap(Tilemap tilemap, List<TileSaveData> tileList)
@@ -358,6 +381,7 @@ private void OnValidate()
             {
                 VehicleSaveData vd = new VehicleSaveData
                 {
+                    vehicleType = v.GetType().Name,
                     id = v.Id,
                     posX = (int)v.transform.position.x,
                     posY = (int)v.transform.position.y,
@@ -372,6 +396,16 @@ private void OnValidate()
                     vd.materialType = truck.MaterialType.ToString();
                     vd.carryingAmount = truck.CarryingAmount;
                     vd.maxCarryingAmount = truck.MaxCarryingAmount;
+
+                    vd.useLoopRoute = truck.UseLoopRoute;
+                    vd.nextLoopLegIndex = truck.NextLoopLegIndex;
+
+                    foreach(List<Vector3Int> leg in busPrefab.LoopRouteLegs)
+                    {
+                        RouteLeg routeLeg = new RouteLeg();
+                        routeLeg.cells = SerializeRoute(leg);
+                        vd.loopRouteLegs.Add(routeLeg);
+                    }
                 }
                 else if (v is Car car)
                 {
@@ -379,6 +413,18 @@ private void OnValidate()
                     vd.shuttleRouteBackward = SerializeRoute(car.ShuttleRouteBackward);
                     vd.useShuttleRoute = car.UseShuttleRoute;
                     vd.nextShuttleLegIsForward = car.NextShuttleLegIsForward;
+                }
+                else if (v is Bus bus)
+                {
+                    vd.useLoopRoute = bus.UseLoopRoute;
+                    vd.nextLoopLegIndex = bus.NextLoopLegIndex;
+
+                    foreach (List<Vector3Int> leg in busPrefab.LoopRouteLegs)
+                    {
+                        RouteLeg routeLeg = new RouteLeg();
+                        routeLeg.cells = SerializeRoute(leg);
+                        vd.loopRouteLegs.Add(routeLeg);
+                    }
                 }
 
                 data.vehicles.Add(vd);
@@ -500,7 +546,10 @@ private void OnValidate()
                 Vehicle instance = Instantiate(prefab, position, Quaternion.identity);
 
                 instance.SetSpeed(vd.speed);
+                instance.SetAge(vd.age);
+                instance.SetId(vd.id);
                 instance.SetRoadTilemap(roadTilemap);
+                instance.SetRoadCoordinates(gameController.RoadCoordinates);
                 instance.SetStopRoute(DeserializeRoute(vd.stopRoute));
                 instance.SetRoute(DeserializeRoute(vd.route));
 
@@ -512,13 +561,34 @@ private void OnValidate()
                     }
                     truck.SetMaxCarryingAmount(vd.maxCarryingAmount);
                     truck.LoadMaterial(vd.carryingAmount);
+
+                    if (vd.useLoopRoute && vd.loopRouteLegs != null)
+                    {
+                        List<List<Vector3Int>> legs = new List<List<Vector3Int>>();
+                        foreach (RouteLeg leg in vd.loopRouteLegs)
+                        {
+                            legs.Add(DeserializeRoute(leg.cells));
+                        }
+                        truck.RestoreLoopState(legs, vd.useLoopRoute, vd.nextLoopLegIndex, vd.hasStartedLooping);
+                    }
                 }
                 else if (instance is Car car)
                 {
                     if (vd.useShuttleRoute)
                     {
-                        List<Vector3Int> forward = DeserializeRoute(vd.shuttleRouteForward);
-                        car.SetShuttleRoute(forward);
+                        car.RestoreShuttleState(DeserializeRoute(vd.shuttleRouteForward), DeserializeRoute(vd.shuttleRouteBackward), vd.nextShuttleLegIsForward);
+                    }
+                }
+                else if(instance is Bus bus)
+                {
+                    if (vd.useLoopRoute && vd.loopRouteLegs != null)
+                    {
+                        List<List<Vector3Int>> legs = new List<List<Vector3Int>>();
+                        foreach (RouteLeg leg in vd.loopRouteLegs)
+                        {
+                            legs.Add(DeserializeRoute(leg.cells));
+                        }
+                        bus.RestoreLoopState(legs, vd.useLoopRoute, vd.nextLoopLegIndex, vd.hasStartedLooping);
                     }
                 }
             }

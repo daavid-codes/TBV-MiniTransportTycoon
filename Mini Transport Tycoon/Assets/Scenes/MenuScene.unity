@@ -5918,6 +5918,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameData: {fileID: 0}
+  gameController: {fileID: 0}
   roadTilemap: {fileID: 0}
   groundTilemap: {fileID: 0}
   houseTilemap: {fileID: 0}

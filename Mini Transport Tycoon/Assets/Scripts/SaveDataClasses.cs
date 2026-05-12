@@ -93,11 +93,22 @@ namespace MiniTransportTycoon
         public List<Vector3IntSaveData> shuttleRouteBackward;
         public bool useShuttleRoute;
         public bool nextShuttleLegIsForward;
+
+        public List<RouteLeg> loopRouteLegs = new List<RouteLeg>();
+        public bool useLoopRoute;
+        public int nextLoopLegIndex;
+        public bool hasStartedLooping;
     }
 
     [Serializable]
     public class Vector3IntSaveData
     {
         public int x, y, z;
+    }
+
+    [Serializable]
+    public class RouteLeg
+    {
+        public List<Vector3IntSaveData> cells = new List<Vector3IntSaveData>();
     }
 }

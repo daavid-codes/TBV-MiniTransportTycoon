@@ -34,6 +34,8 @@ namespace MiniTransportTycoon
 
         private DateTime currentDate;
 
+        private bool dateLoadedFromSave = false;
+
         public int Money
         {
             get { return money; }
@@ -79,6 +81,7 @@ namespace MiniTransportTycoon
             get { return isPaused; }
             set
             {
+                UnityEngine.Debug.Log("IsPaused set to: " + value + "\n" + StackTraceUtility.ExtractStackTrace());
                 isPaused = value;
                 Time.timeScale = isPaused ? 0f : 1f;
                 OnDataChanged?.Invoke();
@@ -142,7 +145,10 @@ namespace MiniTransportTycoon
 
         private void Start()
         {
-            currentDate = starterTime;
+            if (!dateLoadedFromSave)
+            {
+                currentDate = starterTime;
+            }
             StartCoroutine(TimeRoutine());
             OnDayChanged += ProduceAllFacilities;
 
@@ -279,6 +285,13 @@ namespace MiniTransportTycoon
             {
                 facility.produce(this);
             }
+        }
+
+        public void SetCurrentDate(DateTime date)
+        {
+            currentDate = date;
+            dateLoadedFromSave = true;
+            OnDataChanged?.Invoke();
         }
     }
 }

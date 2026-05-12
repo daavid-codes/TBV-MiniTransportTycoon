@@ -107,5 +107,21 @@ namespace MiniTransportTycoon
 
         return leg;
     }
+        public void RestoreShuttleState(List<Vector3Int> forward, List<Vector3Int> backward, bool nextIsForward)
+        {
+            shuttleRouteForward = forward;
+            shuttleRouteBackward = backward;
+            nextShuttleLegIsForward = nextIsForward;
+
+            List<Vector3Int> currentRoute = backward;
+
+            if (nextIsForward)
+            {
+                currentRoute = forward;
+            }
+
+            base.ApplyBaseRoute(currentRoute);
+        }
     }
+
 }
