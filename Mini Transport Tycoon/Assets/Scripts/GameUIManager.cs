@@ -22,6 +22,8 @@ namespace MiniTransportTycoon
         [SerializeField] private TextMeshProUGUI errorText;
         [Header("Material Prices UI")]
         [SerializeField] private List<MaterialPriceUIEntry> materialPriceUIEntries;
+        [Header("Game Over UI")]
+        [SerializeField] private GameObject gameOverPanel;
         [SerializeField] private float errorMessageDuration = 2.5f;
 
     public GameObject escapeMenu;
@@ -71,8 +73,10 @@ namespace MiniTransportTycoon
             if (escapeMenu != null)
             {
                 escapeMenu.SetActive(!escapeMenu.activeSelf);
-                TogglePause();
-                
+                if (!gameData.IsGameOver)
+                {
+                    TogglePause();
+                }
             }
         }
 
@@ -83,6 +87,7 @@ namespace MiniTransportTycoon
             gameData.OnDataChanged += UpdateUI;
             gameData.OnErrorMessage += ShowErrorMessage;
             gameData.OnHourChanged += UpdateMaterialPricesUI;
+            gameData.OnGameOver += HandleGameOver;
         }
     }
 
@@ -93,6 +98,15 @@ namespace MiniTransportTycoon
             gameData.OnDataChanged -= UpdateUI;
             gameData.OnErrorMessage -= ShowErrorMessage;
             gameData.OnHourChanged -= UpdateMaterialPricesUI;
+            gameData.OnGameOver -= HandleGameOver;
+        }
+    }
+
+    private void HandleGameOver()
+    {
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
         }
     }
 
@@ -136,6 +150,8 @@ namespace MiniTransportTycoon
 
     public void IncreaseTimeMultiplier()
     {
+        if (gameData.IsGameOver) return;
+        
         if (Time.timeScale < 4f)
         {
             Time.timeScale *= 2f;
@@ -144,6 +160,8 @@ namespace MiniTransportTycoon
 
     public void DecreaseTimeMultiplier()
     {
+        if (gameData.IsGameOver) return;
+        
         if (Time.timeScale > 0.25f)
         {
             Time.timeScale /= 2f;
@@ -152,6 +170,8 @@ namespace MiniTransportTycoon
 
     public void TogglePause()
     {
+        if (gameData.IsGameOver) return;
+        
         gameData.IsPaused = !gameData.IsPaused;
         Time.timeScale = gameData.IsPaused ? 0f : 1f;
     }

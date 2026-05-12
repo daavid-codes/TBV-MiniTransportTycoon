@@ -11,6 +11,7 @@ namespace MiniTransportTycoon
 
         public event Action OnDataChanged;
         public event Action<string> OnErrorMessage;
+        public event Action OnGameOver;
 
         public string LastErrorMessage { get; private set; } = string.Empty;
 
@@ -33,6 +34,8 @@ namespace MiniTransportTycoon
         public event Action OnHourChanged;
 
         private DateTime currentDate;
+        
+        public bool IsGameOver { get; private set; } = false;
 
         public int Money
         {
@@ -41,6 +44,10 @@ namespace MiniTransportTycoon
             {
                 money = value;
                 OnDataChanged?.Invoke();
+                if (money <= 0 && !IsGameOver)
+                {
+                    TriggerGameOver();
+                }
             }
         }
 
@@ -80,9 +87,19 @@ namespace MiniTransportTycoon
             set
             {
                 isPaused = value;
-                Time.timeScale = isPaused ? 0f : 1f;
+                if (!IsGameOver)
+                {
+                    Time.timeScale = isPaused ? 0f : 1f;
+                }
                 OnDataChanged?.Invoke();
             }
+        }
+
+        private void TriggerGameOver()
+        {
+            IsGameOver = true;
+            Time.timeScale = 0f;
+            OnGameOver?.Invoke();
         }
 
         public static GameData Instance { get; private set; }
@@ -102,6 +119,9 @@ namespace MiniTransportTycoon
 
         public bool TrySpendMoney(int amount, string purchaseContext = null)
         {
+            if (IsGameOver)
+                return false;
+
             if (amount < 0)
             {
                 ReportError("Cannot spend a negative amount of money.");
