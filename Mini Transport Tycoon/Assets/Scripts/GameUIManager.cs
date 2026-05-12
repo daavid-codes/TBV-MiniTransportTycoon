@@ -44,11 +44,30 @@ namespace MiniTransportTycoon
                 }
             }
 
-            if (gameData == null || gameData.Equals(null))
-            {
-                gameData = GameData.Instance;
-            }
+            //if (gameData == null || gameData.Equals(null))
+            gameData = GameData.Instance;
         }
+
+        /*
+         * ez azért van itt, mert ezzel is működött, talán még jobban; nem akartam az eredetit törölni
+         private void Start()
+        {
+            gameData = GameData.Instance;
+            if (gameController == null) gameController = FindObjectOfType<GameController>();
+
+            gameData.OnDataChanged -= UpdateUI;
+            gameData.OnDataChanged += UpdateUI;
+
+            gameData.OnErrorMessage -= ShowErrorMessage;
+            gameData.OnErrorMessage += ShowErrorMessage;
+
+            // Az UI azonnali frissítése a kezdeti értékekkel
+            UpdateUI();
+            UpdateMaterialPricesUI();
+        }
+         */
+
+        
         private void Start()
         {
             if (gameData == null) gameData = GameData.Instance;
@@ -58,6 +77,7 @@ namespace MiniTransportTycoon
             UpdateUI();
             UpdateMaterialPricesUI();
         }
+         
 
         private void Update()
         {

@@ -355,6 +355,7 @@ namespace MiniTransportTycoon
         placeTruck = true;
         placeBus = false;
         ClearPendingCarStopSelections();
+        ClearPendingTruckStopSelections();
         SetNavigationMode(NavigationMode.Camera);
         UpdateButtonColor();
     }
@@ -911,7 +912,7 @@ namespace MiniTransportTycoon
         pointerStartedOverUI = false;
         ClearBuildPreview();
         ClearPendingCarStopSelections();
-    
+        ClearPendingTruckStopSelections();
     }
 
     void UpdateBuildPreview()

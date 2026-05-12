@@ -126,7 +126,7 @@ private void OnValidate()
             data.coal = gameData.Coal;
             data.currentDate = gameData.CurrentDate.ToString();
 
-            data.saveDate = DateTime.Now.ToString();//
+            data.saveDate = DateTime.Now.ToString("yyy/MM/dd HH:mm");//
             data.slot = slot;//
             data.cityName = gameData.CityName;
 
