@@ -195,6 +195,14 @@ namespace MiniTransportTycoon
         RefreshRoadCoordinates();
     }
 
+    void Start()
+    {
+        if (gameData != null)
+        {
+            gameData.OnHourChanged += UpdateMarketPrices;
+        }
+    }
+
     void Update()
     {
         HandleNavigationModeHotkeys();
@@ -207,6 +215,31 @@ namespace MiniTransportTycoon
     {
         ClearBuildPreview();
         ClearPendingCarStopSelections();
+    }
+
+    void OnDestroy()
+    {
+        if (gameData != null)
+        {
+            gameData.OnHourChanged -= UpdateMarketPrices;
+        }
+    }
+
+    private void UpdateMarketPrices()
+    {
+        if (_materialPriceDict == null) return;
+
+        List<Materials> keys = new List<Materials>(_materialPriceDict.Keys);
+        foreach (Materials mat in keys)
+        {
+            float currentPrice = _materialPriceDict[mat];
+            // Véletlenszerű elmozdulás -0.1 és +0.1 között (tőzsdeszerű ingadozás)
+            float priceChange = UnityEngine.Random.Range(-0.1f, 0.1f);
+            float newPrice = Mathf.Clamp(currentPrice + priceChange, 0.1f, 2.0f);
+            
+            // Kerekítés 2 tizedesjegyre a pontosság kedvéért
+            _materialPriceDict[mat] = Mathf.Round(newPrice * 100f) / 100f;
+        }
     }
 
     public float GetMaterialPrice(Materials material)
