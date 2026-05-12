@@ -100,12 +100,6 @@ namespace MiniTransportTycoon
         StartNextLoopLeg();
     }
 
-    public void Maintain()
-    {
-
-        gameData.Money -= maintenanceCost;
-    }
-
     public void SetMaxCarryingAmount(int maxAmount)
     {
         maxCarryingAmount = Mathf.Max(0, maxAmount);
@@ -156,11 +150,6 @@ namespace MiniTransportTycoon
         if (gameData != null)
         {
             gameData.Money += maxCarryingAmount;
-        }
-
-        if (garageTilemap.HasTile(reachedStopCell))
-        {
-            Maintain();
         }
     }
 

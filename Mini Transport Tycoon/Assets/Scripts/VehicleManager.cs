@@ -34,6 +34,7 @@ namespace MiniTransportTycoon
             if (gameData != null)
             {
                 gameData.OnHourChanged += DecraseVehicleDurability;
+                gameData.OnDayChanged += AutoRepairVehicles;
             }
         }
 
@@ -42,6 +43,7 @@ namespace MiniTransportTycoon
             if (gameData != null)
             {
                 gameData.OnHourChanged -= DecraseVehicleDurability;
+                gameData.OnDayChanged -= AutoRepairVehicles;
             }
         }
 
@@ -58,6 +60,29 @@ namespace MiniTransportTycoon
             }
         }
 
+        private void AutoRepairVehicles()
+        {
+            if (gameData == null) return;
+
+            bool vehiclesChanged = false;
+            for (int i = activeVehicles.Count - 1; i >= 0; i--)
+            {
+                Vehicle v = activeVehicles[i];
+                if (v != null && v.HasGarageInRoute() && v.GetDurability() < 100)
+                {
+                    int repairCost = ((100 - v.GetDurability()) * 10) / 2; // Féláron történő javítás
+                    gameData.Money -= repairCost;
+                    v.SetDurability(100);
+                    v.SetMaintenanceCost(0);
+                    vehiclesChanged = true;
+                }
+            }
+
+            if (vehiclesChanged)
+            {
+                OnVehiclesChanged?.Invoke();
+            }
+        }
 
         
 

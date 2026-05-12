@@ -128,11 +128,6 @@ namespace MiniTransportTycoon
         return unloadedAmount;
     }
 
-    public void Maintain()
-    {
-        gameData.Money -= maintenanceCost;
-    }
-
     private void Reset()
     {
         type = CarType.Truck;
@@ -167,11 +162,6 @@ namespace MiniTransportTycoon
 
         int reachedStopIndex = nextLoopLegIndex % stopRoute.Count;
         Vector3Int reachedStopCell = stopRoute[reachedStopIndex];
-
-        if (garageTilemap.HasTile(reachedStopCell))
-        {
-            Maintain();
-        }
 
         HandleMaterialTransferAtStop(reachedStopCell);
     }
