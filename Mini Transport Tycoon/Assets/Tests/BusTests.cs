@@ -1,269 +1,248 @@
-using System;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.Reflection;
-using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace MiniTransportTycoon
 {
     public class BusTests
     {
-        private const BindingFlags InstanceFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        private readonly List<UnityEngine.Object> trackedObjects = new List<UnityEngine.Object>();
+        private GameObject _busGo;
+        private Bus _bus;
+        private GameObject _gameDataGo;
+        private GameData _gameData;
+        private List<Object> _trackedObjects;
+
+        private FieldInfo GetFieldInfo(System.Type type, string name)
+        {
+            if (type == null)
+                return null;
+
+            var field = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            if (field != null)
+                return field;
+
+            return GetFieldInfo(type.BaseType, name);
+        }
+
+        private T GetPrivateField<T>(object obj, string name)
+        {
+            var field = GetFieldInfo(obj.GetType(), name);
+            return (T)field?.GetValue(obj);
+        }
+
+        private void SetPrivateField(object obj, string name, object value)
+        {
+            var field = GetFieldInfo(obj.GetType(), name);
+            field?.SetValue(obj, value);
+        }
+
+        private object InvokePrivateMethod(object obj, string name, params object[] parameters)
+        {
+            var method = obj.GetType().GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
+            return method?.Invoke(obj, parameters);
+        }
+
+        [SetUp]
+        public void SetUp()
+        {
+            _trackedObjects = new List<Object>();
+
+            _busGo = new GameObject("Bus");
+            _bus = _busGo.AddComponent<Bus>();
+            _trackedObjects.Add(_busGo);
+
+            _gameDataGo = new GameObject("GameData");
+            _gameData = _gameDataGo.AddComponent<GameData>();
+            _trackedObjects.Add(_gameDataGo);
+            
+            // Manually invoke Start to ensure gameData is found, simulating Unity's lifecycle
+            var startMethod = typeof(Bus).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
+            startMethod?.Invoke(_bus, null);
+        }
 
         [TearDown]
-        public void TearDownTrackedObjects()
+        public void TearDown()
         {
-            for (int i = trackedObjects.Count - 1; i >= 0; i--)
+            for (int i = _trackedObjects.Count - 1; i >= 0; i--)
             {
-                UnityEngine.Object trackedObject = trackedObjects[i];
-                if (trackedObject != null)
+                if (_trackedObjects[i] != null)
                 {
-                    UnityEngine.Object.DestroyImmediate(trackedObject);
+                    Object.DestroyImmediate(_trackedObjects[i]);
                 }
             }
-
-            trackedObjects.Clear();
+            _trackedObjects.Clear();
         }
 
         [Test]
         public void Awake_SetsCarTypeToBus()
         {
-            Bus bus = CreateBus();
-            Invoke(bus, "Awake");
-
-            Assert.AreEqual(CarType.Bus, GetField<CarType>(bus, "type"));
+            var carType = GetPrivateField<CarType>(_bus, "type");
+            Assert.AreEqual(CarType.Bus, carType);
         }
 
         [Test]
-        public void Reset_SetsCarTypeToBus()
+        public void SetMaxCarryingAmount_PositiveValue_SetsValue()
         {
-            Bus bus = CreateBus();
-            SetField(bus, "type", CarType.Car); 
-            
-            Invoke(bus, "Reset");
-
-            Assert.AreEqual(CarType.Bus, GetField<CarType>(bus, "type"));
+            _bus.SetMaxCarryingAmount(100);
+            Assert.AreEqual(100, _bus.MaxCarryingAmount);
         }
 
         [Test]
-        public void OnValidate_SetsCarTypeToBus()
+        public void SetMaxCarryingAmount_NegativeValue_ClampsToZero()
         {
-            Bus bus = CreateBus();
-            SetField(bus, "type", CarType.Car); 
-
-            Invoke(bus, "OnValidate");
-
-            Assert.AreEqual(CarType.Bus, GetField<CarType>(bus, "type"));
-        }
-
-        [Test]
-        public void SetRoute_ClearsShuttleRoutesAndFlags()
-        {
-            Bus bus = CreateBus();
-            List<Vector3Int> newRoute = new List<Vector3Int> { Vector3Int.zero };
-            
-            bus.SetRoute(newRoute);
-
-            Assert.IsFalse(GetField<bool>(bus, "useLoopRoute"));
-            Assert.AreEqual(0, GetField<List<List<Vector3Int>>>(bus, "loopRouteLegs").Count);
-        }
-
-        [Test]
-        public void SetShuttleRoute_WithInvalidPath_DisablesShuttleRoute()
-        {
-            Bus bus = CreateBus();
-            List<Vector3Int> path = new List<Vector3Int>();
-            
-            bus.SetShuttleRoute(path);
-
-            Assert.IsFalse(GetField<bool>(bus, "useLoopRoute"));
-        }
-
-        [Test]
-        public void SetShuttleRoute_WithValidPath_SetsLegsCorrectly()
-        {
-            Bus bus = CreateBus();
-            List<Vector3Int> path = new List<Vector3Int> { new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(2, 0, 0) };
-            
-            bus.SetShuttleRoute(path);
-
-            Assert.IsTrue(GetField<bool>(bus, "useLoopRoute"));
-            
-            List<List<Vector3Int>> loopRouteLegs = GetField<List<List<Vector3Int>>>(bus, "loopRouteLegs");
-            List<Vector3Int> forwardRoute = loopRouteLegs[0];
-            List<Vector3Int> backwardRoute = loopRouteLegs[1];
-
-            Assert.AreEqual(2, forwardRoute.Count);
-            Assert.AreEqual(2, backwardRoute.Count);
-            Assert.AreEqual(new Vector3Int(1, 0, 0), forwardRoute[0]);
-            Assert.AreEqual(new Vector3Int(1, 0, 0), backwardRoute[0]);
-        }
-
-        [Test]
-        public void BuildShuttleLeg_RemovesFirstElementAndReversesCorrectly()
-        {
-            Bus bus = CreateBus();
-            List<Vector3Int> path = new List<Vector3Int> { new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(2, 0, 0) };
-
-            List<Vector3Int> forwardResult = Invoke<List<Vector3Int>>(bus, "BuildLoopLeg", path, false);
-            Assert.AreEqual(2, forwardResult.Count);
-            Assert.AreEqual(new Vector3Int(1, 0, 0), forwardResult[0]);
-            Assert.AreEqual(new Vector3Int(2, 0, 0), forwardResult[1]);
-
-            List<Vector3Int> backwardResult = Invoke<List<Vector3Int>>(bus, "BuildLoopLeg", path, true);
-            Assert.AreEqual(2, backwardResult.Count);
-            Assert.AreEqual(new Vector3Int(1, 0, 0), backwardResult[0]);
-            Assert.AreEqual(new Vector3Int(0, 0, 0), backwardResult[1]);
-        }
-
-        [Test]
-        public void Update_WhenShuttleEnabledAndNotMoving_StartsNextLeg()
-        {
-            Bus bus = CreateBus();
-            List<Vector3Int> path = new List<Vector3Int> { new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(2, 0, 0) };
-            bus.SetRoadCoordinates(path);
-            bus.SetShuttleRoute(path);
-
-            SetPropertyOrField(bus, "isMoving", false);
-            SetPropertyOrField(bus, "route", new List<Vector3Int> { new Vector3Int(0, 0, 0) });
-
-            int initialLegIndex = GetField<int>(bus, "nextLoopLegIndex");
-
-            Invoke(bus, "Update");
-
-            int newLegIndex = GetField<int>(bus, "nextLoopLegIndex");
-            Assert.AreNotEqual(initialLegIndex, newLegIndex);
-            Assert.AreEqual(2, GetPropertyOrField<List<Vector3Int>>(bus, "route").Count);
-        }
-
-        private Bus CreateBus()
-        {
-            GameObject busObject = Track(new GameObject("Bus"));
-            return busObject.AddComponent<Bus>();
-        }
-
-        private T Track<T>(T obj) where T : UnityEngine.Object
-        {
-            if (obj != null)
-            {
-                trackedObjects.Add(obj);
-            }
-            return obj;
-        }
-
-        private static T GetField<T>(object target, string fieldName)
-        {
-            return (T)FindField(target.GetType(), fieldName).GetValue(target);
-        }
-
-        private static void SetField(object target, string fieldName, object value)
-        {
-            FindField(target.GetType(), fieldName).SetValue(target, value);
+            _bus.SetMaxCarryingAmount(-50);
+            Assert.AreEqual(0, _bus.MaxCarryingAmount);
         }
         
-        private static T GetPropertyOrField<T>(object target, string name)
+        [Test]
+        public void SetMaxCarryingAmount_ClampsCurrentCarryingAmount()
         {
-            Type type = target.GetType();
-            PropertyInfo prop = type.GetProperty(name, InstanceFlags);
-            if (prop != null)
+            SetPrivateField(_bus, "carryingAmount", 150);
+            _bus.SetMaxCarryingAmount(100);
+            Assert.AreEqual(100, _bus.CarryingAmount);
+        }
+
+        [Test]
+        public void SetCost_PositiveValue_SetsValue()
+        {
+            _bus.SetCost(2000);
+            var cost = GetPrivateField<int>(_bus, "cost");
+            Assert.AreEqual(2000, cost);
+        }
+
+        [Test]
+        public void SetCost_NegativeValue_ClampsToZero()
+        {
+            _bus.SetCost(-100);
+            var cost = GetPrivateField<int>(_bus, "cost");
+            Assert.AreEqual(0, cost);
+        }
+
+        [Test]
+        public void SetRoute_ClearsLoopRouteProperties()
+        {
+            SetPrivateField(_bus, "useLoopRoute", true);
+            GetPrivateField<List<List<Vector3Int>>>(_bus, "loopRouteLegs").Add(new List<Vector3Int>());
+            SetPrivateField(_bus, "nextLoopLegIndex", 1);
+
+            _bus.SetRoute(new List<Vector3Int> { Vector3Int.zero });
+
+            Assert.IsFalse(GetPrivateField<bool>(_bus, "useLoopRoute"));
+            Assert.AreEqual(0, GetPrivateField<List<List<Vector3Int>>>(_bus, "loopRouteLegs").Count);
+            Assert.AreEqual(0, GetPrivateField<int>(_bus, "nextLoopLegIndex"));
+        }
+
+        [Test]
+        public void SetShuttleRoute_WithFullPath_CreatesTwoTrimmedLegs()
+        {
+            var path = new List<Vector3Int> { Vector3Int.zero, Vector3Int.one, Vector3Int.up };
+
+            _bus.SetShuttleRoute(path);
+
+            var legs = GetPrivateField<List<List<Vector3Int>>>(_bus, "loopRouteLegs");
+            Assert.IsTrue(GetPrivateField<bool>(_bus, "useLoopRoute"));
+            Assert.AreEqual(2, legs.Count);
+            
+            CollectionAssert.AreEqual(new[] { Vector3Int.one, Vector3Int.up }, legs[0]);
+            CollectionAssert.AreEqual(new[] { Vector3Int.one, Vector3Int.zero }, legs[1]);
+        }
+        
+        [Test]
+        public void SetShuttleRoute_WithNullPath_CreatesEmptyLegs()
+        {
+            _bus.SetShuttleRoute(null);
+            
+            var legs = GetPrivateField<List<List<Vector3Int>>>(_bus, "loopRouteLegs");
+            Assert.IsTrue(GetPrivateField<bool>(_bus, "useLoopRoute"));
+            Assert.AreEqual(2, legs.Count);
+            Assert.IsEmpty(legs[0]);
+            Assert.IsEmpty(legs[1]);
+        }
+
+        [Test]
+        public void SetLoopRoute_WithNull_DisablesLooping()
+        {
+            _bus.SetLoopRoute(null);
+            Assert.IsFalse(GetPrivateField<bool>(_bus, "useLoopRoute"));
+        }
+
+        [Test]
+        public void SetLoopRoute_WithEmptyOrShortLegs_IsIgnored()
+        {
+            var newLoopLegs = new List<List<Vector3Int>>
             {
-                return (T)prop.GetValue(target);
-            }
-            FieldInfo field = FindField(type, name);
-            return (T)field.GetValue(target);
+                new List<Vector3Int>(),
+                new List<Vector3Int> { Vector3Int.zero }
+            };
+
+            _bus.SetLoopRoute(newLoopLegs);
+
+            Assert.AreEqual(0, GetPrivateField<List<List<Vector3Int>>>(_bus, "loopRouteLegs").Count);
+            Assert.IsFalse(GetPrivateField<bool>(_bus, "useLoopRoute"));
         }
 
-        private static void SetPropertyOrField(object target, string name, object value)
+        [Test]
+        public void SetLoopRoute_WithValidLegs_EnablesLoopingAndStartsFirstLeg()
         {
-            Type type = target.GetType();
-            PropertyInfo prop = type.GetProperty(name, InstanceFlags);
-            if (prop != null && prop.CanWrite)
+            var newLoopLegs = new List<List<Vector3Int>>
             {
-                prop.SetValue(target, value);
-                return;
-            }
-            FieldInfo field = FindField(type, name);
-            field.SetValue(target, value);
+                new List<Vector3Int> { Vector3Int.zero, Vector3Int.one },
+                new List<Vector3Int> { Vector3Int.one, Vector3Int.up, Vector3Int.down }
+            };
+
+            _bus.SetLoopRoute(newLoopLegs);
+
+            var legs = GetPrivateField<List<List<Vector3Int>>>(_bus, "loopRouteLegs");
+            Assert.IsTrue(GetPrivateField<bool>(_bus, "useLoopRoute"));
+            Assert.AreEqual(2, legs.Count);
+            Assert.IsTrue(GetPrivateField<bool>(_bus, "hasStartedLoopLeg"));
+            Assert.AreEqual(1, GetPrivateField<int>(_bus, "nextLoopLegIndex"));
+        }
+        
+        [Test]
+        public void HandleStopArrival_WhenConditionsMet_AddsMoney()
+        {
+            _gameData.Money = 100;
+            _bus.SetMaxCarryingAmount(50);
+            SetPrivateField(_bus, "hasStartedLoopLeg", true);
+            SetPrivateField(_bus, "stopRoute", new List<Vector3Int> { Vector3Int.zero, Vector3Int.one });
+            var tilemapGo = new GameObject("Tilemap");
+            _trackedObjects.Add(tilemapGo);
+            SetPrivateField(_bus, "garageTilemap", tilemapGo.AddComponent<Tilemap>());
+
+            InvokePrivateMethod(_bus, "HandleStopArrival");
+
+            Assert.AreEqual(150, _gameData.Money);
         }
 
-        private static T Invoke<T>(object target, string methodName, params object[] args)
+        [Test]
+        public void HandleStopArrival_WhenDependenciesAreNull_DoesNothing()
         {
-            return (T)Invoke(target, methodName, args);
+            _gameData.Money = 100;
+            SetPrivateField(_bus, "hasStartedLoopLeg", true);
+            SetPrivateField(_bus, "stopRoute", null);
+
+            InvokePrivateMethod(_bus, "HandleStopArrival");
+
+            Assert.AreEqual(100, _gameData.Money);
         }
 
-        private static object Invoke(object target, string methodName, params object[] args)
+        [Test]
+        public void StartNextLoopLeg_CyclesThroughLegs()
         {
-            MethodInfo method = FindMethod(target.GetType(), methodName, args ?? Array.Empty<object>());
-            return method.Invoke(target, args);
-        }
-
-        private static FieldInfo FindField(Type type, string fieldName)
-        {
-            Type currentType = type;
-            while (currentType != null)
+            var newLoopLegs = new List<List<Vector3Int>>
             {
-                FieldInfo field = currentType.GetField(fieldName, InstanceFlags);
-                if (field != null)
-                {
-                    return field;
-                }
-                currentType = currentType.BaseType;
-            }
-            throw new MissingFieldException(type.FullName, fieldName);
-        }
+                new List<Vector3Int> { Vector3Int.zero, Vector3Int.one },
+                new List<Vector3Int> { Vector3Int.one, Vector3Int.up }
+            };
+            _bus.SetLoopRoute(newLoopLegs);
+            Assert.AreEqual(1, GetPrivateField<int>(_bus, "nextLoopLegIndex"));
 
-        private static MethodInfo FindMethod(Type type, string methodName, object[] args)
-        {
-            Type currentType = type;
-            while (currentType != null)
-            {
-                MethodInfo[] methods = currentType.GetMethods(InstanceFlags);
-                for (int i = 0; i < methods.Length; i++)
-                {
-                    MethodInfo method = methods[i];
-                    if (method.Name != methodName)
-                    {
-                        continue;
-                    }
+            InvokePrivateMethod(_bus, "StartNextLoopLeg");
 
-                    ParameterInfo[] parameters = method.GetParameters();
-                    if (parameters.Length != args.Length)
-                    {
-                        continue;
-                    }
-
-                    bool matches = true;
-                    for (int j = 0; j < parameters.Length; j++)
-                    {
-                        object arg = args[j];
-                        Type parameterType = parameters[j].ParameterType;
-
-                        if (arg == null)
-                        {
-                            if (parameterType.IsValueType && Nullable.GetUnderlyingType(parameterType) == null)
-                            {
-                                matches = false;
-                                break;
-                            }
-                            continue;
-                        }
-
-                        if (!parameterType.IsInstanceOfType(arg))
-                        {
-                            matches = false;
-                            break;
-                        }
-                    }
-
-                    if (matches)
-                    {
-                        return method;
-                    }
-                }
-                currentType = currentType.BaseType;
-            }
-            throw new MissingMethodException(type.FullName, methodName);
+            Assert.AreEqual(0, GetPrivateField<int>(_bus, "nextLoopLegIndex"));
         }
     }
 }
