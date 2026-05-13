@@ -37,6 +37,7 @@ jobs:
           projectPath: Mini Transport Tycoon
           githubToken: ""
           testMode: editmode
+          coverageEnabled: true
           coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateHtmlReportHistory;assemblyFilters:+Assembly-CSharp;pathFilters:+*/Assets/Scripts/**'
 
       - name: Debug Coverage Paths
