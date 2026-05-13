@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CoverageReport scope="Summary">
+  <Summary>
+    <Generatedon>5/13/2026 - 11:34:31 AM</Generatedon>
+    <Parser>MultiReportParser (2x OpenCoverParser)</Parser>
+    <Assemblies>3</Assemblies>
+    <Classes>87</Classes>
+    <Files>85</Files>
+    <Coveredlines>3227</Coveredlines>
+    <Uncoveredlines>4327</Uncoveredlines>
+    <Coverablelines>7554</Coverablelines>
+    <Totallines>13843</Totallines>
+    <Linecoverage>42.7</Linecoverage>
+    <Coveredbranches>0</Coveredbranches>
+    <Totalbranches>0</Totalbranches>
+    <Coveredmethods>468</Coveredmethods>
+    <Totalmethods>836</Totalmethods>
+    <Methodcoverage>55.9</Methodcoverage>
+  </Summary>
+  <Coverage>
+    <Assembly name="Assembly-CSharp" classes="34" coverage="0" coveredlines="0" coverablelines="2252" totallines="4939" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="165" methodcoverage="0">
+      <Class name="ChatController" coverage="0" coveredlines="0" coverablelines="19" totallines="51" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="DropdownSample" coverage="0" coveredlines="0" coverablelines="6" totallines="19" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="EnvMapAnimator" coverage="0" coveredlines="0" coverablelines="12" totallines="35" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="TMPro.Examples.Benchmark01" coverage="0" coveredlines="0" coverablelines="44" totallines="128" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="TMPro.Examples.Benchmark01_UGUI" coverage="0" coveredlines="0" coverablelines="39" totallines="135" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="TMPro.Examples.Benchmark02" coverage="0" coveredlines="0" coverablelines="54" totallines="97" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="TMPro.Examples.Benchmark03" coverage="0" coveredlines="0" coverablelines="46" totallines="92" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="TMPro.Examples.Benchmark04" coverage="0" coveredlines="0" coverablelines="30" totallines="85" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="TMPro.Examples.CameraController" coverage="0" coveredlines="0" coverablelines="168" totallines="292" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="TMPro.Examples.ObjectSpin" coverage="0" coveredlines="0" coverablelines="30" totallines="69" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="TMPro.Examples.ShaderPropAnimator" coverage="0" coveredlines="0" coverablelines="16" totallines="51" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="TMPro.Examples.SimpleScript" coverage="0" coveredlines="0" coverablelines="11" totallines="58" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="TMPro.Examples.SkewTextExample" coverage="0" coveredlines="0" coverablelines="78" totallines="158" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="TMPro.Examples.TeleType" coverage="0" coveredlines="0" coverablelines="28" totallines="83" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="TMPro.Examples.TextConsoleSimulator" coverage="0" coveredlines="0" coverablelines="60" totallines="121" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="7" methodcoverage="0" />
+      <Class name="TMPro.Examples.TextMeshProFloatingText" coverage="0" coveredlines="0" coverablelines="108" totallines="223" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="6" methodcoverage="0" />
+      <Class name="TMPro.Examples.TextMeshSpawner" coverage="0" coveredlines="0" coverablelines="33" totallines="79" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="TMPro.Examples.TMP_ExampleScript_01" coverage="0" coveredlines="0" coverablelines="18" totallines="64" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="TMPro.Examples.TMP_FrameRateCounter" coverage="0" coveredlines="0" coverablelines="65" totallines="134" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="TMPro.Examples.TMP_TextEventCheck" coverage="0" coveredlines="0" coverablelines="40" totallines="73" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="7" methodcoverage="0" />
+      <Class name="TMPro.Examples.TMP_TextInfoDebugTool" coverage="0" coveredlines="0" coverablelines="344" totallines="652" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="14" methodcoverage="0" />
+      <Class name="TMPro.Examples.TMP_TextSelector_A" coverage="0" coveredlines="0" coverablelines="73" totallines="157" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="TMPro.Examples.TMP_TextSelector_B" coverage="0" coveredlines="0" coverablelines="198" totallines="547" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="11" methodcoverage="0" />
+      <Class name="TMPro.Examples.TMP_UiFrameRateCounter" coverage="0" coveredlines="0" coverablelines="71" totallines="125" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="TMPro.Examples.TMPro_InstructionOverlay" coverage="0" coveredlines="0" coverablelines="33" totallines="84" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="TMPro.Examples.VertexColorCycler" coverage="0" coveredlines="0" coverablelines="33" totallines="84" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="TMPro.Examples.VertexJitter" coverage="0" coveredlines="0" coverablelines="80" totallines="175" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="7" methodcoverage="0" />
+      <Class name="TMPro.Examples.VertexShakeA" coverage="0" coveredlines="0" coverablelines="80" totallines="161" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="7" methodcoverage="0" />
+      <Class name="TMPro.Examples.VertexShakeB" coverage="0" coveredlines="0" coverablelines="93" totallines="185" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="7" methodcoverage="0" />
+      <Class name="TMPro.Examples.VertexZoom" coverage="0" coveredlines="0" coverablelines="91" totallines="192" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="7" methodcoverage="0" />
+      <Class name="TMPro.Examples.WarpTextExample" coverage="0" coveredlines="0" coverablelines="70" totallines="144" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="TMPro.TMP_DigitValidator" coverage="0" coveredlines="0" coverablelines="8" totallines="27" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="TMPro.TMP_PhoneNumberValidator" coverage="0" coveredlines="0" coverablelines="66" totallines="105" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="TMPro.TMP_TextEventHandler" coverage="0" coveredlines="0" coverablelines="107" totallines="254" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="20" methodcoverage="0" />
+    </Assembly>
+    <Assembly name="MiniTransportTycoon.EditModeTests" classes="13" coverage="96" coveredlines="1751" coverablelines="1823" totallines="3163" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="242" totalmethods="245" methodcoverage="98.7">
+      <Class name="MiniTransportTycoon.BusTests" coverage="98.4" coveredlines="128" coverablelines="130" totallines="236" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="20" totalmethods="20" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.CarTests" coverage="89.5" coveredlines="198" coverablelines="221" totallines="345" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="26" totalmethods="26" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.CarTypeTests" coverage="100" coveredlines="13" coverablelines="13" totallines="34" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="3" totalmethods="3" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.GameControllerTests" coverage="96.8" coveredlines="486" coverablelines="502" totallines="866" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="61" totalmethods="61" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.GameDataTests" coverage="99.4" coveredlines="179" coverablelines="180" totallines="295" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="22" totalmethods="22" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.GameUIManagerTests" coverage="100" coveredlines="122" coverablelines="122" totallines="220" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="15" totalmethods="15" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.MainMenuTests" coverage="96" coveredlines="49" coverablelines="51" totallines="102" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="8" totalmethods="8" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.MenuControllerTests" coverage="95.3" coveredlines="103" coverablelines="108" totallines="191" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="15" totalmethods="15" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.Tests.CoverageBoosterTests" coverage="100" coveredlines="54" coverablelines="54" totallines="91" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="7" totalmethods="7" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.Tests.FacilityTests" coverage="88.1" coveredlines="89" coverablelines="101" totallines="180" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="16" totalmethods="19" methodcoverage="84.2" />
+      <Class name="MiniTransportTycoon.TopBarManagerTests" coverage="100" coveredlines="53" coverablelines="53" totallines="110" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="8" totalmethods="8" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.TruckTests" coverage="98.8" coveredlines="173" coverablelines="175" totallines="309" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="28" totalmethods="28" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.VehicleManagerTests" coverage="92" coveredlines="104" coverablelines="113" totallines="184" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="13" totalmethods="13" methodcoverage="100" />
+    </Assembly>
+    <Assembly name="Scripts" classes="40" coverage="42.4" coveredlines="1476" coverablelines="3479" totallines="6205" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="226" totalmethods="426" methodcoverage="53">
+      <Class name="BridgeField" coverage="0" coveredlines="0" coverablelines="6" totallines="16" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="2" methodcoverage="0" />
+      <Class name="City" coverage="0" coveredlines="0" coverablelines="4" totallines="14" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="Field" coverage="0" coveredlines="0" coverablelines="8" totallines="19" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="GarageField" coverage="0" coveredlines="0" coverablelines="5" totallines="15" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="LargeBridge" coverage="0" coveredlines="0" coverablelines="4" totallines="12" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="MediumBridge" coverage="0" coveredlines="0" coverablelines="4" totallines="12" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="MiniTransportTycoon.Bus" coverage="85.3" coveredlines="93" coverablelines="109" totallines="181" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="17" totalmethods="18" methodcoverage="94.4" />
+      <Class name="MiniTransportTycoon.CameraDragController" coverage="22.8" coveredlines="8" coverablelines="35" totallines="62" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="1" totalmethods="5" methodcoverage="20" />
+      <Class name="MiniTransportTycoon.Car" coverage="100" coveredlines="62" coverablelines="62" totallines="106" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="10" totalmethods="10" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.CoalFactory" coverage="0" coveredlines="0" coverablelines="17" totallines="34" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="MiniTransportTycoon.Facility" coverage="55.9" coveredlines="122" coverablelines="218" totallines="347" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="19" totalmethods="27" methodcoverage="70.3" />
+      <Class name="MiniTransportTycoon.FacilityInputRequirement" coverage="100" coveredlines="6" coverablelines="6" totallines="347" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="1" totalmethods="1" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.GameController" coverage="38.4" coveredlines="674" coverablelines="1755" totallines="2708" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="73" totalmethods="141" methodcoverage="51.7" />
+      <Class name="MiniTransportTycoon.GameData" coverage="87" coveredlines="148" coverablelines="170" totallines="304" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="37" totalmethods="38" methodcoverage="97.3" />
+      <Class name="MiniTransportTycoon.GameErrorUIBridge" coverage="4.7" coveredlines="5" coverablelines="106" totallines="166" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="1" totalmethods="10" methodcoverage="10" />
+      <Class name="MiniTransportTycoon.GameUIManager" coverage="56.7" coveredlines="59" coverablelines="104" totallines="172" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="8" totalmethods="13" methodcoverage="61.5" />
+      <Class name="MiniTransportTycoon.IronFactory" coverage="0" coveredlines="0" coverablelines="17" totallines="34" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="MiniTransportTycoon.MainMenu" coverage="85.7" coveredlines="6" coverablelines="7" totallines="51" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="2" totalmethods="2" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.MaterialAmount" coverage="100" coveredlines="5" coverablelines="5" totallines="117" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="1" totalmethods="1" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.MenuController" coverage="96.5" coveredlines="28" coverablelines="29" totallines="48" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="3" totalmethods="3" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.MiniMapClick" coverage="0" coveredlines="0" coverablelines="19" totallines="46" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="MiniTransportTycoon.PaperFactory" coverage="0" coveredlines="0" coverablelines="17" totallines="34" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="MiniTransportTycoon.SettingsMenu" coverage="0" coveredlines="0" coverablelines="29" totallines="59" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="4" methodcoverage="0" />
+      <Class name="MiniTransportTycoon.SteelFactory" coverage="0" coveredlines="0" coverablelines="17" totallines="34" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="MiniTransportTycoon.TopBarManager" coverage="100" coveredlines="5" coverablelines="5" totallines="19" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="1" totalmethods="1" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.Tree" coverage="5.8" coveredlines="7" coverablelines="119" totallines="199" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="1" totalmethods="10" methodcoverage="10" />
+      <Class name="MiniTransportTycoon.Truck" coverage="73.2" coveredlines="115" coverablelines="157" totallines="254" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="22" totalmethods="22" methodcoverage="100" />
+      <Class name="MiniTransportTycoon.Vehicle" coverage="39.8" coveredlines="73" coverablelines="183" totallines="300" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="15" totalmethods="35" methodcoverage="42.8" />
+      <Class name="MiniTransportTycoon.VehicleListUI" coverage="4.8" coveredlines="2" coverablelines="41" totallines="65" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="1" totalmethods="5" methodcoverage="20" />
+      <Class name="MiniTransportTycoon.VehicleManager" coverage="55.9" coveredlines="47" coverablelines="84" totallines="125" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="10" totalmethods="13" methodcoverage="76.9" />
+      <Class name="MiniTransportTycoon.VehicleUIEntry" coverage="0" coveredlines="0" coverablelines="23" totallines="51" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="3" methodcoverage="0" />
+      <Class name="MiniTransportTycoon.Warehouse" coverage="18.3" coveredlines="11" coverablelines="60" totallines="117" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="3" totalmethods="13" methodcoverage="23" />
+      <Class name="MiniTransportTycoon.WoodFactory" coverage="0" coveredlines="0" coverablelines="17" totallines="34" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="Road" coverage="0" coveredlines="0" coverablelines="8" totallines="17" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="RoadField" coverage="0" coveredlines="0" coverablelines="3" totallines="12" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="Site" coverage="0" coveredlines="0" coverablelines="7" totallines="19" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="SmallBridge" coverage="0" coveredlines="0" coverablelines="4" totallines="12" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="StopField" coverage="0" coveredlines="0" coverablelines="3" totallines="12" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="TreeField" coverage="0" coveredlines="0" coverablelines="9" totallines="19" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="4" methodcoverage="0" />
+      <Class name="WaterField" coverage="0" coveredlines="0" coverablelines="3" totallines="12" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+    </Assembly>
+  </Coverage>
+</CoverageReport>
