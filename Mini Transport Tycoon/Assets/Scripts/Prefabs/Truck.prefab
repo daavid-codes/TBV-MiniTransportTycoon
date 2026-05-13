@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8054266385136690486}
   - component: {fileID: 9221737352675144597}
-  - component: {fileID: 2326899049741260738}
+  - component: {fileID: -7597570568052650351}
   m_Layer: 0
   m_Name: Truck
   m_TagString: Untagged
@@ -73,7 +73,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: 53efe5772f1e74794bade2564ecd9c91, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -84,8 +84,8 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
-  m_SpriteSortPoint: 0
---- !u!114 &2326899049741260738
+  m_SpriteSortPoint: 1
+--- !u!114 &-7597570568052650351
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -99,13 +99,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 0
   carSprite: {fileID: 0}
-  speed: 1
+  speed: 0
   age: 0
-  maintenanceCost: 600
+  durability: 0
+  maintenanceCost: 0
+  cost: 0
   type: 2
   roadTilemap: {fileID: 0}
+  garageTilemap: {fileID: 0}
   leftUpSprite: {fileID: 21300000, guid: b2f4d75c789374b358022043c926baf6, type: 3}
   leftDownSprite: {fileID: 21300000, guid: 49c5c541b329e4fce8dfd2bfffa5d388, type: 3}
   rightUpSprite: {fileID: 21300000, guid: 2ac66cce9c7be4823a14282b88ac2aa4, type: 3}
   rightDownSprite: {fileID: 21300000, guid: 53efe5772f1e74794bade2564ecd9c91, type: 3}
   materialType: 0
+  carryingAmount: 0
+  maxCarryingAmount: 500
