@@ -33,7 +33,7 @@ jobs:
           testMode: editmode
           githubToken: ""                # Do not post PR comments from test runner
           enableCodeCoverage: true
-          enableTestReporting: false     # Avoid GitHub API calls for test reports
+          enableTestReporting: true     # Enable test reporting
           coverageOptions: 'generateAdditionalMetrics;generateHtmlReport'
           customParameters: >-
             -pathFilters:+Assets/Scripts/Bus.cs,+Assets/Scripts/Car.cs,+Assets/Scripts/CarType.cs,+Assets/Scripts/GameController.cs,+Assets/Scripts/GameData.cs,+Assets/Scripts/MenuController.cs,+Assets/Scripts/TopBarManager.cs,+Assets/Scripts/MainMenu.cs,+Assets/Scripts/Vehicle.cs
@@ -71,6 +71,90 @@ jobs:
           if [ "$copied" = false ]; then
             echo "Coverage output was not found in this run." > coverage-artifact/README.txt
           fi
+
+      - name: Add Coverage Summary
+        if: always()
+        run: |
+          set -eu
+
+          summary_xml="$(find coverage-artifact -type f -name Summary.xml | head -n 1 || true)"
+
+          if [ -z "$summary_xml" ]; then
+            {
+              echo "## Code Coverage"
+              echo ""
+              echo "Coverage summary was not found in this run."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          python3 - "$summary_xml" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          summary_xml = sys.argv[1]
+          summary_out = sys.argv[2]
+
+          def pct(v):
+              return f"{v * 100:.2f}%"
+
+          root = ET.parse(summary_xml).getroot()
+          tag = root.tag.split("}")[-1]
+
+          line_coverage = None
+          method_coverage = None
+          covered_lines = None
+          total_lines = None
+          covered_methods = None
+          total_methods = None
+
+          if tag.lower() == "coverage" and "line-rate" in root.attrib:
+              line_coverage = float(root.attrib.get("line-rate", "0"))
+              method_coverage = float(root.attrib.get("branch-rate", "0"))
+          else:
+              summary_node = root.find(".//Summary")
+              if summary_node is not None:
+                  attrs = summary_node.attrib
+
+                  if attrs.get("numSequencePoints") and attrs.get("visitedSequencePoints"):
+                      total_lines = int(attrs["numSequencePoints"])
+                      covered_lines = int(attrs["visitedSequencePoints"])
+                      line_coverage = (covered_lines / total_lines) if total_lines else 0.0
+
+                  if attrs.get("numMethods") and attrs.get("visitedMethods"):
+                      total_methods = int(attrs["numMethods"])
+                      covered_methods = int(attrs["visitedMethods"])
+                      method_coverage = (covered_methods / total_methods) if total_methods else 0.0
+
+          with open(summary_out, "a", encoding="utf-8") as out:
+              out.write("## Code Coverage\\n\\n")
+              out.write("| Metric | Value |\\n")
+              out.write("| --- | --- |\\n")
+
+              if line_coverage is not None:
+                  if covered_lines is not None and total_lines is not None:
+                      out.write(f"| Line Coverage | {pct(line_coverage)} ({covered_lines}/{total_lines}) |\\n")
+                  else:
+                      out.write(f"| Line Coverage | {pct(line_coverage)} |\\n")
+
+              if method_coverage is not None:
+                  if covered_methods is not None and total_methods is not None:
+                      out.write(f"| Method Coverage | {pct(method_coverage)} ({covered_methods}/{total_methods}) |\\n")
+                  else:
+                      out.write(f"| Method Coverage | {pct(method_coverage)} |\\n")
+
+              if line_coverage is None and method_coverage is None:
+                  out.write("| Coverage | Unable to parse Summary.xml |\\n")
+
+              out.write(f"\\nParsed from: {summary_xml}\\n")
+          PY
+
+        - name: Post Coverage Comment on PR
+          uses: marocchino/sticky-pull-request-comment@v2
+          if: github.event_name == 'pull_request'
+          with:
+            recreate: true
+            path: ${{ github.step_summary }}
 
       - name: Upload Coverage Report
         if: always()

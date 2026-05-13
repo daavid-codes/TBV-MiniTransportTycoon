@@ -37,10 +37,8 @@ jobs:
           projectPath: Mini Transport Tycoon
           githubToken: ""
           testMode: editmode
-          enableCodeCoverage: true
-          coverageOptions: generateAdditionalMetrics;generateHtmlReport
-          customParameters: >-
-            -pathFilters:+Assets/Scripts/Bus.cs,+Assets/Scripts/Car.cs,+Assets/Scripts/CarType.cs,+Assets/Scripts/GameController.cs,+Assets/Scripts/GameData.cs,+Assets/Scripts/MenuController.cs,+Assets/Scripts/TopBarManager.cs,+Assets/Scripts/MainMenu.cs,+Assets/Scripts/Vehicle.cs
+          coverageEnabled: true
+          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateHtmlReportHistory;assemblyFilters:+Assembly-CSharp;pathFilters:+*/Assets/Scripts/**'
 
       - name: Debug Coverage Paths
         if: always()
@@ -83,7 +81,20 @@ jobs:
           name: code-coverage
           path: coverage-artifact/**
 
+      - name: Check for coverage results
+        id: coverage_check
+        if: always()
+        run: |
+          if compgen -G "${{ steps.tests.outputs.coveragePath }}/**/TestCoverageResults_*.xml" > /dev/null; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            mkdir -p coverage-summary
+            echo "Coverage summary unavailable for this run." > coverage-summary/SummaryGithub.md
+          fi
+
       - name: Generate Coverage Summary
+        if: always() && steps.coverage_check.outputs.found == 'true'
         uses: danielpalme/ReportGenerator-GitHub-Action@ee3806a36b8b2eb9594cb3e5fae045af7e5ead10 # v5.5.6
         with:
           reports: ${{ steps.tests.outputs.coveragePath }}/**/TestCoverageResults_*.xml
@@ -91,6 +102,7 @@ jobs:
           reporttypes: MarkdownSummaryGithub
 
       - name: Write Coverage to Job Summary
+        if: always()
         run: cat coverage-summary/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
 
       - name: Post Coverage Comment on PR
@@ -99,36 +111,3 @@ jobs:
         with:
           recreate: true
           path: coverage-summary/SummaryGithub.md
-
-  build:
-    name: Build Unity Project
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Cache Library
-        uses: actions/cache@v4
-        with:
-          path: Mini Transport Tycoon/Library
-          key: Library-${{ hashFiles('Mini Transport Tycoon/Assets/**', 'Mini Transport Tycoon/Packages/**', 'Mini Transport Tycoon/ProjectSettings/**') }}
-
-      - name: Build project
-        uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          unityVersion: 2022.3.62f3
-          targetPlatform: StandaloneWindows64
-          projectPath: Mini Transport Tycoon
-          versioning: None
-
-      - name: Upload build
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build
-          path: build

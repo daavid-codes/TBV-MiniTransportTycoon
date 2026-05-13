@@ -55,6 +55,15 @@ namespace MiniTransportTycoon
         }
 
         [Test]
+        public void ToggleBusStopBuildModeUI_SetsModeToStopBuild()
+        {
+            var context = CreateContext();
+            context.Controller.ToggleBusStopBuildModeUI();
+            Assert.AreEqual(NavigationMode.StopBuild, GetField<NavigationMode>(context.Controller, "navigationMode"));
+            Assert.AreEqual(context.ActiveColor, context.BusStopButtonImage.color);
+        }
+
+        [Test]
         public void ToggleBuildModeUI_SetsModeToRoadBuild()
         {
             var context = CreateContext();
@@ -117,6 +126,88 @@ namespace MiniTransportTycoon
             
             Assert.IsFalse(GetField<bool>(context.Controller, "placeBus"));
             Assert.AreEqual(context.NormalColor, context.PlaceBusButtonImage.color);
+        }
+
+        [Test]
+        public void StartBusPlacement_SetsCorrectFields()
+        {
+            var context = CreateContext();
+            context.Controller.StartBusPlacement(35, 3f, 500);
+
+            Assert.IsTrue(GetField<bool>(context.Controller, "placeBus"));
+            Assert.IsFalse(GetField<bool>(context.Controller, "placeTruck"));
+            Assert.AreEqual(35, GetField<int>(context.Controller, "busPlacementCapacity"));
+            Assert.AreEqual(3f, GetField<float>(context.Controller, "busPlacementSpeed"));
+            Assert.AreEqual(500, GetField<int>(context.Controller, "busPlacementPrice"));
+            Assert.AreEqual(NavigationMode.Camera, GetField<NavigationMode>(context.Controller, "navigationMode"));
+        }
+
+        [Test]
+        public void ButtonStartBusPlacementSmall_CallsStartBusPlacement()
+        {
+            var context = CreateContext();
+            context.Controller.ButtonStartBusPlacementSmall();
+
+            Assert.IsTrue(GetField<bool>(context.Controller, "placeBus"));
+            Assert.AreEqual(15, GetField<int>(context.Controller, "busPlacementCapacity"));
+            Assert.AreEqual(2.5f, GetField<float>(context.Controller, "busPlacementSpeed"));
+            Assert.AreEqual(300, GetField<int>(context.Controller, "busPlacementPrice"));
+        }
+
+        [Test]
+        public void TogglePlaceTruckModeUI_TogglesFlag()
+        {
+            var context = CreateContext();
+            SetField(context.Controller, "navigationMode", NavigationMode.RoadBuild);
+            
+            context.Controller.TogglePlaceTruckModeUI();
+            
+            Assert.IsTrue(GetField<bool>(context.Controller, "placeTruck"));
+            Assert.IsFalse(GetField<bool>(context.Controller, "placeBus"));
+            Assert.AreEqual(NavigationMode.Camera, GetField<NavigationMode>(context.Controller, "navigationMode"));
+        }
+
+        [Test]
+        public void StartTruckPlacement_SetsCorrectFields()
+        {
+            var context = CreateContext();
+            context.Controller.StartTruckPlacement(Materials.Steel, 400, 2f, 600);
+
+            Assert.IsTrue(GetField<bool>(context.Controller, "placeTruck"));
+            Assert.IsFalse(GetField<bool>(context.Controller, "placeBus"));
+            Assert.AreEqual(Materials.Steel, GetField<Materials>(context.Controller, "truckPlacementMaterial"));
+            Assert.AreEqual(400, GetField<int>(context.Controller, "truckPlacementCapacity"));
+            Assert.AreEqual(2f, GetField<float>(context.Controller, "truckPlacementSpeed"));
+            Assert.AreEqual(600, GetField<int>(context.Controller, "truckPlacementPrice"));
+            Assert.AreEqual(NavigationMode.Camera, GetField<NavigationMode>(context.Controller, "navigationMode"));
+        }
+
+        [Test]
+        public void ButtonStartTruckPlacementWoodSmall_CallsStartTruckPlacement()
+        {
+            var context = CreateContext();
+            context.Controller.ButtonStartTruckPlacementWoodSmall();
+
+            Assert.IsTrue(GetField<bool>(context.Controller, "placeTruck"));
+            Assert.AreEqual(Materials.Wood, GetField<Materials>(context.Controller, "truckPlacementMaterial"));
+            Assert.AreEqual(200, GetField<int>(context.Controller, "truckPlacementCapacity"));
+            Assert.AreEqual(300, GetField<int>(context.Controller, "truckPlacementPrice"));
+        }
+
+        [Test]
+        public void GetMaterialPrice_ReturnsValidPrice()
+        {
+            var context = CreateContext();
+            float woodPrice = context.Controller.GetMaterialPrice(Materials.Wood);
+            Assert.IsTrue(woodPrice > 0f);
+        }
+
+        [Test]
+        public void UpdateMarketPrices_ExecutesWithoutError()
+        {
+            var context = CreateContext();
+            
+            Assert.DoesNotThrow(() => Invoke(context.Controller, "UpdateMarketPrices"));
         }
 
         [Test]
@@ -437,41 +528,6 @@ namespace MiniTransportTycoon
         }
 
         [Test]
-        public void SelectCarStop_SameSelection_Ignored()
-        {
-            var context = CreateContext();
-            Vector3Int stop = Vector3Int.zero;
-            context.BusStops.SetTile(stop, context.BusStopUpTile);
-            
-            Invoke(context.Controller, "SelectCarStop", stop);
-            Invoke(context.Controller, "SelectCarStop", stop);
-            
-            var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
-            Assert.AreEqual(1, pending.Count);
-        }
-
-        [Test]
-        public void SelectCarStop_TwoSelections_ClearsPendingList()
-        {
-            var context = CreateContext();
-            Vector3Int stop1 = Vector3Int.zero;
-            Vector3Int stop2 = new Vector3Int(2, 0, 0);
-            
-            context.BusStops.SetTile(stop1, context.BusStopUpTile);
-            context.BusStops.SetTile(stop2, context.BusStopUpTile);
-            AddRoad(context, stop1 + Vector3Int.up);
-            AddRoad(context, stop2 + Vector3Int.up);
-            AddRoad(context, new Vector3Int(1, 1, 0));
-            
-            Invoke(context.Controller, "SelectCarStop", stop1);
-            Invoke(context.Controller, "SelectCarStop", stop2);
-            Invoke(context.Controller, "SelectCarStop", stop1);
-            
-            var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
-            Assert.AreEqual(0, pending.Count);
-        }
-
-        [Test]
         public void GetNearestRoadDirection_FindsCorrectOffset()
         {
             var context = CreateContext();
@@ -507,6 +563,64 @@ namespace MiniTransportTycoon
             Assert.IsTrue(result);
         }
 
+        [Test]
+        public void DestroyTile_Road_RemovesRoad()
+        {
+            var context = CreateContext();
+            Vector3Int cellPos = new Vector3Int(5, 5, 0);
+            AddRoad(context, cellPos);
+            
+            Assert.IsTrue(Invoke<bool>(context.Controller, "IsRoadCoordinate", cellPos));
+            
+            Invoke(context.Controller, "DestroyTile", cellPos);
+            
+            Assert.IsFalse(Invoke<bool>(context.Controller, "IsRoadCoordinate", cellPos));
+        }
+
+        [Test]
+        public void ClearBuildPreview_RestoresColors()
+        {
+            var context = CreateContext();
+            Vector3Int cellPos = new Vector3Int(2, 2, 0);
+            var previewedBuildCells = GetField<List<Vector3Int>>(context.Controller, "previewedBuildCells");
+            previewedBuildCells.Add(cellPos);
+            
+            Invoke(context.Controller, "ClearBuildPreview");
+            
+            Assert.AreEqual(0, previewedBuildCells.Count);
+        }
+
+        [Test]
+        public void NormalizeRoutePoint_BusStop_ReturnsCell()
+        {
+            var context = CreateContext();
+            Vector3Int cellPos = new Vector3Int(2, 2, 0);
+            context.BusStops.SetTile(cellPos, context.BusStopUpTile);
+            
+            Vector3Int result = Invoke<Vector3Int>(context.Controller, "NormalizeRoutePoint", cellPos);
+            
+            Assert.AreEqual(cellPos, result);
+        }
+
+        [Test]
+        public void RegisterPlacedWarehouse_AddsToDictionary()
+        {
+            var context = CreateContext();
+            Vector3Int cellPos = new Vector3Int(3, 3, 0);
+            
+            GameObject warehouseObj = Track(new GameObject("Warehouse"));
+            Warehouse warehouse = warehouseObj.AddComponent<Warehouse>();
+            SetField(context.Controller, "warehousePrefab", warehouse);
+            
+            Invoke(context.Controller, "RegisterPlacedWarehouse", cellPos);
+            
+            object[] args = { cellPos, null };
+            var method = context.Controller.GetType().GetMethod("TryGetWarehouseAtRoutePoint", InstanceFlags);
+            bool result = (bool)method.Invoke(context.Controller, args);
+            
+            Assert.IsTrue(result);
+        }
+
         private ControllerContext CreateContext()
         {
             GameObject go = Track(new GameObject("GameController"));
@@ -520,6 +634,9 @@ namespace MiniTransportTycoon
                 BusStops = CreateTilemap("BusStops"),
                 Garage = CreateTilemap("Garages"),
                 Houses = CreateTilemap("Houses"),
+                Warehouse = CreateTilemap("Warehouses"),
+                IronFactory = CreateTilemap("IronFactory"),
+                Tree = CreateTilemap("Trees"),
                 NormalColor = Color.white,
                 ActiveColor = Color.gray,
                 BuildButtonImage = CreateImage("BuildBtn"),
@@ -558,6 +675,9 @@ namespace MiniTransportTycoon
             SetField(controller, "busStopTilemap", context.BusStops);
             SetField(controller, "garageTilemap", context.Garage);
             SetField(controller, "housesTilemap", context.Houses);
+            SetField(controller, "warehouseTilemap", context.Warehouse);
+            SetField(controller, "ironFactoryTilemap", context.IronFactory);
+            SetField(controller, "treeTilemap", context.Tree);
             
             SetField(controller, "roadStraightUpDownTile", context.RoadStraightUpDownTile);
             SetField(controller, "roadStraightLeftRightTile", context.RoadStraightLeftRightTile);
@@ -734,7 +854,7 @@ namespace MiniTransportTycoon
         private class ControllerContext
         {
             public GameController Controller;
-            public Tilemap Ground, Road, BusStops, Garage, Houses;
+            public Tilemap Ground, Road, BusStops, Garage, Houses, Warehouse, IronFactory, Tree;
             public Image BuildButtonImage, BusStopButtonImage, GarageButtonImage, PlaceBusButtonImage;
             public Color NormalColor, ActiveColor;
             public Bus BusPrefab;

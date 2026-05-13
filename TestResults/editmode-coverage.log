@@ -1,0 +1,59 @@
+Unity Editor version:    2022.3.62f3 (96770f904ca7)
+Branch:                  2022.3/respin/2022.3.62f2-4af31df585-v2
+Build type:              Release
+Batch mode:              YES
+macOS version:           Version 26.3.1 (a) (Build 25D771280a)
+Darwin version:          25.3.0
+Architecture:            arm64
+Running under Rosetta:   NO
+Available memory:        8192 MB
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-brekovszkimark" at "2026-05-13T09:20:44.405552Z"
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 47373, path: "/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/Helpers/UnityLicensingClient.app/Contents/MacOS/Unity.Licensing.Client")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.17.4+4293ba1
+  Session Id:              316ba0398b0e4755922caff48ee9ae82
+  Correlation Id:          28231f0f55251ca0bb3ff84b53c6410c
+  External correlation Id: 709973923171346034
+  Machine Id:              jDe41GJu4SgK00520w7+li5WG7c=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-brekovszkimark" (connect: 0.00s, validation: 0.02s, handshake: 0.30s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-brekovszkimark-notifications" at "2026-05-13T09:20:44.716584Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully updated license
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Serial number assigned to: "7972536943658-UnityPersXXXX"
+Pro License: NO
+[Licensing::Client] Successfully resolved entitlement details
+Launching external process: /Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/Resources/PackageManager/Server/UnityPackageManager
+
+COMMAND LINE ARGUMENTS:
+/Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/MacOS/Unity
+-batchmode
+-nographics
+-quit
+-projectPath
+Mini Transport Tycoon
+-runTests
+-testPlatform
+editmode
+-enableCodeCoverage
+-coverageOptions
+generateAdditionalMetrics;generateHtmlReport
+-testResults
+TestResults/EditMode-results.xml
+-logFile
+TestResults/editmode-coverage.log
+Successfully changed project path to: /Users/brekovszkimark/Programozás/4. félév/Szoftech/TBV-MiniTransportTycoon/Mini Transport Tycoon
+/Users/brekovszkimark/Programozás/4. félév/Szoftech/TBV-MiniTransportTycoon/Mini Transport Tycoon
+It looks like another Unity instance is running with this project open.
+
+Multiple Unity instances cannot open the same project.
+
+Project: /Users/brekovszkimark/Programozás/4. félév/Szoftech/TBV-MiniTransportTycoon/Mini Transport Tycoon
+Fatal Error! It looks like another Unity instance is running with this project open.
+
+Multiple Unity instances cannot open the same project.
+
+Project: /Users/brekovszkimark/Programozás/4. félév/Szoftech/TBV-MiniTransportTycoon/Mini Transport Tycoon
+[Package Manager] Server::Kill -- Server was shutdown

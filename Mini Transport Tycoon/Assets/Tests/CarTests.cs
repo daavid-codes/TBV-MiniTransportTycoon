@@ -137,6 +137,82 @@ namespace MiniTransportTycoon
             Assert.AreEqual(2, GetPropertyOrField<List<Vector3Int>>(car, "Route").Count);
         }
 
+        [Test]
+        public void SetShuttleRoute_WithNullPath_DisablesShuttleRoute()
+        {
+            Car car = CreateCar();
+            
+            car.SetShuttleRoute(null);
+
+            Assert.IsFalse(GetField<bool>(car, "useShuttleRoute"));
+            Assert.AreEqual(0, GetPropertyOrField<List<Vector3Int>>(car, "Route").Count);
+        }
+
+        [Test]
+        public void Update_WhenNotUsingShuttleRoute_DoesNothing()
+        {
+            Car car = CreateCar();
+            SetField(car, "useShuttleRoute", false);
+            SetPropertyOrField(car, "isMoving", false);
+            SetField(car, "nextShuttleLegIsForward", true);
+
+            Invoke(car, "Update");
+
+            Assert.IsTrue(GetField<bool>(car, "nextShuttleLegIsForward"), "Should have returned early without changing state.");
+        }
+
+        [Test]
+        public void Update_WhenRouteIsNull_DisablesShuttleRoute()
+        {
+            Car car = CreateCar();
+            SetField(car, "useShuttleRoute", true);
+            SetPropertyOrField(car, "isMoving", false);
+            SetPropertyOrField(car, "route", null);
+
+            Invoke(car, "Update");
+
+            Assert.IsFalse(GetField<bool>(car, "useShuttleRoute"));
+        }
+
+        [Test]
+        public void Update_WhenRouteIsEmpty_DisablesShuttleRoute()
+        {
+            Car car = CreateCar();
+            SetField(car, "useShuttleRoute", true);
+            SetPropertyOrField(car, "isMoving", false);
+            SetPropertyOrField(car, "route", new List<Vector3Int>());
+
+            Invoke(car, "Update");
+
+            Assert.IsFalse(GetField<bool>(car, "useShuttleRoute"));
+        }
+
+        [Test]
+        public void StartNextShuttleLeg_WhenNextRouteIsNull_DisablesShuttleRoute()
+        {
+            Car car = CreateCar();
+            SetField(car, "useShuttleRoute", true);
+            SetField(car, "nextShuttleLegIsForward", true);
+            SetField(car, "shuttleRouteForward", null);
+
+            Invoke(car, "StartNextShuttleLeg");
+
+            Assert.IsFalse(GetField<bool>(car, "useShuttleRoute"));
+        }
+
+        [Test]
+        public void StartNextShuttleLeg_WhenNextRouteIsEmpty_DisablesShuttleRoute()
+        {
+            Car car = CreateCar();
+            SetField(car, "useShuttleRoute", true);
+            SetField(car, "nextShuttleLegIsForward", false);
+            SetField(car, "shuttleRouteBackward", new List<Vector3Int>());
+
+            Invoke(car, "StartNextShuttleLeg");
+
+            Assert.IsFalse(GetField<bool>(car, "useShuttleRoute"));
+        }
+
         private Car CreateCar()
         {
             GameObject carObject = Track(new GameObject("Car"));
