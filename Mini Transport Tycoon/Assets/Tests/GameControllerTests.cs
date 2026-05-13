@@ -5,6 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using UnityEngine.TestTools;
 using MiniTransportTycoon;
 using UnityEditor.PackageManager;
 
@@ -33,12 +34,8 @@ namespace MiniTransportTycoon
                 }
             }
             trackedObjects.Clear();
-            
-            // Reset GameData singleton
-            var gameDataField = typeof(GameData).GetField("instance", 
-                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-            if (gameDataField != null)
-                gameDataField.SetValue(null, null);
+
+            ResetGameDataSingleton();
         }
 
         [Test]
@@ -444,6 +441,7 @@ namespace MiniTransportTycoon
             context.BusStops.SetTile(stop, context.BusStopUpTile);
             
             Invoke(context.Controller, "SelectCarStop", stop);
+            LogAssert.Expect(LogType.Error, "Route point already selected. Click the first point again to finalize the loop.");
             Invoke(context.Controller, "SelectCarStop", stop);
             
             var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
@@ -509,6 +507,8 @@ namespace MiniTransportTycoon
 
         private ControllerContext CreateContext()
         {
+            EnsureGameDataMockExists();
+
             GameObject go = Track(new GameObject("GameController"));
             GameController controller = go.AddComponent<GameController>();
 
@@ -587,7 +587,6 @@ namespace MiniTransportTycoon
             SetField(controller, "normalColor", context.NormalColor);
             SetField(controller, "activeColor", context.ActiveColor);
 
-            CreateGameDataMock();
             Invoke(controller, "Awake");
             return context;
         }
@@ -618,8 +617,8 @@ namespace MiniTransportTycoon
             GameData mockGameData = mockGameDataObj.AddComponent<GameData>();
             // Don't track one-time setup objects; they persist for test suite
             
-            // Set the GameData.instance singleton
-            var gameDataField = typeof(GameData).GetField("instance", 
+            // Set the GameData.Instance singleton backing field
+            var gameDataField = typeof(GameData).GetField("<Instance>k__BackingField", 
                 System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
             if (gameDataField != null)
                 gameDataField.SetValue(null, mockGameData);
@@ -729,6 +728,14 @@ namespace MiniTransportTycoon
             
             // Create mock if it doesn't exist
             CreateGameDataMock();
+        }
+
+        private void ResetGameDataSingleton()
+        {
+            var gameDataField = typeof(GameData).GetField("<Instance>k__BackingField",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            if (gameDataField != null)
+                gameDataField.SetValue(null, null);
         }
 
         private class ControllerContext
