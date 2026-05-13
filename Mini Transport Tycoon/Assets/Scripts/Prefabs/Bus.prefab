@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8054266385136690486}
   - component: {fileID: 9221737352675144597}
-  - component: {fileID: 7384858662980590483}
+  - component: {fileID: 3927171211899793351}
   m_Layer: 0
   m_Name: Bus
   m_TagString: Untagged
@@ -73,7 +73,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: 745cb4eb15d654386a229ef9ab387bac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -84,8 +84,8 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
-  m_SpriteSortPoint: 0
---- !u!114 &7384858662980590483
+  m_SpriteSortPoint: 1
+--- !u!114 &3927171211899793351
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -97,13 +97,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9f3ac501f1334febabb693a34d025b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  id: 0
   carSprite: {fileID: 0}
-  speed: 1.5
+  speed: 0
   age: 0
-  maintenanceCost: 500
+  durability: 0
+  maintenanceCost: 0
+  cost: 0
   type: 0
   roadTilemap: {fileID: 0}
+  garageTilemap: {fileID: 0}
   leftUpSprite: {fileID: 21300000, guid: 41fd5a27de42746fb93ccc7e99cbf7e9, type: 3}
-  leftDownSprite: {fileID: 21300000, guid: 72f9cf72656824e9693ce8d789d5cff4, type: 3}
+  leftDownSprite: {fileID: 21300000, guid: 9efae374098af441886aa7f7281d0e8b, type: 3}
   rightUpSprite: {fileID: 21300000, guid: 745cb4eb15d654386a229ef9ab387bac, type: 3}
   rightDownSprite: {fileID: 21300000, guid: 9efae374098af441886aa7f7281d0e8b, type: 3}
+  carryingAmount: 0
+  maxCarryingAmount: 50

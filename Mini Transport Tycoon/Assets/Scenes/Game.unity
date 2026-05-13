@@ -13387,7 +13387,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 1002384135}
   m_OnClick:
     m_PersistentCalls:
@@ -13442,12 +13442,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2db8f323f7faf4d4eb3ad3969603136c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameData: {fileID: 0}
+  gameData: {fileID: 968814745}
   tryFindGameDataWhenMissing: 1
   replayLastErrorOnEnable: 1
-  errorPanelParent: {fileID: 0}
-  errorPanelCanvasGroup: {fileID: 0}
-  errorText: {fileID: 0}
+  errorPanelParent: {fileID: 1036247332}
+  errorPanelCanvasGroup: {fileID: 1002384139}
+  errorText: {fileID: 1311708480}
   clearAfterSeconds: 2.5
   hidePanelOnAwake: 1
   onErrorMessageReceived:
@@ -13464,7 +13464,7 @@ CanvasGroup:
   m_Alpha: 1
   m_Interactable: 1
   m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
+  m_IgnoreParentGroups: 1
 --- !u!1 &1006703080
 GameObject:
   m_ObjectHideFlags: 0
@@ -16258,16 +16258,16 @@ MonoBehaviour:
   woodFactoryTilemap: {fileID: 60301212}
   coalFactoryTilemap: {fileID: 568628818}
   housesTilemap: {fileID: 1537390872}
-  treeTilemap: {fileID: 0}
+  treeTilemap: {fileID: 627441082}
   placeBus: 0
-  busPrefab: {fileID: 7384858662980590483, guid: a3453bc2c0d6f43899f1e941c29a5bcd,
+  busPrefab: {fileID: 3927171211899793351, guid: a3453bc2c0d6f43899f1e941c29a5bcd,
     type: 3}
   busPlacementCapacity: 50
   busPlacementSpeed: 1
   busPlacementPrice: 100
   placeTruck: 0
   truckPlacementPrice: 100
-  truckPrefab: {fileID: 2326899049741260738, guid: 4242a94c9986844edb444939f4ad8292,
+  truckPrefab: {fileID: -7597570568052650351, guid: 4242a94c9986844edb444939f4ad8292,
     type: 3}
   truckPlacementMaterial: 0
   truckPlacementCapacity: 500
@@ -16322,11 +16322,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameData: {fileID: 968814745}
-  gameController: {fileID: 0}
+  gameController: {fileID: 1419960539}
   moneyText: {fileID: 74277991}
   cityText: {fileID: 429633358}
   dateText: {fileID: 2081498922}
-  errorText: {fileID: 0}
+  errorText: {fileID: 1311708480}
   materialPriceUIEntries:
   - material: 0
     priceText: {fileID: 823882918}
@@ -16365,9 +16365,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cee4b7bdfbce47bd922863f0bd5e87e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundTilemap: {fileID: 0}
-  treeTilemap: {fileID: 0}
-  treeTile: {fileID: 0}
+  groundTilemap: {fileID: 1686296014}
+  treeTilemap: {fileID: 627441082}
+  treeTile: {fileID: 11400000, guid: 0ff9dc5c21f6c474490995ab03b1ab25, type: 2}
   spreadIntervalSeconds: 6
   spreadChancePerTree: 0.2
   maxNewTreesPerTick: 3
