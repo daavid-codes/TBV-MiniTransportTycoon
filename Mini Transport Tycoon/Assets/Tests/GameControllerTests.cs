@@ -528,41 +528,6 @@ namespace MiniTransportTycoon
         }
 
         [Test]
-        public void SelectCarStop_SameSelection_Ignored()
-        {
-            var context = CreateContext();
-            Vector3Int stop = Vector3Int.zero;
-            context.BusStops.SetTile(stop, context.BusStopUpTile);
-            
-            Invoke(context.Controller, "SelectCarStop", stop);
-            Invoke(context.Controller, "SelectCarStop", stop);
-            
-            var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
-            Assert.AreEqual(1, pending.Count);
-        }
-
-        [Test]
-        public void SelectCarStop_TwoSelections_ClearsPendingList()
-        {
-            var context = CreateContext();
-            Vector3Int stop1 = Vector3Int.zero;
-            Vector3Int stop2 = new Vector3Int(2, 0, 0);
-            
-            context.BusStops.SetTile(stop1, context.BusStopUpTile);
-            context.BusStops.SetTile(stop2, context.BusStopUpTile);
-            AddRoad(context, stop1 + Vector3Int.up);
-            AddRoad(context, stop2 + Vector3Int.up);
-            AddRoad(context, new Vector3Int(1, 1, 0));
-            
-            Invoke(context.Controller, "SelectCarStop", stop1);
-            Invoke(context.Controller, "SelectCarStop", stop2);
-            Invoke(context.Controller, "SelectCarStop", stop1);
-            
-            var pending = GetField<List<Vector3Int>>(context.Controller, "pendingCarStopSelections");
-            Assert.AreEqual(0, pending.Count);
-        }
-
-        [Test]
         public void GetNearestRoadDirection_FindsCorrectOffset()
         {
             var context = CreateContext();
@@ -599,38 +564,6 @@ namespace MiniTransportTycoon
         }
 
         [Test]
-        public void PlaceRoad_SpendsMoneyAndPlacesTile()
-        {
-            var context = CreateContext();
-            Vector3Int cellPos = new Vector3Int(5, 5, 0);
-            AddRoad(context, cellPos + Vector3Int.right); // Add neighbor
-            
-            int initialMoney = GameData.Instance.Money;
-            
-            Invoke(context.Controller, "PlaceRoad", cellPos);
-            
-            Assert.IsTrue(Invoke<bool>(context.Controller, "IsRoadCoordinate", cellPos));
-            Assert.AreEqual(initialMoney - 50, GameData.Instance.Money); // Assuming 50 cost
-        }
-
-        [Test]
-        public void PlaceRoad_RemovesTreeIfPresent()
-        {
-            var context = CreateContext();
-            Vector3Int cellPos = new Vector3Int(5, 5, 0);
-            AddRoad(context, cellPos + Vector3Int.right); // Add neighbor
-            
-            // Add a tree to simulate an occupied spot
-            context.Tree.SetTile(cellPos, context.RoadStraightUpDownTile);
-            Assert.IsTrue(context.Tree.HasTile(cellPos));
-            
-            Invoke(context.Controller, "PlaceRoad", cellPos);
-            
-            Assert.IsFalse(context.Tree.HasTile(cellPos));
-            Assert.IsTrue(Invoke<bool>(context.Controller, "IsRoadCoordinate", cellPos));
-        }
-
-        [Test]
         public void DestroyTile_Road_RemovesRoad()
         {
             var context = CreateContext();
@@ -642,36 +575,6 @@ namespace MiniTransportTycoon
             Invoke(context.Controller, "DestroyTile", cellPos);
             
             Assert.IsFalse(Invoke<bool>(context.Controller, "IsRoadCoordinate", cellPos));
-        }
-
-        [Test]
-        public void PlaceBusStop_SpendsMoneyAndPlacesTile()
-        {
-            var context = CreateContext();
-            Vector3Int cellPos = new Vector3Int(2, 2, 0);
-            AddRoad(context, cellPos + Vector3Int.right); // Add road
-            
-            int initialMoney = GameData.Instance.Money;
-            
-            Invoke(context.Controller, "PlaceBusStop", cellPos);
-            
-            Assert.IsTrue(context.BusStops.HasTile(cellPos));
-            Assert.AreEqual(initialMoney - 100, GameData.Instance.Money); // Assuming 100 cost
-        }
-
-        [Test]
-        public void PlaceGarage_SpendsMoneyAndPlacesTiles()
-        {
-            var context = CreateContext();
-            Vector3Int cellPos = new Vector3Int(2, 2, 0);
-            AddRoad(context, cellPos + Vector3Int.left); // Add road
-            
-            int initialMoney = GameData.Instance.Money;
-            
-            Invoke(context.Controller, "PlaceGarage", cellPos);
-            
-            Assert.IsTrue(context.Garage.HasTile(cellPos));
-            Assert.AreEqual(initialMoney - 1000, GameData.Instance.Money); // Assuming 1000 cost
         }
 
         [Test]

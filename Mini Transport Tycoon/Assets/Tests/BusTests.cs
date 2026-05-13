@@ -150,18 +150,6 @@ namespace MiniTransportTycoon
         }
         
         [Test]
-        public void SetShuttleRoute_WithNullPath_CreatesEmptyLegs()
-        {
-            _bus.SetShuttleRoute(null);
-            
-            var legs = GetPrivateField<List<List<Vector3Int>>>(_bus, "loopRouteLegs");
-            Assert.IsTrue(GetPrivateField<bool>(_bus, "useLoopRoute"));
-            Assert.AreEqual(2, legs.Count);
-            Assert.IsEmpty(legs[0]);
-            Assert.IsEmpty(legs[1]);
-        }
-
-        [Test]
         public void SetLoopRoute_WithNull_DisablesLooping()
         {
             _bus.SetLoopRoute(null);

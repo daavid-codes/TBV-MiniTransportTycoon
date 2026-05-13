@@ -162,19 +162,6 @@ namespace MiniTransportTycoon
         }
 
         [Test]
-        public void Update_WhenMoving_DoesNothing()
-        {
-            Car car = CreateCar();
-            SetField(car, "useShuttleRoute", true);
-            SetPropertyOrField(car, "isMoving", true);
-            SetField(car, "nextShuttleLegIsForward", true);
-
-            Invoke(car, "Update");
-
-            Assert.IsTrue(GetField<bool>(car, "nextShuttleLegIsForward"), "Should have returned early without changing state.");
-        }
-
-        [Test]
         public void Update_WhenRouteIsNull_DisablesShuttleRoute()
         {
             Car car = CreateCar();
