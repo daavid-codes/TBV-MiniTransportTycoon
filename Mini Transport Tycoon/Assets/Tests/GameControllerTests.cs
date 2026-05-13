@@ -14,13 +14,15 @@ namespace MiniTransportTycoon
     public class GameControllerTests
     {
         private const BindingFlags InstanceFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags StaticNonPublicFlags = BindingFlags.Static | BindingFlags.NonPublic;
+        private const string GameDataInstanceBackingFieldName = "<Instance>k__BackingField";
         private readonly List<UnityEngine.Object> trackedObjects = new List<UnityEngine.Object>();
 
         [OneTimeSetUp]
         public void OneTimeSetUpGameData()
         {
             // Initialize GameData singleton once before all tests
-            EnsureGameDataMockExists();
+            EnsureGameDataSingletonInitialized();
         }
 
         [TearDown]
@@ -507,7 +509,7 @@ namespace MiniTransportTycoon
 
         private ControllerContext CreateContext()
         {
-            EnsureGameDataMockExists();
+            EnsureGameDataSingletonInitialized();
 
             GameObject go = Track(new GameObject("GameController"));
             GameController controller = go.AddComponent<GameController>();
@@ -618,8 +620,7 @@ namespace MiniTransportTycoon
             // Don't track one-time setup objects; they persist for test suite
             
             // Set the GameData.Instance singleton backing field
-            var gameDataField = typeof(GameData).GetField("<Instance>k__BackingField", 
-                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            var gameDataField = typeof(GameData).GetField(GameDataInstanceBackingFieldName, StaticNonPublicFlags);
             if (gameDataField != null)
                 gameDataField.SetValue(null, mockGameData);
         }
@@ -720,7 +721,7 @@ namespace MiniTransportTycoon
             return null;
         }
 
-        private void EnsureGameDataMockExists()
+        private void EnsureGameDataSingletonInitialized()
         {
             // Check if GameData.Instance already exists
             if (GameData.Instance != null)
@@ -732,8 +733,7 @@ namespace MiniTransportTycoon
 
         private void ResetGameDataSingleton()
         {
-            var gameDataField = typeof(GameData).GetField("<Instance>k__BackingField",
-                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            var gameDataField = typeof(GameData).GetField(GameDataInstanceBackingFieldName, StaticNonPublicFlags);
             if (gameDataField != null)
                 gameDataField.SetValue(null, null);
         }
