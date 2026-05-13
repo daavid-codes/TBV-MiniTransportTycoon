@@ -153,6 +153,7 @@ namespace MiniTransportTycoon
     private readonly List<Vector3Int> pendingTruckStopSelections = new List<Vector3Int>(2);
     private readonly List<Vector3Int> roadCoordinates = new List<Vector3Int>();
     private readonly HashSet<Vector3Int> roadCoordinateLookup = new HashSet<Vector3Int>();
+    private readonly Dictionary<Vector3Int, TileBase> roadUnderlyingGroundTiles = new Dictionary<Vector3Int, TileBase>();
     private int nextWarehouseId = 1;
     private int nextFacilityId = 1;
     private bool pointerStartedOverUI;
@@ -163,6 +164,7 @@ namespace MiniTransportTycoon
     void Awake()
     {
         gameData = GameData.Instance;
+        EnsureRoadTilemapRendersAboveGround();
 
         // Populate price dictionary
         _materialPriceDict = new Dictionary<Materials, float>();
@@ -194,6 +196,11 @@ namespace MiniTransportTycoon
         InitializeFacilitiesFromTilemaps();
         RefreshRoadCoordinates();
         RefreshRoadVisuals();
+    }
+
+    void OnValidate()
+    {
+        EnsureRoadTilemapRendersAboveGround();
     }
 
     void Start()
@@ -893,7 +900,6 @@ namespace MiniTransportTycoon
         roadTilemap.SetTile(cellPos, defaultRoadTile);
         RegisterRoadCoordinate(cellPos);
         UpdateRoadTiles(cellPos);
-        TrySpendMoneyFromGameData(100);
         Debug.Log("Placed road at: " + cellPos);
     }
 
@@ -1953,17 +1959,55 @@ namespace MiniTransportTycoon
         roadCoordinates.Clear();
         roadCoordinateLookup.Clear();
 
-        if (roadTilemap == null)
+        CollectRoadCoordinatesFromTilemap(roadTilemap, false);
+        CollectRoadCoordinatesFromTilemap(groundTilemap, true);
+    }
+
+    void CollectRoadCoordinatesFromTilemap(UnityTilemap tilemap, bool copyToRoadTilemap)
+    {
+        if (tilemap == null)
             return;
 
-        BoundsInt cellBounds = roadTilemap.cellBounds;
+        BoundsInt cellBounds = tilemap.cellBounds;
 
         foreach (Vector3Int cellPos in cellBounds.allPositionsWithin)
         {
-            if (!roadTilemap.HasTile(cellPos))
+            if (!tilemap.HasTile(cellPos))
+                continue;
+
+            TileBase tile = tilemap.GetTile(cellPos);
+            if (!IsConfiguredRoadTile(tile))
                 continue;
 
             RegisterRoadCoordinate(cellPos);
+
+            if (copyToRoadTilemap && roadTilemap != null && !roadTilemap.HasTile(cellPos))
+            {
+                roadTilemap.SetTile(cellPos, tile);
+                roadTilemap.SetTransformMatrix(cellPos, Matrix4x4.identity);
+            }
+        }
+    }
+
+    void EnsureRoadTilemapRendersAboveGround()
+    {
+        if (groundTilemap == null || roadTilemap == null)
+            return;
+
+        TilemapRenderer groundRenderer = groundTilemap.GetComponent<TilemapRenderer>();
+        TilemapRenderer roadRenderer = roadTilemap.GetComponent<TilemapRenderer>();
+
+        if (groundRenderer == null || roadRenderer == null)
+            return;
+
+        if (roadRenderer.sortingLayerID != groundRenderer.sortingLayerID)
+        {
+            roadRenderer.sortingLayerID = groundRenderer.sortingLayerID;
+        }
+
+        if (roadRenderer.sortingOrder <= groundRenderer.sortingOrder)
+        {
+            roadRenderer.sortingOrder = groundRenderer.sortingOrder + 1;
         }
     }
 
@@ -2207,6 +2251,7 @@ namespace MiniTransportTycoon
                 roadTilemap.SetTile(cellPos, null);
                 UnregisterRoadCoordinate(cellPos);
                 UpdateRoadTiles(cellPos);
+                RestoreGroundTileAfterRoadRemoval(cellPos);
                 Debug.Log("Destroyed road at: " + cellPos);
                 RecalculateAllVehicleRoutes();
                 return;
@@ -2493,10 +2538,90 @@ namespace MiniTransportTycoon
         if (roadTile == null)
             return;
 
+        if (groundTilemap != null && !roadUnderlyingGroundTiles.ContainsKey(cellPos))
+        {
+            TileBase underlyingGroundTile = groundTilemap.GetTile(cellPos);
+            if (underlyingGroundTile != null && !IsConfiguredRoadTile(underlyingGroundTile))
+            {
+                roadUnderlyingGroundTiles[cellPos] = underlyingGroundTile;
+            }
+        }
+
         roadTilemap.SetTile(cellPos, roadTile);
         roadTilemap.SetTransformMatrix(cellPos, Matrix4x4.identity);
-        groundTilemap.SetTile(cellPos, roadTile);
+
+        if (groundTilemap != null)
+        {
+            groundTilemap.SetTile(cellPos, roadTile);
+            groundTilemap.SetTransformMatrix(cellPos, Matrix4x4.identity);
+        }
+    }
+
+    void RestoreGroundTileAfterRoadRemoval(Vector3Int cellPos)
+    {
+        if (groundTilemap == null)
+            return;
+
+        if (roadUnderlyingGroundTiles.TryGetValue(cellPos, out TileBase originalGroundTile) && originalGroundTile != null)
+        {
+            groundTilemap.SetTile(cellPos, originalGroundTile);
+            groundTilemap.SetTransformMatrix(cellPos, Matrix4x4.identity);
+            roadUnderlyingGroundTiles.Remove(cellPos);
+            return;
+        }
+
+        TileBase currentGroundTile = groundTilemap.GetTile(cellPos);
+        if (currentGroundTile != null && !IsConfiguredRoadTile(currentGroundTile))
+        {
+            roadUnderlyingGroundTiles.Remove(cellPos);
+            return;
+        }
+
+        TileBase nearbyGroundTile = FindNearbyNonRoadGroundTile(cellPos);
+        if (nearbyGroundTile == null)
+        {
+            roadUnderlyingGroundTiles.Remove(cellPos);
+            return;
+        }
+
+        groundTilemap.SetTile(cellPos, nearbyGroundTile);
         groundTilemap.SetTransformMatrix(cellPos, Matrix4x4.identity);
+        roadUnderlyingGroundTiles.Remove(cellPos);
+    }
+
+    TileBase FindNearbyNonRoadGroundTile(Vector3Int centerCell)
+    {
+        for (int i = 0; i < RoadNeighborOffsets.Length; i++)
+        {
+            Vector3Int neighborCell = centerCell + RoadNeighborOffsets[i];
+
+            if (groundTilemap == null || !groundTilemap.HasTile(neighborCell))
+                continue;
+
+            TileBase neighborTile = groundTilemap.GetTile(neighborCell);
+            if (neighborTile != null && !IsConfiguredRoadTile(neighborTile))
+                return neighborTile;
+        }
+
+        return null;
+    }
+
+    bool IsConfiguredRoadTile(TileBase tile)
+    {
+        if (tile == null)
+            return false;
+
+        return tile == roadStraightUpDownTile
+            || tile == roadStraightLeftRightTile
+            || tile == roadTurnUpRightTile
+            || tile == roadTurnRightDownTile
+            || tile == roadTurnDownLeftTile
+            || tile == roadTurnLeftUpTile
+            || tile == roadTJunctionUpRightDownTile
+            || tile == roadTJunctionRightDownLeftTile
+            || tile == roadTJunctionDownLeftUpTile
+            || tile == roadTJunctionLeftUpRightTile
+            || tile == roadIntersectionTile;
     }
 
     int GetRoadNeighborMask(Vector3Int cellPos)

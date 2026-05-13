@@ -22,12 +22,6 @@ A gazdasági rendszer bevételeket biztosít a sikeresen leszállított áruk é
     fa jelenhet meg. A játék kezdeti állapotában is legyenek erdős mezők.
     Erdős mezőkre is építhető út, de az magasabb költséggel járjon (irtás).
 
-- ### Folyók és tavak (0.5)
-    A térképen legyenek víz mezők is, amelyek kezdeti elhelyezésekor (akár előre rögzített a térkép, akár
-    véletlen generált) tavakat és folyókat alkossanak. Legyen legalább 3 különböző híd típus a játékban,
-    amelyek különböző költséggel, maximális áthidalási távolsággal és sebességkorlátozással
-    rendelkeznek.
-
 - ### Garázs (0.5)
     A játékos építhessen 1 vagy több garázst is, amelyet szintén az úthálózathoz szükséges kapcsolnia. A
     járműveket vásárolni és karbantartani a garázsban lehessen. A járművek karbantartásra megadott
@@ -40,16 +34,19 @@ A gazdasági rendszer bevételeket biztosít a sikeresen leszállított áruk é
     A játékpálya legyen nagyobb a megjelenítettnél, a navigáláshoz azt X és Y dimenzióban lehessen
     görgetni. A könnyebb tájékozódáshoz a játékhoz tartozzon navigálható minimap.
 
-- ### Perzisztencia (0.5)
-    Egy adott játékállást legyen lehetőség elmenteni, majd később egy kiválasztott játékállást
-    visszatölteni és a játékot folytatni. A visszatöltés után a mentéskor éppen mozgásban lévő járművek
-    onnan folytatják az útjukat, ahol éppen tartózkodtak. Több mentés kezelésére is legyen lehetőség.
 
 - ### Folyamatos mozgás (0.5)
     A járművek mozgása a játékpálya mezői között ne ugrásszerű, hanem folyamatos legyen. A járművek
     ettől még logikailag lehetnek mindig kizárólagosan egyetlen mezőn, de mozgatásuk a mezők között
     animált és folyamatos legyen.
 
+- ### 2.5D grafika [0.5 komplexitás]
+    Az alapfeladat elvárása egy felülnézeti grafika megvalósítása, ahol minden objektum a saját mezőjén
+    belül jelenik meg. A feladat egy olyan 2.5 dimenziós grafika megvalósítása, ahol az objektumok
+    túlnyúlhatnak saját cellájukon vizuálisan. (Pl. egy megálló épülete részben kitakarhatja a “fölötte”
+    lévő cellát.)
+
+### SUM: 4.5
 
 ## Technology Stack
 
