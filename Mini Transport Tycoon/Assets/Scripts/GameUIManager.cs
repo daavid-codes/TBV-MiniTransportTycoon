@@ -19,19 +19,27 @@ namespace MiniTransportTycoon
         [SerializeField] private TextMeshProUGUI moneyText;
         [SerializeField] private TextMeshProUGUI cityText;
         [SerializeField] private TextMeshProUGUI dateText;
-        [SerializeField] private TextMeshProUGUI errorText;
         [Header("Material Prices UI")]
         [SerializeField] private List<MaterialPriceUIEntry> materialPriceUIEntries;
         [Header("Game Over UI")]
         [SerializeField] private GameObject gameOverPanel;
-        [SerializeField] private float errorMessageDuration = 2.5f;
 
     public GameObject escapeMenu;
-    private float hideErrorAtTime = -1f;
     private Dictionary<Materials, TextMeshProUGUI> _materialPriceUITexts;
+
+        private void EnsureReferences()
+        {
+            if (gameData == null)
+                gameData = GameData.Instance;
+
+            if (gameController == null)
+                gameController = FindObjectOfType<GameController>();
+        }
 
         private void Awake()
         {
+            EnsureReferences();
+
             _materialPriceUITexts = new Dictionary<Materials, TextMeshProUGUI>();
             if (materialPriceUIEntries != null)
             {
@@ -46,8 +54,7 @@ namespace MiniTransportTycoon
         }
         private void Start()
         {
-            if (gameData == null) gameData = GameData.Instance;
-            if (gameController == null) gameController = FindObjectOfType<GameController>();
+            EnsureReferences();
 
             // Az UI azonnali frissítése a kezdeti értékekkel
             UpdateUI();
@@ -59,12 +66,6 @@ namespace MiniTransportTycoon
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 ToggleEscapeMenu();
-            }
-
-            if (errorText != null && hideErrorAtTime >= 0f && Time.unscaledTime >= hideErrorAtTime)
-            {
-                errorText.text = string.Empty;
-                hideErrorAtTime = -1f;
             }
         }
 
@@ -82,10 +83,11 @@ namespace MiniTransportTycoon
 
     private void OnEnable()
     {
+        EnsureReferences();
+
         if (gameData != null)
         {
             gameData.OnDataChanged += UpdateUI;
-            gameData.OnErrorMessage += ShowErrorMessage;
             gameData.OnHourChanged += UpdateMaterialPricesUI;
             gameData.OnGameOver += HandleGameOver;
         }
@@ -96,7 +98,6 @@ namespace MiniTransportTycoon
         if (gameData != null)
         {
             gameData.OnDataChanged -= UpdateUI;
-            gameData.OnErrorMessage -= ShowErrorMessage;
             gameData.OnHourChanged -= UpdateMaterialPricesUI;
             gameData.OnGameOver -= HandleGameOver;
         }
@@ -120,15 +121,6 @@ namespace MiniTransportTycoon
 
         if (dateText != null)
             dateText.text = gameData.CurrentDate.ToString("yyyy. MM. dd. HH:mm");
-    }
-
-    private void ShowErrorMessage(string message)
-    {
-        if (errorText == null)
-            return;
-
-        errorText.text = message;
-        hideErrorAtTime = Time.unscaledTime + Mathf.Max(0.5f, errorMessageDuration);
     }
 
     private void UpdateMaterialPricesUI()

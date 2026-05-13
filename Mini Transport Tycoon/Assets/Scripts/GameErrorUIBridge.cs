@@ -1,21 +1,19 @@
 using UnityEngine;
-using UnityEngine.Events;
 using TMPro;
 
 namespace MiniTransportTycoon
 {
-    // UI-only bridge so designers can connect error handling through Inspector events.
+    // Minimal bridge: show error panel, set TMP text, auto-hide after delay.
     public class GameErrorUIBridge : MonoBehaviour
     {
         [SerializeField] private GameData gameData;
         [SerializeField] private bool tryFindGameDataWhenMissing = true;
         [SerializeField] private bool replayLastErrorOnEnable = true;
         [SerializeField] private GameObject errorPanelParent;
-        [SerializeField] private CanvasGroup errorPanelCanvasGroup;
         [SerializeField] private TMP_Text errorText;
         [SerializeField] private float clearAfterSeconds = 2.5f;
         [SerializeField] private bool hidePanelOnAwake = true;
-        [SerializeField] private UnityEvent<string> onErrorMessageReceived;
+        private CanvasGroup selfCanvasGroup;
         private float hideAtTime = -1f;
 
         private void Awake()
@@ -26,13 +24,17 @@ namespace MiniTransportTycoon
                 errorPanelParent = gameObject;
 
             if (errorText == null)
-                errorText = GetComponentInChildren<TMP_Text>(true);
+                errorText = errorPanelParent.GetComponentInChildren<TMP_Text>(true);
 
-            if (errorPanelCanvasGroup == null && errorPanelParent != null)
-                errorPanelCanvasGroup = errorPanelParent.GetComponent<CanvasGroup>();
+            if (errorPanelParent == gameObject)
+            {
+                selfCanvasGroup = errorPanelParent.GetComponent<CanvasGroup>();
+                if (selfCanvasGroup == null)
+                    selfCanvasGroup = errorPanelParent.AddComponent<CanvasGroup>();
+            }
 
             if (hidePanelOnAwake)
-                SetPanelVisible(false);
+                HideErrorNow();
         }
 
         private void Update()
@@ -42,7 +44,7 @@ namespace MiniTransportTycoon
                 if (errorText != null)
                     errorText.text = string.Empty;
 
-                SetPanelVisible(false);
+                HideErrorNow();
 
                 hideAtTime = -1f;
             }
@@ -99,35 +101,53 @@ namespace MiniTransportTycoon
             if (string.IsNullOrWhiteSpace(errorMessage))
                 return;
 
-            SetPanelVisible(true);
+            ShowErrorNow();
 
             if (errorText != null)
                 errorText.text = errorMessage;
 
             hideAtTime = Time.unscaledTime + Mathf.Max(0.5f, clearAfterSeconds);
-
-            onErrorMessageReceived?.Invoke(errorMessage);
         }
 
-        private void SetPanelVisible(bool isVisible)
+        private void ShowErrorNow()
         {
             if (errorPanelParent == null)
                 return;
 
-            // Never deactivate the object that contains this bridge; otherwise it unsubscribes from events.
+            // If the bridge is on the same object, keep object active and fade via CanvasGroup.
             if (errorPanelParent == gameObject)
             {
-                if (errorPanelCanvasGroup != null)
+                if (selfCanvasGroup != null)
                 {
-                    errorPanelCanvasGroup.alpha = isVisible ? 1f : 0f;
-                    errorPanelCanvasGroup.interactable = isVisible;
-                    errorPanelCanvasGroup.blocksRaycasts = isVisible;
+                    selfCanvasGroup.alpha = 1f;
+                    selfCanvasGroup.interactable = true;
+                    selfCanvasGroup.blocksRaycasts = true;
                 }
 
                 return;
             }
 
-            errorPanelParent.SetActive(isVisible);
+            errorPanelParent.SetActive(true);
+        }
+
+        private void HideErrorNow()
+        {
+            if (errorPanelParent == null)
+                return;
+
+            if (errorPanelParent == gameObject)
+            {
+                if (selfCanvasGroup != null)
+                {
+                    selfCanvasGroup.alpha = 0f;
+                    selfCanvasGroup.interactable = false;
+                    selfCanvasGroup.blocksRaycasts = false;
+                }
+
+                return;
+            }
+
+            errorPanelParent.SetActive(false);
         }
 
         private void EnsureGameDataReference()

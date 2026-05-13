@@ -13327,7 +13327,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1002384133
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13445,14 +13445,10 @@ MonoBehaviour:
   gameData: {fileID: 968814745}
   tryFindGameDataWhenMissing: 1
   replayLastErrorOnEnable: 1
-  errorPanelParent: {fileID: 1036247332}
-  errorPanelCanvasGroup: {fileID: 1002384139}
+  errorPanelParent: {fileID: 1002384132}
   errorText: {fileID: 1311708480}
   clearAfterSeconds: 2.5
   hidePanelOnAwake: 1
-  onErrorMessageReceived:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!225 &1002384139
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -13464,7 +13460,7 @@ CanvasGroup:
   m_Alpha: 1
   m_Interactable: 1
   m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1006703080
 GameObject:
   m_ObjectHideFlags: 0
@@ -16326,7 +16322,6 @@ MonoBehaviour:
   moneyText: {fileID: 74277991}
   cityText: {fileID: 429633358}
   dateText: {fileID: 2081498922}
-  errorText: {fileID: 1311708480}
   materialPriceUIEntries:
   - material: 0
     priceText: {fileID: 823882918}
@@ -16339,7 +16334,6 @@ MonoBehaviour:
   - material: 1
     priceText: {fileID: 1179444939}
   gameOverPanel: {fileID: 420696851}
-  errorMessageDuration: 2.5
   escapeMenu: {fileID: 2035287128}
 --- !u!114 &1419960541
 MonoBehaviour:
