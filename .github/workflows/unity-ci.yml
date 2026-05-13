@@ -37,8 +37,7 @@ jobs:
           projectPath: Mini Transport Tycoon
           githubToken: ""
           testMode: editmode
-          enableCodeCoverage: true
-          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Assembly-CSharp;pathFilters:+*/Assets/Scripts/**'
+          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateHtmlReportHistory;assemblyFilters:+Assembly-CSharp;pathFilters:+*/Assets/Scripts/**'
 
       - name: Debug Coverage Paths
         if: always()
@@ -81,7 +80,20 @@ jobs:
           name: code-coverage
           path: coverage-artifact/**
 
+      - name: Check for coverage results
+        id: coverage_check
+        if: always()
+        run: |
+          if compgen -G "${{ steps.tests.outputs.coveragePath }}/**/TestCoverageResults_*.xml" > /dev/null; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            mkdir -p coverage-summary
+            echo "Coverage summary unavailable for this run." > coverage-summary/SummaryGithub.md
+          fi
+
       - name: Generate Coverage Summary
+        if: always() && steps.coverage_check.outputs.found == 'true'
         uses: danielpalme/ReportGenerator-GitHub-Action@ee3806a36b8b2eb9594cb3e5fae045af7e5ead10 # v5.5.6
         with:
           reports: ${{ steps.tests.outputs.coveragePath }}/**/TestCoverageResults_*.xml
@@ -89,6 +101,7 @@ jobs:
           reporttypes: MarkdownSummaryGithub
 
       - name: Write Coverage to Job Summary
+        if: always()
         run: cat coverage-summary/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
 
       - name: Post Coverage Comment on PR
